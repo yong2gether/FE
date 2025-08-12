@@ -79,7 +79,7 @@ export default function Login() {
   const [idInput, setIdInput] = useState("");
   const [pwInput, setPwInput] = useState("");
 
-  const handleLoginClick = () => {
+  const handleLogin = () => {
     navigate("/main");
   };
 
@@ -94,7 +94,7 @@ export default function Login() {
       </TitleContainer>
       <InputContainer>
         <InputRow>
-          <label className="Body__XLarge" for="user-id">
+          <label className="Body__XLarge" htmlFor="user-id">
             ID
           </label>
           <PublicInput
@@ -108,7 +108,7 @@ export default function Login() {
           />
         </InputRow>
         <InputRow>
-          <label className="Body__XLarge" for="user-pw">
+          <label className="Body__XLarge" htmlFor="user-pw">
             PW
           </label>
           <PublicInput
@@ -118,12 +118,12 @@ export default function Login() {
             onChange={(e) => {
               setPwInput(e.target.value);
             }}
-            placeholder="아이디를 입력해주세요"
+            placeholder="비밀번호를 입력해주세요"
           />
         </InputRow>
       </InputContainer>
       <ButtonContainer>
-        <PublicButton buttonText="로그인" onClick={handleLoginClick} />
+        <PublicButton buttonText="로그인" onClick={handleLogin} />
         <SignUpContainer>
           <div className="Body__Large">아직 가입하지 않으셨나요?</div>
           <SignUp className="Title__H5"
