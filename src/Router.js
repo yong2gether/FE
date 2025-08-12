@@ -7,6 +7,7 @@ import Main from "./Pages/Main";
 import Map from "./Pages/Map";
 import Mypage from "./Pages/Mypage";
 import BookMark from "./Pages/BookMark";
+import SignUpComplete from "./Pages/SignUpComplete";
 
 export default function RouterComponent() {
     return(
@@ -17,6 +18,8 @@ export default function RouterComponent() {
             <Route path="/login" element={<Login />} />
             {/*회원가입 페이지 라우팅*/}
             <Route path="/signup" element={<SignUp />} />
+            {/*회원가입 완료 페이지 라우팅*/}
+            <Route path="/signupcomplete" element={<SignUpComplete />} />
             {/*메인 페이지 라우팅*/}
             <Route path="/main" element={<Main />} />
             {/*지도 페이지 라우팅*/}
