@@ -80,7 +80,8 @@ export default function Login() {
   const [pwInput, setPwInput] = useState("");
 
   const handleLogin = () => {
-    navigate("/main");
+    // navigate("/main");
+    navigate("/category/region");
   };
 
   return (
