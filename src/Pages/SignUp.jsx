@@ -106,7 +106,7 @@ export default function SignUp() {
   const handleIdCheck = () => {};
 
   const handleSignUp = () => {
-    navigate("/signupcomplete");
+    navigate("/signup/complete");
   };
 
   return (

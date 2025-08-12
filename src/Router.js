@@ -8,6 +8,9 @@ import Map from "./Pages/Map";
 import Mypage from "./Pages/Mypage";
 import BookMark from "./Pages/BookMark";
 import SignUpComplete from "./Pages/SignUpComplete";
+import CategoryRegion from "./Pages/CategoryRegion";
+import CategoryIndustry from "./Pages/CategoryIndustry";
+import CategoryResult from "./Pages/CategoryResult";
 
 export default function RouterComponent() {
     return(
@@ -19,7 +22,13 @@ export default function RouterComponent() {
             {/*회원가입 페이지 라우팅*/}
             <Route path="/signup" element={<SignUp />} />
             {/*회원가입 완료 페이지 라우팅*/}
-            <Route path="/signupcomplete" element={<SignUpComplete />} />
+            <Route path="/signup/complete" element={<SignUpComplete />} />
+            {/*선호 카테고리 지역 페이지 라우팅*/}
+            <Route path="/category/region" element={<CategoryRegion />} />
+            {/*선호 카테고리 업종 페이지 라우팅*/}
+            <Route path="/category/industry" element={<CategoryIndustry />} />
+            {/*선호 카테고리 결과 페이지 라우팅*/}
+            <Route path="/category/result" element={<CategoryResult />} />
             {/*메인 페이지 라우팅*/}
             <Route path="/main" element={<Main />} />
             {/*지도 페이지 라우팅*/}
