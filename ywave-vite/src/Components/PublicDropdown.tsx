@@ -2,13 +2,25 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 
+interface Option {
+  index: number;
+  value: string;
+}
+
+interface PublicDropdownProps {
+  options: Option[];
+  placeholder: string;
+  value: Option | null;
+  onChange: (option: Option) => void;
+}
+
 const DropdownContainer = styled.div`
   position: relative;
   width: 100%;
   min-width: 200px;
 `;
 
-const DropdownHeader = styled.div`
+const DropdownHeader = styled.div<{ isOpen: boolean; isSelect: boolean }>`
   width: 100%;
   min-width: 200px;
   display: flex;
@@ -94,15 +106,15 @@ const DropdownItem = styled.li`
   }
 `;
 
-export default function PublicDropdown({ options, placeholder, value, onChange }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef();
+export default function PublicDropdown({ options, placeholder, value, onChange }: PublicDropdownProps): React.JSX.Element {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleDropdown = () => {
+  const handleDropdown = (): void => {
     setIsOpen((prev) => !prev);
   };
 
-  const handleOptionClick = (option) => {
+  const handleOptionClick = (option: Option): void => {
     if (onChange) {
       onChange(option);
     }
@@ -110,8 +122,8 @@ export default function PublicDropdown({ options, placeholder, value, onChange }
   };
 
   useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleOutsideClick = (event: MouseEvent): void => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };

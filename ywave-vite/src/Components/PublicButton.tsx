@@ -1,6 +1,11 @@
 import React from "react";
 import styled from "styled-components";
 
+interface PublicButtonProps {
+  buttonText: string;
+  onClick: () => void;
+}
+
 const Button = styled.button`
   width: 100%;
   min-width: 200px;
@@ -37,7 +42,7 @@ const Button = styled.button`
   }
 `;
 
-export default function PublicButton({ buttonText, onClick }) {
+export default function PublicButton({ buttonText, onClick }: PublicButtonProps): React.JSX.Element {
   return (
     <Button className="Title__H4" onClick={onClick}>
       {buttonText}

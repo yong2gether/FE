@@ -52,7 +52,7 @@ const ButtonContainer = styled.div`
   width: 100%;
 `;
 
-export default function CategoryResult() {
+export default function CategoryResult(): React.JSX.Element {
   const navigate = useNavigate();
 
   const regions = ["용인시 처인구 모현읍", "창원시 마산회원구 양덕 2동"];
@@ -65,8 +65,8 @@ export default function CategoryResult() {
         <TitleContainer>
           <Title className="Title__H1">
             주로 <br />
-            {regions.map((region) => (
-              <span key={region.index}>
+            {regions.map((region, index) => (
+              <span key={index}>
                 #{region}
                 <br />
               </span>
@@ -74,8 +74,8 @@ export default function CategoryResult() {
             지역에 위치한
           </Title>
           <Title className="Title__H1">
-            {industries.map((industry) => (
-              <span key={industry.index}>
+            {industries.map((industry, index) => (
+              <span key={index}>
                 #{industry}
                 <br />
               </span>
