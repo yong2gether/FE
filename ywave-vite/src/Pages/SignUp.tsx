@@ -97,15 +97,15 @@ const InputCaption = styled.div`
   color: var(--neutral-500);
 `;
 
-export default function SignUp() {
+export default function SignUp(): React.JSX.Element {
   const navigate = useNavigate();
-  const [idInput, setIdInput] = useState("");
-  const [pwInput, setPwInput] = useState("");
-  const [nickInput, setNickInput] = useState("");
+  const [idInput, setIdInput] = useState<string>("");
+  const [pwInput, setPwInput] = useState<string>("");
+  const [nickInput, setNickInput] = useState<string>("");
 
-  const handleIdCheck = () => {};
+  const handleIdCheck = (): void => {};
 
-  const handleSignUp = () => {
+  const handleSignUp = (): void => {
     navigate("/signup/complete");
   };
 
@@ -113,7 +113,7 @@ export default function SignUp() {
     <PageContainer>
       <ContentContainer>
         <TitleContainer>
-          <TitleLogoImage src={Logo} />
+          <TitleLogoImage src={Logo} alt="Logo" />
           <div className="Title__H1">회원가입</div>
         </TitleContainer>
         <InputContainer>
@@ -126,7 +126,7 @@ export default function SignUp() {
                 type="email"
                 id="user-id"
                 value={idInput}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setIdInput(e.target.value);
                 }}
                 placeholder="아이디를 입력해주세요"
@@ -144,7 +144,7 @@ export default function SignUp() {
               type="password"
               id="user-pw"
               value={pwInput}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setPwInput(e.target.value);
               }}
               placeholder="비밀번호를 입력해주세요"
@@ -161,7 +161,7 @@ export default function SignUp() {
               type="text"
               id="user-nick"
               value={nickInput}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setNickInput(e.target.value);
               }}
               placeholder="닉네임을 입력해주세요"
