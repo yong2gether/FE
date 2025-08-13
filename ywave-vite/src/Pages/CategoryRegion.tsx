@@ -89,15 +89,25 @@ const ButtonContainer = styled.div`
   width: 100%;
 `;
 
-export default function CategoryRegion() {
+interface Option {
+  index: number;
+  value: string;
+}
+
+interface RegionData {
+  id: number;
+  value: string;
+}
+
+export default function CategoryRegion(): React.JSX.Element {
   const navigate = useNavigate();
-  const [selectCity, setSelectCity] = useState(null);
-  const [selectGu, setSelectGu] = useState(null);
-  const [selectDong, setSelectDong] = useState(null);
-  const [selectRegion, setSelectRegion] = useState([]);
+  const [selectCity, setSelectCity] = useState<Option | null>(null);
+  const [selectGu, setSelectGu] = useState<Option | null>(null);
+  const [selectDong, setSelectDong] = useState<Option | null>(null);
+  const [selectRegion, setSelectRegion] = useState<RegionData[]>([]);
 
   const nickname = "상현";
-  const cityOptions = [
+  const cityOptions: Option[] = [
     { index: 0, value: "서울특별시" },
     { index: 1, value: "부산광역시" },
     { index: 2, value: "인천광역시" },
@@ -109,7 +119,7 @@ export default function CategoryRegion() {
 
   useEffect(() => {
     if (selectCity && selectGu && selectDong) {
-      const newRegion = {
+      const newRegion: RegionData = {
         id: Date.now(),
         value: `${selectCity.value} ${selectGu.value} ${selectDong.value}`,
       };
@@ -122,7 +132,7 @@ export default function CategoryRegion() {
     }
   }, [selectDong]);
 
-  const handleDeleteRegion = (clickId) => {
+  const handleDeleteRegion = (clickId: number): void => {
     setSelectRegion(selectRegion.filter((region) => region.id !== clickId));
   };
 

@@ -1,6 +1,14 @@
 import React from "react";
 import styled from "styled-components";
 
+interface PublicInputProps {
+  type: string;
+  id: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+}
+
 const Input = styled.input`
   width: 100%;
   min-width: 200px;
@@ -49,7 +57,7 @@ export default function PublicInput({
   value,
   onChange,
   placeholder
-}) {
+}: PublicInputProps): React.JSX.Element {
   return (
     <Input
       className="Body__Default"
