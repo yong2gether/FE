@@ -26,7 +26,7 @@ const Content = styled.div`
   width: 100%;
 `;
 
-export default function Mypage() {
+export default function Mypage(): React.JSX.Element {
   return (
     <PageContainer>
       <Content>
