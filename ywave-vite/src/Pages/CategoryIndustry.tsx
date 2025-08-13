@@ -64,7 +64,7 @@ const IndustryRow = styled.div`
   gap: var(--spacing-m);
 `;
 
-const IndustryItem = styled.button`
+const IndustryItem = styled.button<{ isSelect: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,11 +97,11 @@ const ButtonContainer = styled.div`
   width: 100%;
 `;
 
-export default function CategoryIndustry() {
+export default function CategoryIndustry(): React.JSX.Element {
   const navigate = useNavigate();
-  const [selectIndustries, setSelectIndustries] = useState([]);
+  const [selectIndustries, setSelectIndustries] = useState<string[]>([]);
 
-  const handleIndustryClick = (clickId) => {
+  const handleIndustryClick = (clickId: string): void => {
     if (selectIndustries.includes(clickId)) {
       setSelectIndustries(selectIndustries.filter((id) => id !== clickId));
     } else {
@@ -132,7 +132,7 @@ export default function CategoryIndustry() {
                       onClick={() => handleIndustryClick(category.id)}
                       isSelect={selectIndustries.includes(category.id)}
                     >
-                      {category.icon}
+                      {category.icon()}
                       <div>{category.name}</div>
                     </IndustryItem>
                   ))}
