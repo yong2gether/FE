@@ -29,13 +29,11 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.4;
     background-color: var(--background);
     color: var(--black);
-    /* 접근성: 색상 대비 개선 */
     background-color: var(--neutral-100);
     color: var(--neutral-1000);
   }
 
   :root {
-    /* Figma Color Variables */
     --primary-green-100: #e9f5d8;
     --primary-green-200: #d4eab0;
     --primary-green-300: #bee089;
@@ -129,7 +127,6 @@ export const GlobalStyle = createGlobalStyle`
     --gray : #d9d9d9;
   }
 
-  /* Display, Title, Body 스타일 */
   .Display__Large {
     font-size: 32px;
     font-family: Pretendard, sans-serif;
@@ -226,35 +223,24 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: 600;
     line-height: 1.4;
   }
-
-  /* 접근성 개선 스타일 */
   
-  /* 포커스 스타일 */
   *:focus {
-    outline: 2px solid var(--primary-green-500);
-    outline-offset: 2px;
+    outline: none;
   }
   
-  /* 버튼 포커스 스타일 */
   button:focus {
-    outline: 2px solid var(--primary-green-500);
-    outline-offset: 2px;
+    outline: none;
   }
   
-  /* 링크 포커스 스타일 */
   a:focus {
-    outline: 2px solid var(--primary-green-500);
-    outline-offset: 2px;
+    outline: none;
   }
   
-  /* 입력 필드 포커스 스타일 */
   input:focus, textarea:focus, select:focus {
-    outline: 2px solid var(--primary-green-500);
-    outline-offset: 2px;
-    border-color: var(--primary-green-500);
+    outline: none;
+    border-color: var(--primary-blue-500);
   }
   
-  /* 스크린 리더 전용 텍스트 */
   .sr-only {
     position: absolute;
     width: 1px;
@@ -267,7 +253,6 @@ export const GlobalStyle = createGlobalStyle`
     border: 0;
   }
   
-  /* 고대비 모드 지원 */
   @media (prefers-contrast: high) {
     :root {
       --primary-green-500: #2d501f;
@@ -277,7 +262,6 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
   
-  /* 모션 감소 설정 지원 */
   @media (prefers-reduced-motion: reduce) {
     * {
       animation-duration: 0.01ms !important;
@@ -286,8 +270,6 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
 
-  /* 스크롤바 스타일링 */
-  /* 웹킷 브라우저 (Chrome, Safari, Edge) */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -312,13 +294,11 @@ export const GlobalStyle = createGlobalStyle`
     background: var(--neutral-200);
   }
 
-  /* Firefox */
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--neutral-400) var(--neutral-200);
   }
 
-  /* 모바일에서는 스크롤바 숨김 */
   @media (max-width: 768px) {
     ::-webkit-scrollbar {
       width: 4px;
@@ -345,7 +325,7 @@ export const GlobalStyle = createGlobalStyle`
     padding: 0;
     cursor: pointer;
     font: inherit;
-    min-height: 44px; /* 터치 타겟 최소 크기 */
+    min-height: 44px;
     min-width: 44px;
   }
   
@@ -353,19 +333,17 @@ export const GlobalStyle = createGlobalStyle`
     font-family: inherit;
     border: none;
     outline: none;
-    min-height: 44px; /* 터치 타겟 최소 크기 */
+    min-height: 44px;
     &::placeholder {
       color: var(--subtext);
     }
   }
   
-  /* 이미지 접근성 */
   img {
     max-width: 100%;
     height: auto;
   }
   
-  /* 테이블 접근성 */
   table {
     border-collapse: collapse;
     width: 100%;
