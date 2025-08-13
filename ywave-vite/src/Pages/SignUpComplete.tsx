@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import TitleLogo from "../Images/TitleLogo.svg";
-import { useNavigate } from "react-router-dom/dist";
+import { useNavigate } from "react-router-dom";
 import PublicButton from "../Components/PublicButton";
 
 const PageContainer = styled.div`
@@ -34,13 +34,13 @@ const Title = styled.div`
   text-align: center;
 `;
 
-export default function SignUpComplete() {
+export default function SignUpComplete(): React.JSX.Element {
   const navigate = useNavigate();
 
   return (
     <PageContainer>
       <TitleContainer>
-        <TitleLogoImage src={TitleLogo} />
+        <TitleLogoImage src={TitleLogo} alt="Title Logo" />
         <Title className="Body__XLarge">
           회원가입이 완료되었습니다! <br />
           Y:Wave가 새로운 경험을 <br />
