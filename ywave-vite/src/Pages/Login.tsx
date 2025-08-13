@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom/dist";
+import { useNavigate } from "react-router-dom";
 import PublicInput from "../Components/PublicInput";
 import PublicButton from "../Components/PublicButton";
 import TitleLogo from "../Images/TitleLogo.svg";
@@ -74,12 +74,12 @@ const SignUp = styled.a`
   cursor: pointer;
 `;
 
-export default function Login() {
+export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
-  const [idInput, setIdInput] = useState("");
-  const [pwInput, setPwInput] = useState("");
+  const [idInput, setIdInput] = useState<string>("");
+  const [pwInput, setPwInput] = useState<string>("");
 
-  const handleLogin = () => {
+  const handleLogin = (): void => {
     // navigate("/main");
     navigate("/category/region");
   };
@@ -87,7 +87,7 @@ export default function Login() {
   return (
     <PageContainer>
       <TitleContainer>
-        <TitleLogoImage src={TitleLogo} />
+        <TitleLogoImage src={TitleLogo} alt="Title Logo" />
         <Title className="Body__XLarge">
           서비스 이용을 위해 <br />
           로그인을 진행해주세요
@@ -102,7 +102,7 @@ export default function Login() {
             type="email"
             id="user-id"
             value={idInput}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setIdInput(e.target.value);
             }}
             placeholder="아이디를 입력해주세요"
@@ -116,7 +116,7 @@ export default function Login() {
             type="password"
             id="user-pw"
             value={pwInput}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setPwInput(e.target.value);
             }}
             placeholder="비밀번호를 입력해주세요"
