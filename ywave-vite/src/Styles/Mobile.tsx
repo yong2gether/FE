@@ -27,34 +27,46 @@ const Content = styled.div<{ isWideLayout: boolean }>`
   position: relative;
   overflow-x: hidden;
 
-  /* 데스크톱에서 모바일처럼 보이게 */
   @media (min-width: 768px) {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
-    margin: 8px auto;
-    min-height: calc(100vh - 16px);
+    margin: 20px auto;
+    min-height: calc(100vh - 40px);
   }
 
   scroll-behavior: smooth;
 `;
 
-const Contents = styled.main`
+const Header = styled.div`
   display: flex;
   padding: 16px;
-  flex-direction: column;   
-  flex: 1 1 0%;
-  width: 100%;
-  overflow-y: auto;
-  padding-bottom: 24px;
-  outline: none;
-  
-  &:focus {
-    outline: 2px solid var(--primary-green-500);
-    outline-offset: 2px;
-  }
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  flex-shrink: 0;
+  background: var(--neutral-100);
 `;
 
-// 접근성을 위한 스킵 링크
+const Menu = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 16px;
+`;
+
+const Contents = styled.main`
+  display: flex;
+  padding: 32px 16px;
+  flex-direction: column;   
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  padding-bottom: 32px;
+  outline: none;
+`;
+
 const SkipLink = styled.a`
   position: absolute;
   top: -40px;
@@ -80,6 +92,10 @@ export default function Mobile({ children }: MobileProps): React.JSX.Element {
         메인 콘텐츠로 건너뛰기
       </SkipLink>
       <Content isWideLayout={isWideLayout}>
+        <Header>
+          <Menu>
+          </Menu>
+        </Header>
         <Contents 
           id="main-content" 
           tabIndex={-1}
