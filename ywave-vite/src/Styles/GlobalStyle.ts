@@ -382,5 +382,3 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: var(--font-weight-semibold);
   }
 `;
-
-
