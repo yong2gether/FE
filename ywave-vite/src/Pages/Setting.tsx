@@ -111,10 +111,10 @@ const SectionTitle = styled.h3`
   }
 `;
 
-export default function Setting() {
+export default function Setting(): React.JSX.Element {
   const navigate = useNavigate();
 
-  const gotoPage = (path) => {
+  const gotoPage = (path: string): void => {
     navigate(path);
   };
 
@@ -142,7 +142,6 @@ export default function Setting() {
           즐겨찾기
         </NavigationButton>
       </ButtonGrid>
-
-         </PageContainer>
+    </PageContainer>
   );
 }
