@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import TitleLogo from "../Images/TitleLogo.svg";
 import { useNavigate } from "react-router-dom";
-import PublicButton from "../Components/PublicButton";
+import LargeButton from "../Components/LargeButton";
 
 const PageContainer = styled.div`
   display: flex;
@@ -47,7 +47,7 @@ export default function SignUpComplete(): React.JSX.Element {
           제공할게요!
         </Title>
       </TitleContainer>
-      <PublicButton buttonText="로그인하기" onClick={() => {navigate("/login");}} />
+      <LargeButton buttonText="로그인하기" onClick={() => {navigate("/login");}} />
     </PageContainer>
   );
 }

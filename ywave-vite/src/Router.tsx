@@ -11,6 +11,7 @@ import SignUpComplete from "./Pages/SignUpComplete";
 import CategoryRegion from "./Pages/CategoryRegion";
 import CategoryIndustry from "./Pages/CategoryIndustry";
 import CategoryResult from "./Pages/CategoryResult";
+import MypageProfile from "./Pages/MypageProfile";
 
 export default function RouterComponent(): React.JSX.Element {
     return(
@@ -35,6 +36,8 @@ export default function RouterComponent(): React.JSX.Element {
             <Route path="/map" element={<Map />} />
             {/*마이페이지 페이지 라우팅*/}
             <Route path="/mypage" element={<Mypage />} />
+            {/*마이페이지 프로필 편집 페이지 라우팅*/}
+            <Route path="/mypage/profile" element={<MypageProfile />} />
             {/*즐겨찾기 페이지 라우팅*/}
             <Route path="/bookmark" element={<BookMark />} />
         </Routes>

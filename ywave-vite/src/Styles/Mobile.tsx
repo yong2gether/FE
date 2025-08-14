@@ -1,5 +1,7 @@
 import React from "react";
 import styled from "styled-components";
+import { useLocation } from "react-router-dom";
+import Navigation from "../Components/Navigation";
 
 interface MobileProps {
   children: React.ReactNode;
@@ -77,7 +79,11 @@ const SkipLink = styled.a`
 `;
 
 export default function Mobile({ children }: MobileProps): React.JSX.Element {
-  const isWideLayout = ["/setting"].includes(window.location.pathname);
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const isWideLayout = ["/setting"].includes(currentPath);
+  const noNavigationPath = ["/login", "/signup", "/category"];
+  const showNavigation = !(currentPath === "/" || noNavigationPath.some(prefix => currentPath.startsWith(prefix)));
 
   return (
     <Container>
@@ -93,6 +99,7 @@ export default function Mobile({ children }: MobileProps): React.JSX.Element {
         >
           {children}
         </Contents>
+        {showNavigation && <Navigation />}
       </Content>
     </Container>
   );

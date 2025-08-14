@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-interface PublicButtonProps {
+interface LargeButtonProps {
   buttonText: string;
   onClick: () => void;
 }
@@ -9,7 +9,7 @@ interface PublicButtonProps {
 const Button = styled.button`
   width: 100%;
   min-width: 200px;
-  height: 49px;
+  min-height: auto;
   background-color: var(--primary-blue-500);
   border: none;
   border-radius: 10px;
@@ -42,7 +42,7 @@ const Button = styled.button`
   }
 `;
 
-export default function PublicButton({ buttonText, onClick }: PublicButtonProps): React.JSX.Element {
+export default function LargeButton({ buttonText, onClick }: LargeButtonProps): React.JSX.Element {
   return (
     <Button className="Title__H4" onClick={onClick}>
       {buttonText}

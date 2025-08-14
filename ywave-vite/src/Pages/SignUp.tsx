@@ -3,7 +3,8 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Logo from "../Images/Logo.svg";
 import PublicInput from "../Components/PublicInput";
-import PublicButton from "../Components/PublicButton";
+import LargeButton from "../Components/LargeButton";
+import MediumButton from "../Components/MediumButton";
 
 const PageContainer = styled.div`
   display: flex;
@@ -73,26 +74,6 @@ const IdInputRow = styled.div`
   width: 100%;
 `;
 
-const IdCheckButton = styled.button`
-  min-width: 83px;
-  background-color: var(--primary-blue-500);
-  border: none;
-  border-radius: 10px;
-  color: var(--neutral-100);
-  cursor: pointer;
-  padding: 12px 16px;
-  text-align: center;
-  white-space: nowrap;
-
-  &:hover {
-    background-color: var(--primary-blue-600);
-  }
-
-  &:active {
-    background-color: var(--primary-blue-700);
-  }
-`;
-
 const InputCaption = styled.div`
   color: var(--neutral-500);
 `;
@@ -131,9 +112,7 @@ export default function SignUp(): React.JSX.Element {
                 }}
                 placeholder="아이디를 입력해주세요"
               />
-              <IdCheckButton className="Title__H6" onClick={handleIdCheck}>
-                중복확인
-              </IdCheckButton>
+              <MediumButton buttonText="중복확인" onClick={handleIdCheck} />
             </IdInputRow>
           </InputRow>
           <InputRow>
@@ -169,7 +148,7 @@ export default function SignUp(): React.JSX.Element {
           </InputRow>
         </InputContainer>
       </ContentContainer>
-      <PublicButton buttonText="회원가입 완료" onClick={handleSignUp} />
+      <LargeButton buttonText="회원가입 완료" onClick={handleSignUp} />
     </PageContainer>
   );
 }
