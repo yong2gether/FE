@@ -10,7 +10,7 @@ import {
   BiSolidTime,
   BiSolidShoppingBagAlt,
   BiDumbbell,
-  BiSolidGasPump
+  BiSolidGasPump,
 } from "react-icons/bi";
 
 interface Industry {

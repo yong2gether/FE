@@ -6,7 +6,7 @@ interface PublicInputProps {
   id: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string;
+  placeholder?: string;
 }
 
 const Input = styled.input`
@@ -56,7 +56,7 @@ export default function PublicInput({
   id,
   value,
   onChange,
-  placeholder
+  placeholder,
 }: PublicInputProps): React.JSX.Element {
   return (
     <Input

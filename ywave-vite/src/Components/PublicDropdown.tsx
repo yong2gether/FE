@@ -106,7 +106,12 @@ const DropdownItem = styled.li`
   }
 `;
 
-export default function PublicDropdown({ options, placeholder, value, onChange }: PublicDropdownProps): React.JSX.Element {
+export default function PublicDropdown({
+  options,
+  placeholder,
+  value,
+  onChange,
+}: PublicDropdownProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +128,10 @@ export default function PublicDropdown({ options, placeholder, value, onChange }
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent): void => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };

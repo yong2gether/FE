@@ -47,7 +47,12 @@ export default function SignUpComplete(): React.JSX.Element {
           제공할게요!
         </Title>
       </TitleContainer>
-      <LargeButton buttonText="로그인하기" onClick={() => {navigate("/login");}} />
+      <LargeButton
+        buttonText="로그인하기"
+        onClick={() => {
+          navigate("/login");
+        }}
+      />
     </PageContainer>
   );
 }

@@ -124,7 +124,7 @@ export default function CategoryRegion(): React.JSX.Element {
         id: Date.now(),
         value: `${selectCity.value} ${selectGu.value} ${selectDong.value}`,
       };
-      
+
       setSelectRegions((prevRegions) => [...prevRegions, newRegion]);
 
       setSelectCity(null);

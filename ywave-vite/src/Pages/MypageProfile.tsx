@@ -100,18 +100,17 @@ export default function MypageProfile(): React.JSX.Element {
 
   const handleImageEdit = () => {
     alert("이미지 변경 기능 추가 예정");
-
-  }
+  };
 
   const handlePwEdit = () => {
     setIsPwEdit(true);
     setPw("");
-  }
+  };
 
   const handleNickEdit = () => {
     setIsNickEdit(true);
     setNick("");
-  }
+  };
 
   const handleSave = () => {
     if (isPwEdit && pw === "") {
@@ -126,7 +125,7 @@ export default function MypageProfile(): React.JSX.Element {
 
     setIsPwEdit(false);
     setIsNickEdit(false);
-  }
+  };
 
   return (
     <PageContainer>
@@ -181,10 +180,7 @@ export default function MypageProfile(): React.JSX.Element {
           )}
         </InfoRow>
       </InfoContainer>
-      <LargeButton
-        buttonText="저장하기"
-        onClick={handleSave}
-      />
+      <LargeButton buttonText="저장하기" onClick={handleSave} />
     </PageContainer>
   );
 }
