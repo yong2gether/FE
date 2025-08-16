@@ -127,7 +127,8 @@ export default function Login(): React.JSX.Element {
         <LargeButton buttonText="로그인" onClick={handleLogin} />
         <SignUpContainer>
           <div className="Body__Large">아직 가입하지 않으셨나요?</div>
-          <SignUp className="Title__H5"
+          <SignUp
+            className="Title__H5"
             onClick={() => {
               navigate("/signup");
             }}

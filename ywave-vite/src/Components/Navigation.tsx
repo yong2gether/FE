@@ -28,18 +28,20 @@ const NavigationItem = styled.div<{ isActive: boolean }>`
   gap: var(--spacing-2xs);
   padding: 11.5px 0;
   cursor: pointer;
-  
+
   &:hover {
     color: var(--primary-blue-600);
     background-color: var(--primary-blue-alpha-10);
   }
-    
+
   &:active {
     color: var(--primary-blue-700);
     background-color: var(--primary-blue-alpha-10);
   }
 
-  ${props => props.isActive && `
+  ${(props) =>
+    props.isActive &&
+    `
     color: var(--primary-blue-500);
   `}
 `;

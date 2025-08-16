@@ -5,6 +5,8 @@ import { BiSolidUserCircle, BiSolidPencil } from "react-icons/bi";
 import { industries } from "../Data/Industries";
 import LargeButton from "../Components/LargeButton";
 import DeleteTag from "../Components/DeleteTag";
+import ReviewBox from "../Components/ReviewBox";
+import { reviewDatas } from "../Data/ReviewDatas";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -69,16 +71,18 @@ const Tab = styled.button<{ isActive: boolean }>`
   border: none;
   cursor: pointer;
   position: relative;
-  color: ${props => props.isActive ? 'var(--primary-blue-500)' : 'var(--neutral-300)'};
+  color: ${(props) =>
+    props.isActive ? "var(--primary-blue-500)" : "var(--neutral-300)"};
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: -1px;
     left: 0;
     right: 0;
     height: 2px;
-    background-color: ${props => props.isActive ? 'var(--primary-blue-500)' : 'transparent'};
+    background-color: ${(props) =>
+      props.isActive ? "var(--primary-blue-500)" : "transparent"};
   }
 `;
 
@@ -136,6 +140,7 @@ const Industry = styled.div`
 const ReviewContainer = styled.div`
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-m);
@@ -149,7 +154,9 @@ interface IndustryData {
 
 export default function Mypage(): React.JSX.Element {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'preferences' | 'reviews'>('preferences');
+  const [activeTab, setActiveTab] = useState<"preferences" | "reviews">(
+    "preferences"
+  );
   const [selectRegions, setSelectRegions] = useState<string[]>([]);
   const [selectIndustries, setSelectIndustries] = useState<IndustryData[]>([]);
 
@@ -159,23 +166,27 @@ export default function Mypage(): React.JSX.Element {
     "창원시 마산회구 양덕2동",
     "서울특별시 동대문구 휘경1동",
   ];
-  const IndustryDatas = [
-    "restaurant",
-    "cafe",
-    "convenience",
-  ];
+  const IndustryDatas = ["restaurant", "cafe", "convenience"];
 
   useEffect(() => {
     setSelectRegions(RegionDatas);
-    setSelectIndustries(industries.filter(industry => IndustryDatas.some(industryId => industryId === industry.id)));
+    setSelectIndustries(
+      industries.filter((industry) =>
+        IndustryDatas.some((industryId) => industryId === industry.id)
+      )
+    );
   }, []);
 
   const handleDeleteRegion = (deleteRegion: string): void => {
-    setSelectRegions(prev => prev.filter(region => region !== deleteRegion));
+    setSelectRegions((prev) =>
+      prev.filter((region) => region !== deleteRegion)
+    );
   };
 
   const handleDeleteIndustry = (deleteIndustry: string): void => {
-    setSelectIndustries(prev => prev.filter(industry => industry.id !== deleteIndustry));
+    setSelectIndustries((prev) =>
+      prev.filter((industry) => industry.id !== deleteIndustry)
+    );
   };
 
   const handleCategoryChange = () => {};
@@ -188,43 +199,41 @@ export default function Mypage(): React.JSX.Element {
         </ImageContainer>
         {nick}님
       </UserContainer>
-      <ProfileEditButton onClick={() => navigate('/mypage/profile')}>
+      <ProfileEditButton onClick={() => navigate("/mypage/profile")}>
         <BiSolidPencil />
-        <div className="Body__MediumSmall">
-          프로필 편집하기
-        </div>
+        <div className="Body__MediumSmall">프로필 편집하기</div>
       </ProfileEditButton>
       <Content>
         <TabContainer>
           <Tab
             className="Title_H6"
-            isActive={activeTab === 'preferences'}
-            onClick={() => setActiveTab('preferences')}
+            isActive={activeTab === "preferences"}
+            onClick={() => setActiveTab("preferences")}
           >
             선호 카테고리
           </Tab>
           <Tab
             className="Title_H6"
-            isActive={activeTab === 'reviews'}
-            onClick={() => setActiveTab('reviews')}
+            isActive={activeTab === "reviews"}
+            onClick={() => setActiveTab("reviews")}
           >
             리뷰
           </Tab>
         </TabContainer>
         <TabContent>
-          {activeTab === 'preferences' && (
+          {activeTab === "preferences" && (
             <CategoryContainer>
               <Category>
                 <CategorySection>
                   <SectionTitle className="Title__H5">위치</SectionTitle>
-                    {selectRegions.map((region, index) => (
-                      <DeleteTag
-                        key={index}
-                        content={<>{region}</>}
-                        color={"var(--neutral-1000)"}
-                        onClick={() => handleDeleteRegion(region)}
-                      />
-                    ))}
+                  {selectRegions.map((region, index) => (
+                    <DeleteTag
+                      key={index}
+                      content={<>{region}</>}
+                      color={"var(--neutral-1000)"}
+                      onClick={() => handleDeleteRegion(region)}
+                    />
+                  ))}
                 </CategorySection>
                 <CategorySection>
                   <SectionTitle className="Title__H5">업종</SectionTitle>
@@ -232,7 +241,12 @@ export default function Mypage(): React.JSX.Element {
                     {selectIndustries.map((industry) => (
                       <DeleteTag
                         key={industry.id}
-                        content={<Industry key={industry.id}>{industry.icon()}{industry.name}</Industry>}
+                        content={
+                          <Industry key={industry.id}>
+                            {industry.icon()}
+                            {industry.name}
+                          </Industry>
+                        }
                         color={"var(--neutral-1000)"}
                         isFix={true}
                         onClick={() => handleDeleteIndustry(industry.id)}
@@ -247,9 +261,21 @@ export default function Mypage(): React.JSX.Element {
               />
             </CategoryContainer>
           )}
-          {activeTab === 'reviews' && (
+          {activeTab === "reviews" && (
             <ReviewContainer>
-              <div className="Body__Medium">아직 작성한 리뷰가 없습니다.</div>
+              {reviewDatas.map((review) => (
+                <ReviewBox
+                  key={review.id}
+                  name={review.name}
+                  bookmark={review.bookmark}
+                  rating={review.rating}
+                  createdAt={review.createdAt}
+                  industry={review.industry}
+                  address={review.address}
+                  images={review.images}
+                  reviewText={review.reviewText}
+                />
+              ))}
             </ReviewContainer>
           )}
         </TabContent>

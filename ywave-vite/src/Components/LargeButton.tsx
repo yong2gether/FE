@@ -42,7 +42,10 @@ const Button = styled.button`
   }
 `;
 
-export default function LargeButton({ buttonText, onClick }: LargeButtonProps): React.JSX.Element {
+export default function LargeButton({
+  buttonText,
+  onClick,
+}: LargeButtonProps): React.JSX.Element {
   return (
     <Button className="Title__H4" onClick={onClick}>
       {buttonText}

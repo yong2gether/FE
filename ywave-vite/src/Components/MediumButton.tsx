@@ -27,7 +27,10 @@ const Button = styled.button`
   }
 `;
 
-export default function MediumButton({ buttonText, onClick }: MediumButtonProps): React.JSX.Element {
+export default function MediumButton({
+  buttonText,
+  onClick,
+}: MediumButtonProps): React.JSX.Element {
   return (
     <Button className="Title__H6" onClick={onClick}>
       {buttonText}
