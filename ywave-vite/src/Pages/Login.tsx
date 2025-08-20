@@ -16,7 +16,7 @@ const PageContainer = styled.div`
   width: 100%;
   gap: var(--spacing-4xl);
   color: var(--primary-blue-1000);
-  cursor: default;
+  user-select: none;
 `;
 
 const TitleContainer = styled.div`

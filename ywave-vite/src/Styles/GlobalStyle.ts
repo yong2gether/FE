@@ -193,6 +193,12 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: 400;
     line-height: 24px;
   }
+  .Body__MediumLarge {
+    font-size: 16px;
+    font-family: Pretendard, sans-serif;
+    font-weight: 500;
+    line-height: 24px;
+  }
   .Body__Default {
     font-size: 14px;
     font-family: Pretendard, sans-serif;

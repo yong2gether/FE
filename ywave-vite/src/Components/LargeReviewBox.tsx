@@ -8,9 +8,12 @@ import {
 import { AiFillStar } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 
-interface ReviewBoxProps {
+interface LargeReviewBoxProps {
+  id: string;
   name: string;
   bookmark: boolean;
+  isMoreOpen: boolean;
+  onMoreClick: (id: string) => void;
   rating: number;
   createdAt: string;
   industry: string;
@@ -50,8 +53,8 @@ const IconContainer = styled.div`
   position: relative;
 
   & > svg {
-    width: 24px;
-    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
     cursor: pointer;
   }
 `;
@@ -82,6 +85,11 @@ const MoreItem = styled.div`
     background-color: var(--neutral-200);
     color: var(--neutral-1000);
   }
+
+  &:active {
+    background-color: var(--neutral-200);
+    color: var(--neutral-1000);
+  }
 `;
 
 const RatingContainer = styled.div`
@@ -102,7 +110,7 @@ const Star = styled(AiFillStar)<{ isFill: boolean }>`
   width: 16px;
   height: 16px;
   color: ${({ isFill }) =>
-    isFill ? "var(--success-100)" : "var(--neutral-200)"};
+    isFill ? "var(--primary-blue-500)" : "var(--neutral-200)"};
 `;
 
 const InfoContainer = styled.div`
@@ -138,27 +146,30 @@ const ReviewText = styled.div`
   color: var(--neutral-1000);
 `;
 
-export default function ReviewBox({
+export default function LargeReviewBox({
+  id,
   name,
   bookmark,
+  isMoreOpen = false,
+  onMoreClick,
   rating,
   createdAt,
   industry,
   address,
   images,
   reviewText,
-}: ReviewBoxProps): React.JSX.Element {
+}: LargeReviewBoxProps): React.JSX.Element {
   const navigate = useNavigate();
   const [isBookmark, setIsBookmark] = useState<boolean>(bookmark);
-  const [isMoreOpen, setIsMoreOpen] = useState<boolean>(false);
-  const roundRating = Math.round(rating);
 
   const handleBookmarkClick = () => {
     setIsBookmark((prev) => !prev);
   };
 
   const handleMoreClick = () => {
-    setIsMoreOpen((prev) => !prev);
+    if (onMoreClick) {
+      onMoreClick(id);
+    }
   };
 
   const handleReviewEdit = () => {
@@ -175,14 +186,15 @@ export default function ReviewBox({
 
   const renderStars = () => {
     const stars: React.ReactElement[] = [];
-
-    for (let i = 0; i < roundRating; i++) {
-      stars.push(<Star key={`filled-${i}`} isFill={true} />);
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        i <= Math.round(rating) ? (
+          <Star key={`filled-${i}`} isFill={true} />
+        ) : (
+          <Star key={`empty-${i}`} isFill={false} />
+        )
+      );
     }
-    for (let i = 0; i < 5 - roundRating; i++) {
-      stars.push(<Star key={`empty-${i}`} isFill={false} />);
-    }
-
     return stars;
   };
 
@@ -211,12 +223,12 @@ export default function ReviewBox({
         <StarContainer>{renderStars()}</StarContainer>
       </RatingContainer>
 
-      <InfoContainer>
-        <div className="Body__Default">{createdAt}</div>
-        <div className="Body__Default">|</div>
-        <div className="Body__Default">{industry}</div>
-        <div className="Body__Default">|</div>
-        <div className="Body__Default">{address}</div>
+      <InfoContainer className="Body__Default">
+        <div>{createdAt}</div>
+        <div>|</div>
+        <div>{industry}</div>
+        <div>|</div>
+        <div>{address}</div>
       </InfoContainer>
 
       {images && images.length > 0 && (
