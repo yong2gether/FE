@@ -6,13 +6,14 @@ import { industries } from "../Data/Industries";
 import LargeButton from "../Components/LargeButton";
 
 const PageContainer = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   min-height: 100vh;
   box-sizing: border-box;
-  width: 100%;
+  user-select: none;
 `;
 
 const ContentContainer = styled.div`
@@ -107,7 +108,7 @@ export default function CategoryIndustry(): React.JSX.Element {
     <PageContainer>
       <ContentContainer>
         <TitleContainer>
-          <BackIcon onClick={() => navigate("/category/region")} />
+          <BackIcon onClick={() => navigate(-1)} />
           <Title className="Title__H1">
             주로 <span>어떤 업종</span>의 <br />
             지역 화폐 가맹점을 <br />

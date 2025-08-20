@@ -8,13 +8,14 @@ import LargeButton from "../Components/LargeButton";
 import DeleteTag from "../Components/DeleteTag";
 
 const PageContainer = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   min-height: 100vh;
   box-sizing: border-box;
-  width: 100%;
+  user-select: none;
 `;
 
 const ContentContainer = styled.div`
@@ -67,22 +68,6 @@ const RegionContainer = styled.div`
   width: 100%;
   gap: var(--spacing-m);
   color: var(--primary-blue-600);
-`;
-
-const Region = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: 1px solid var(--primary-blue-600);
-  border-radius: 10px;
-  padding: 12px 16px;
-`;
-
-const DeleteIcon = styled(AiOutlineClose)`
-  width: 12px;
-  height: 12px;
-  cursor: pointer;
 `;
 
 const ButtonContainer = styled.div`
@@ -141,7 +126,7 @@ export default function CategoryRegion(): React.JSX.Element {
     <PageContainer>
       <ContentContainer>
         <TitleContainer>
-          <BackIcon onClick={() => navigate("/login")} />
+          <BackIcon onClick={() => navigate(-1)} />
           <Title className="Title__H1">
             반갑습니다 {nickname}님! <br />
             주로 <span>어느 위치</span>의 <br />

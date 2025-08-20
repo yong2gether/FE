@@ -52,8 +52,8 @@ const IconWrapper = styled.div`
   justify-content: center;
 
   & > svg {
-    width: 24px;
-    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
   }
 `;
 

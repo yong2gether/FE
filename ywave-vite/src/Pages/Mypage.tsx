@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import { BiSolidUserCircle, BiSolidPencil } from "react-icons/bi";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { BiSolidUserCircle } from "react-icons/bi";
+import PencilButton from "../Components/PencilButton";
 import { industries } from "../Data/Industries";
 import LargeButton from "../Components/LargeButton";
 import DeleteTag from "../Components/DeleteTag";
-import ReviewBox from "../Components/ReviewBox";
-import { reviewDatas } from "../Data/ReviewDatas";
+import LargeReviewBox from "../Components/LargeReviewBox";
+import { placeDatas } from "../Data/PlaceDatas";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -17,6 +18,7 @@ const PageContainer = styled.div`
   justify-content: flex-start;
   box-sizing: border-box;
   gap: var(--spacing-l);
+  user-select: none;
 `;
 
 const UserContainer = styled.div`
@@ -39,20 +41,6 @@ const ImageContainer = styled.div`
   }
 `;
 
-const ProfileEditButton = styled.button`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0px;
-  gap: var(--spacing-2xs);
-  background-color: var(--primary-blue-500);
-  border: none;
-  border-radius: 10px;
-  color: var(--neutral-100);
-  cursor: pointer;
-`;
-
 const Content = styled.div`
   width: 100%;
   display: flex;
@@ -61,7 +49,8 @@ const Content = styled.div`
 `;
 
 const TabContainer = styled.div`
-  width: 100%;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
   display: flex;
 `;
 
@@ -80,7 +69,7 @@ const Tab = styled.button<{ isActive: boolean }>`
     bottom: -1px;
     left: 0;
     right: 0;
-    height: 2px;
+    height: 1px;
     background-color: ${(props) =>
       props.isActive ? "var(--primary-blue-500)" : "transparent"};
   }
@@ -146,6 +135,12 @@ const ReviewContainer = styled.div`
   gap: var(--spacing-m);
 `;
 
+const Divider = styled.div`
+  width: 100%;
+  height: 1px;
+  background: var(--neutral-200);
+`;
+
 interface IndustryData {
   id: string;
   icon: () => React.ReactElement;
@@ -154,11 +149,14 @@ interface IndustryData {
 
 export default function Mypage(): React.JSX.Element {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabUrl = searchParams.get("tab") as "preferences" | "reviews" | null;
   const [activeTab, setActiveTab] = useState<"preferences" | "reviews">(
-    "preferences"
+    tabUrl || "preferences"
   );
   const [selectRegions, setSelectRegions] = useState<string[]>([]);
   const [selectIndustries, setSelectIndustries] = useState<IndustryData[]>([]);
+  const [openMoreId, setOpenMoreId] = useState<string | null>(null);
 
   const nick = "닉네임";
   const RegionDatas = [
@@ -191,6 +189,15 @@ export default function Mypage(): React.JSX.Element {
 
   const handleCategoryChange = () => {};
 
+  const handleTabClick = (tab: "preferences" | "reviews") => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
+
+  const handleMoreClick = (id: string) => {
+    setOpenMoreId((prev) => (prev === id ? null : id));
+  };
+
   return (
     <PageContainer>
       <UserContainer className="Title__H4">
@@ -199,23 +206,24 @@ export default function Mypage(): React.JSX.Element {
         </ImageContainer>
         {nick}님
       </UserContainer>
-      <ProfileEditButton onClick={() => navigate("/mypage/profile")}>
-        <BiSolidPencil />
-        <div className="Body__MediumSmall">프로필 편집하기</div>
-      </ProfileEditButton>
+      <PencilButton
+        buttonText="프로필 편집하기"
+        onClick={() => navigate("/mypage/profile")}
+        isFill={true}
+      />
       <Content>
         <TabContainer>
           <Tab
             className="Title_H6"
             isActive={activeTab === "preferences"}
-            onClick={() => setActiveTab("preferences")}
+            onClick={() => handleTabClick("preferences")}
           >
             선호 카테고리
           </Tab>
           <Tab
             className="Title_H6"
             isActive={activeTab === "reviews"}
-            onClick={() => setActiveTab("reviews")}
+            onClick={() => handleTabClick("reviews")}
           >
             리뷰
           </Tab>
@@ -257,24 +265,22 @@ export default function Mypage(): React.JSX.Element {
               </Category>
               <LargeButton
                 buttonText="변경하기"
-                onClick={handleCategoryChange}
+                onClick={() => navigate("/category/region")}
               />
             </CategoryContainer>
           )}
           {activeTab === "reviews" && (
             <ReviewContainer>
-              {reviewDatas.map((review) => (
-                <ReviewBox
-                  key={review.id}
-                  name={review.name}
-                  bookmark={review.bookmark}
-                  rating={review.rating}
-                  createdAt={review.createdAt}
-                  industry={review.industry}
-                  address={review.address}
-                  images={review.images}
-                  reviewText={review.reviewText}
-                />
+              {placeDatas.map((review, i) => (
+                <>
+                  <LargeReviewBox
+                    key={review.id}
+                    {...review}
+                    isMoreOpen={openMoreId == review.id}
+                    onMoreClick={handleMoreClick}
+                  />
+                  {i < placeDatas.length - 1 && <Divider />}
+                </>
               ))}
             </ReviewContainer>
           )}

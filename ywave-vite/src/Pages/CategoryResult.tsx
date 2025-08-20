@@ -5,13 +5,14 @@ import { BiArrowBack } from "react-icons/bi";
 import LargeButton from "../Components/LargeButton";
 
 const PageContainer = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   min-height: 100vh;
   box-sizing: border-box;
-  width: 100%;
+  user-select: none;
 `;
 
 const ContentContainer = styled.div`
@@ -61,7 +62,7 @@ export default function CategoryResult(): React.JSX.Element {
   return (
     <PageContainer>
       <ContentContainer>
-        <BackIcon onClick={() => navigate("/category/industry")} />
+        <BackIcon onClick={() => navigate(-1)} />
         <TitleContainer>
           <Title className="Title__H1">
             주로 <br />

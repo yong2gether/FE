@@ -13,6 +13,7 @@ import CategoryIndustry from "./Pages/CategoryIndustry";
 import CategoryResult from "./Pages/CategoryResult";
 import MypageProfile from "./Pages/MypageProfile";
 import MypageReview from "./Pages/MypageReview";
+import MainPlace from "./Pages/MainPlace";
 
 export default function RouterComponent(): React.JSX.Element {
     return(
@@ -33,6 +34,8 @@ export default function RouterComponent(): React.JSX.Element {
             <Route path="/category/result" element={<CategoryResult />} />
             {/*메인 페이지 라우팅*/}
             <Route path="/main" element={<Main />} />
+            {/*메인 장소 페이지 라우팅*/}
+            <Route path="/main/place/:id" element={<MainPlace />} />
             {/*지도 페이지 라우팅*/}
             <Route path="/map" element={<Map />} />
             {/*마이페이지 페이지 라우팅*/}
