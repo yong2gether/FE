@@ -128,97 +128,99 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   .Display__Large {
-    font-size: 32px;
+    font-size: 2rem; /* 32px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
   .Display__Medium {
-    font-size: 30px;
+    font-size: 1.875rem; /* 30px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
   .Display__Small {
-    font-size: 28px;
+    font-size: 1.75rem; /* 28px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
+
   .Title__H1 {
-    font-size: 24px;
+    font-size: 1.5rem; /* 24px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
   .Title__H2 {
-    font-size: 22px;
+    font-size: 1.375rem; /* 22px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
   .Title__H3 {
-    font-size: 20px;
+    font-size: 1.25rem; /* 20px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
   .Title__H4 {
-    font-size: 18px;
+    font-size: 1.125rem; /* 18px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
   .Title__H5 {
-    font-size: 16px;
+    font-size: 1rem; /* 16px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
   .Title__H6 {
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
   }
+
   .Body__XLarge {
-    font-size: 18px;
+    font-size: 1.125rem; /* 18px */
     font-family: Pretendard, sans-serif;
     font-weight: 400;
-    line-height: 28px;
+    line-height: 1.75rem; /* 28px */
   }
   .Body__Large {
-    font-size: 16px;
+    font-size: 1rem; /* 16px */
     font-family: Pretendard, sans-serif;
     font-weight: 400;
-    line-height: 24px;
+    line-height: 1.5rem; /* 24px */
   }
   .Body__Default {
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px */
     font-family: Pretendard, sans-serif;
     font-weight: 400;
-    line-height: 20px;
+    line-height: 1.25rem; /* 20px */
   }
   .Body__MediumDefault {
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px */
     font-family: Pretendard, sans-serif;
     font-weight: 500;
-    line-height: 20px;
+    line-height: 1.25rem; /* 20px */
   }
   .Body__Small {
-    font-size: 12px;
+    font-size: 0.75rem; /* 12px */
     font-family: Pretendard, sans-serif;
     font-weight: 400;
-    line-height: 16px;
+    line-height: 1rem; /* 16px */
   }
   .Body__MediumSmall {
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px */
     font-family: Pretendard, sans-serif;
     font-weight: 500;
     line-height: 1.4;
   }
   .Body__ButtonDefault {
-    font-size: 16px;
+    font-size: 1rem; /* 16px */
     font-family: Pretendard, sans-serif;
     font-weight: 600;
     line-height: 1.4;
