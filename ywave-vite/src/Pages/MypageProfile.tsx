@@ -11,9 +11,10 @@ const PageContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  min-height: 100vh;
+  min-height: 100svh;
   box-sizing: border-box;
-  margin-top: 44px;
+  margin-top: 24px;
+  padding: 0 16px;
   width: 100%;
   gap: 64px;
   user-select: none;
@@ -24,6 +25,7 @@ const BackIcon = styled(BiArrowBack)`
   align-self: flex-start;
   width: 32px;
   height: 32px;
+  cursor: pointer;
 `;
 
 const ImageContainer = styled.div`

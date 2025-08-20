@@ -12,18 +12,19 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100svh;
   background-color: #f5f5f5;
-  padding: 20px;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+  overflow-y: hidden;
 `;
 
-const Content = styled.div<{ isWideLayout: boolean }>`
+const Content = styled.div`
   width: 100%;
-  max-width: ${(props) => props.isWideLayout ? "1200px" : "375px"};
+  max-width: 375px;
   min-width: 320px;
-  height: auto;
-  min-height: 100vh;
-  max-height: 100vh;
+  height: 100svh;
+  min-height: 100svh;
+  max-height: 100svh;
   margin: 0 auto;
   background-color: var(--neutral-100);
   box-sizing: border-box;
@@ -32,65 +33,42 @@ const Content = styled.div<{ isWideLayout: boolean }>`
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-  border-radius: 20px;
+  box-shadow: none;
+  border-radius: 0;
 
-  /* 스크롤바 숨기기 */
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  &::-webkit-scrollbar { display: none; }
   -ms-overflow-style: none;
   scrollbar-width: none;
 
-  @media (min-width: 768px) {
-    margin: 0 auto;
+  @media (min-width: 1024px) {
     height: auto;
     min-height: calc(100vh - 40px);
     max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
   }
-
-  scroll-behavior: smooth;
 `;
 
 const Contents = styled.main`
   display: flex;
-  padding: 16px;
   flex-direction: column;   
   flex: 1 1 auto;
   width: 100%;
   overflow: visible;
   outline: none;
-`;
-
-const SkipLink = styled.a`
-  position: absolute;
-  top: -40px;
-  left: 6px;
-  background: var(--primary-green-500);
-  color: var(--neutral-100);
-  padding: 8px;
-  text-decoration: none;
-  border-radius: 4px;
-  z-index: 10000;
-  
-  &:focus {
-    top: 6px;
-  }
+  padding: 0;
 `;
 
 export default function Mobile({ children }: MobileProps): React.JSX.Element {
   const location = useLocation();
   const currentPath = location.pathname;
-  const isWideLayout = ["/setting"].includes(currentPath);
   const noNavigationPath = ["/login", "/signup", "/category"];
   const showNavigation = !(currentPath === "/" || noNavigationPath.some(prefix => currentPath.startsWith(prefix)));
 
   return (
     <Container>
-      <SkipLink href="#main-content">
-        메인 콘텐츠로 건너뛰기
-      </SkipLink>
-      <Content isWideLayout={isWideLayout}>
+      <Content>
         <Contents 
           id="main-content" 
           tabIndex={-1}
