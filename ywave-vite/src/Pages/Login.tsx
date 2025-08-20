@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import PublicInput from "../Components/PublicInput";
-import PublicButton from "../Components/PublicButton";
+import LargeButton from "../Components/LargeButton";
 import TitleLogo from "../Images/TitleLogo.svg";
 
 const PageContainer = styled.div`
@@ -124,10 +124,11 @@ export default function Login(): React.JSX.Element {
         </InputRow>
       </InputContainer>
       <ButtonContainer>
-        <PublicButton buttonText="로그인" onClick={handleLogin} />
+        <LargeButton buttonText="로그인" onClick={handleLogin} />
         <SignUpContainer>
           <div className="Body__Large">아직 가입하지 않으셨나요?</div>
-          <SignUp className="Title__H5"
+          <SignUp
+            className="Title__H5"
             onClick={() => {
               navigate("/signup");
             }}

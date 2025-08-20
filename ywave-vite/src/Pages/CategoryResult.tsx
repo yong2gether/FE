@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
-import PublicButton from "../Components/PublicButton";
+import LargeButton from "../Components/LargeButton";
 
 const PageContainer = styled.div`
   display: flex;
@@ -20,7 +20,7 @@ const ContentContainer = styled.div`
   align-items: flex-start;
   justify-content: center;
   width: 100%;
-  margin-top: 28px;
+  margin-top: 44px;
   gap: 60px;
 `;
 
@@ -48,7 +48,7 @@ const Title = styled.h1`
 `;
 
 const ButtonContainer = styled.div`
-  margin-bottom: var(--spacing-xs);
+  margin: var(--spacing-3xl) 0px var(--spacing-xl) 0px;
   width: 100%;
 `;
 
@@ -86,7 +86,7 @@ export default function CategoryResult(): React.JSX.Element {
         </TitleContainer>
       </ContentContainer>
       <ButtonContainer>
-        <PublicButton buttonText="시작하기" onClick={() => navigate("/main")} />
+        <LargeButton buttonText="시작하기" onClick={() => navigate("/main")} />
       </ButtonContainer>
     </PageContainer>
   );

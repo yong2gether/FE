@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
 import { AiOutlineClose } from "react-icons/ai";
 import PublicDropdown from "../Components/PublicDropdown";
-import PublicButton from "../Components/PublicButton";
+import LargeButton from "../Components/LargeButton";
+import DeleteTag from "../Components/DeleteTag";
 
 const PageContainer = styled.div`
   display: flex;
@@ -31,7 +32,7 @@ const TitleContainer = styled.div`
   align-items: flex-start;
   justify-content: center;
   width: 100%;
-  margin-top: 28px;
+  margin-top: 44px;
   gap: 60px;
 `;
 
@@ -85,7 +86,7 @@ const DeleteIcon = styled(AiOutlineClose)`
 `;
 
 const ButtonContainer = styled.div`
-  margin: var(--spacing-3xl) 0px var(--spacing-xs) 0px;
+  margin: var(--spacing-3xl) 0px var(--spacing-xl) 0px;
   width: 100%;
 `;
 
@@ -104,7 +105,7 @@ export default function CategoryRegion(): React.JSX.Element {
   const [selectCity, setSelectCity] = useState<Option | null>(null);
   const [selectGu, setSelectGu] = useState<Option | null>(null);
   const [selectDong, setSelectDong] = useState<Option | null>(null);
-  const [selectRegion, setSelectRegion] = useState<RegionData[]>([]);
+  const [selectRegions, setSelectRegions] = useState<RegionData[]>([]);
 
   const nickname = "상현";
   const cityOptions: Option[] = [
@@ -123,8 +124,8 @@ export default function CategoryRegion(): React.JSX.Element {
         id: Date.now(),
         value: `${selectCity.value} ${selectGu.value} ${selectDong.value}`,
       };
-      
-      setSelectRegion((prevRegions) => [...prevRegions, newRegion]);
+
+      setSelectRegions((prevRegions) => [...prevRegions, newRegion]);
 
       setSelectCity(null);
       setSelectGu(null);
@@ -133,7 +134,7 @@ export default function CategoryRegion(): React.JSX.Element {
   }, [selectDong]);
 
   const handleDeleteRegion = (clickId: number): void => {
-    setSelectRegion(selectRegion.filter((region) => region.id !== clickId));
+    setSelectRegions(selectRegions.filter((region) => region.id !== clickId));
   };
 
   return (
@@ -169,16 +170,18 @@ export default function CategoryRegion(): React.JSX.Element {
           />
         </DropdownContainer>
         <RegionContainer>
-          {selectRegion.map((region) => (
-            <Region key={region.id}>
-              <div className="Body__Small">{region.value}</div>
-              <DeleteIcon onClick={() => handleDeleteRegion(region.id)} />
-            </Region>
+          {selectRegions.map((region) => (
+            <DeleteTag
+              key={region.id}
+              content={<>{region.value}</>}
+              color={"var(--primary-blue-600)"}
+              onClick={() => handleDeleteRegion(region.id)}
+            />
           ))}
         </RegionContainer>
       </ContentContainer>
       <ButtonContainer>
-        <PublicButton
+        <LargeButton
           buttonText="다음"
           onClick={() => navigate("/category/industry")}
         />

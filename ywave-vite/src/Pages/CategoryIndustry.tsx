@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
-import { categories } from "../Data/Categories";
-import PublicButton from "../Components/PublicButton";
+import { industries } from "../Data/Industries";
+import LargeButton from "../Components/LargeButton";
 
 const PageContainer = styled.div`
   display: flex;
@@ -30,7 +30,7 @@ const TitleContainer = styled.div`
   align-items: flex-start;
   justify-content: center;
   width: 100%;
-  margin-top: 28px;
+  margin-top: 44px;
   gap: 60px;
 `;
 
@@ -49,19 +49,12 @@ const Title = styled.h1`
 `;
 
 const IndustryContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
   width: 100%;
-  gap: var(--spacing-m);
-`;
-
-const IndustryRow = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   gap: var(--spacing-m);
+  flex-wrap: wrap;
 `;
 
 const IndustryItem = styled.button<{ isSelect: boolean }>`
@@ -73,6 +66,7 @@ const IndustryItem = styled.button<{ isSelect: boolean }>`
   border-radius: 10px;
   color: var(--neutral-600);
   gap: var(--spacing-xs);
+  white-space: nowrap;
 
   &:hover {
     border-color: var(--primary-blue-500);
@@ -93,7 +87,7 @@ const IndustryItem = styled.button<{ isSelect: boolean }>`
 `;
 
 const ButtonContainer = styled.div`
-  margin-bottom: var(--spacing-xs);
+  margin: var(--spacing-3xl) 0px var(--spacing-xl) 0px;
   width: 100%;
 `;
 
@@ -121,28 +115,20 @@ export default function CategoryIndustry(): React.JSX.Element {
           </Title>
         </TitleContainer>
         <IndustryContainer>
-          {Array.from({ length: Math.ceil(categories.length / 3) }).map(
-            (_, rowIndex) => (
-              <IndustryRow key={rowIndex}>
-                {categories
-                  .slice(rowIndex * 3, rowIndex * 3 + 3)
-                  .map((category) => (
-                    <IndustryItem
-                      key={category.id}
-                      onClick={() => handleIndustryClick(category.id)}
-                      isSelect={selectIndustries.includes(category.id)}
-                    >
-                      {category.icon()}
-                      <div>{category.name}</div>
-                    </IndustryItem>
-                  ))}
-              </IndustryRow>
-            )
-          )}
+          {industries.map((industry) => (
+            <IndustryItem
+              key={industry.id}
+              onClick={() => handleIndustryClick(industry.id)}
+              isSelect={selectIndustries.includes(industry.id)}
+            >
+              {industry.icon()}
+              <div className="Body__MediumSmall">{industry.name}</div>
+            </IndustryItem>
+          ))}
         </IndustryContainer>
       </ContentContainer>
       <ButtonContainer>
-        <PublicButton
+        <LargeButton
           buttonText="다음"
           onClick={() => navigate("/category/result")}
         />
