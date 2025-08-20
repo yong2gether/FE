@@ -11,6 +11,7 @@ import { reviewDatas } from "../Data/ReviewDatas";
 const PageContainer = styled.div`
   width: 100%;
   min-height: 100vh;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -25,7 +26,7 @@ const UserContainer = styled.div`
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
-  margin-top: 57px;
+  margin-top: 24px;
 `;
 
 const ImageContainer = styled.div`
@@ -67,7 +68,7 @@ const TabContainer = styled.div`
 
 const Tab = styled.button<{ isActive: boolean }>`
   flex: 1;
-  height: 56px;
+  height: 48px;
   border: none;
   cursor: pointer;
   position: relative;
@@ -77,7 +78,7 @@ const Tab = styled.button<{ isActive: boolean }>`
   &::after {
     content: "";
     position: absolute;
-    bottom: -1px;
+    bottom: 0;
     left: 0;
     right: 0;
     height: 2px;
@@ -206,14 +207,14 @@ export default function Mypage(): React.JSX.Element {
       <Content>
         <TabContainer>
           <Tab
-            className="Title_H6"
+            className="Title__H6"
             isActive={activeTab === "preferences"}
             onClick={() => setActiveTab("preferences")}
           >
             선호 카테고리
           </Tab>
           <Tab
-            className="Title_H6"
+            className="Title__H6"
             isActive={activeTab === "reviews"}
             onClick={() => setActiveTab("reviews")}
           >
