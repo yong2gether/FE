@@ -15,7 +15,7 @@ const NavigationContainer = styled.nav`
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 2000;
 `;
 
 const NavigationItem = styled.div<{ isActive: boolean }>`
@@ -66,7 +66,7 @@ export default function Navigation(): React.JSX.Element {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer id="app-navigation">
       <NavigationItem
         isActive={isActive("/main")}
         onClick={() => navigate("/main")}

@@ -229,17 +229,12 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1rem; /* 16px */
   }
   .Body__MediumSmall {
-    font-size: 0.875rem; /* 14px */
+    font-size: 0.75rem; /* 12px */
     font-family: Pretendard, sans-serif;
     font-weight: 500;
     line-height: 1.4;
   }
-  .Body__ButtonDefault {
-    font-size: 1rem; /* 16px */
-    font-family: Pretendard, sans-serif;
-    font-weight: 600;
-    line-height: 1.4;
-  }
+ 
   
   *:focus {
     outline: none;
