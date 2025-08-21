@@ -16,6 +16,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
+    "types": ["vite-plugin-svgr/client"],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/Components/*"],
@@ -25,5 +26,5 @@
       "@images/*": ["src/Images/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "svg.d.ts"]
 }
