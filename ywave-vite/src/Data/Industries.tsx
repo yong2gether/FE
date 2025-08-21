@@ -15,27 +15,28 @@ import {
 
 interface Industry {
   id: string;
-  icon: () => React.ReactElement;
+  icon: (props: { size: number }) => React.ReactElement;
   name: string;
+  size?: number;
 }
 
-const RestaurantIcon = () => <BiSolidBowlRice />;
-const CafeIcon = () => <BiSolidCoffeeAlt />;
-const MovieIcon = () => <BiSolidCameraMovie />;
-const HospitalIcon = () => <BiPlusMedical />;
-const MartIcon = () => <BiSolidCart />;
-const StationeryIcon = () => <BiSolidPencil />;
-const HotelIcon = () => <BiSolidBed />;
-const ConvenienceIcon = () => <BiSolidTime />;
-const ClothingIcon = () => <BiSolidShoppingBagAlt />;
-const GymIcon = () => <BiDumbbell />;
-const GasIcon = () => <BiSolidGasPump />;
+const RestaurantIcon = (props: { size: number }) => <BiSolidBowlRice size={props.size} />;
+const CafeIcon = (props: { size: number }) => <BiSolidCoffeeAlt size={props.size} />;
+const MovieIcon = (props: { size: number }) => <BiSolidCameraMovie size={props.size} />;
+const HospitalIcon = (props: { size: number }) => <BiPlusMedical size={props.size} />;
+const MartIcon = (props: { size: number }) => <BiSolidCart size={props.size} />;
+const StationeryIcon = (props: { size: number }) => <BiSolidPencil size={props.size} />;
+const HotelIcon = (props: { size: number }) => <BiSolidBed size={props.size} />;
+const ConvenienceIcon = (props: { size: number }) => <BiSolidTime size={props.size} />;
+const ClothingIcon = (props: { size: number }) => <BiSolidShoppingBagAlt size={props.size} />;
+const GymIcon = (props: { size: number }) => <BiDumbbell size={props.size} />;
+const GasIcon = (props: { size: number }) => <BiSolidGasPump size={props.size} />;
 
 export const industries: Industry[] = [
-  { id: "restaurant", icon: RestaurantIcon, name: "음식점" },
-  { id: "cafe", icon: CafeIcon, name: "카페" },
-  { id: "movie", icon: MovieIcon, name: "영화공연" },
-  { id: "mart", icon: MartIcon, name: "마트슈퍼" },
+    { id: "restaurant", icon: RestaurantIcon, name: "음식점", size: 16 },
+  { id: "cafe", icon: CafeIcon, name: "카페", size: 16 },
+  { id: "movie", icon: MovieIcon, name: "영화공연", size: 16 },
+  { id: "mart", icon: MartIcon, name: "마트슈퍼", size: 16 },
   { id: "clothing", icon: ClothingIcon, name: "의류잡화" },
   { id: "gas", icon: GasIcon, name: "주유소" },
   { id: "convenience", icon: ConvenienceIcon, name: "생활편의" },
