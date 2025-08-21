@@ -14,6 +14,7 @@ const PageContainer = styled.div`
   box-sizing: border-box;
   width: 100%;
   gap: 64px;
+  user-select: none;
 `;
 
 const Content = styled.div`
@@ -52,7 +53,7 @@ const Star = styled(AiFillStar)<{ isFill: boolean }>`
   width: 24px;
   height: 24px;
   color: ${({ isFill }) =>
-    isFill ? "var(--success-100)" : "var(--neutral-200)"};
+    isFill ? "var(--primary-blue-500)" : "var(--neutral-200)"};
 `;
 
 const RatingInput = styled.input`
@@ -101,7 +102,6 @@ export default function MypageReview(): React.JSX.Element {
   const [images, setImages] = useState<File[]>([]);
   const [review, setReview] = useState<string>("");
 
-
   useEffect(() => {
     setRatingInput(rating > 0 ? Number(rating.toFixed(1)) : 0.0);
     setReview(reviewText);
@@ -115,16 +115,16 @@ export default function MypageReview(): React.JSX.Element {
   };
 
   const renderStars = (rating: number) => {
-    const roundRating = Math.round(rating);
     const stars: React.ReactElement[] = [];
-
-    for (let i = 0; i < roundRating; i++) {
-      stars.push(<Star key={`filled-${i}`} isFill={true} />);
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        i <= Math.round(rating) ? (
+          <Star key={`filled-${i}`} isFill={true} />
+        ) : (
+          <Star key={`empty-${i}`} isFill={false} />
+        )
+      );
     }
-    for (let i = 0; i < 5 - roundRating; i++) {
-      stars.push(<Star key={`empty-${i}`} isFill={false} />);
-    }
-
     return stars;
   };
 
@@ -135,7 +135,9 @@ export default function MypageReview(): React.JSX.Element {
   return (
     <PageContainer>
       <Content>
-        <CancelIcon onClick={() => navigate("/mypage")} />
+        <CancelIcon
+          onClick={() => navigate("/mypage?tab=reviews", { replace: true })}
+        />
         <div className="Title__H3">{name}</div>
         <RatingContainer>
           <StarContainer>{renderStars(ratingInput)}</StarContainer>

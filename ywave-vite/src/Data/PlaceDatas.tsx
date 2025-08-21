@@ -1,23 +1,31 @@
 import React from "react";
 
-interface ReviewData {
+interface PlaceData {
   id: string;
   name: string;
   bookmark: boolean;
   rating: number;
+  distance: string;
   createdAt: string;
   industry: string;
   address: string;
   images?: string[];
   reviewText: string;
+  reviews?: {
+    nick: string;
+    rating: number;
+    createdAt: string;
+    reviewText: string;
+  }[];
 }
 
-export const reviewDatas: ReviewData[] = [
+export const placeDatas: PlaceData[] = [
   {
-    id: "review_001",
+    id: "place_001",
     name: "미팅 족산불 도소매",
     bookmark: false,
     rating: 4.7,
+    distance: "2.5km",
     createdAt: "2025.05.16",
     industry: "식당",
     address: "경기도 용인시 처인구 모현읍",
@@ -30,24 +38,66 @@ export const reviewDatas: ReviewData[] = [
     ],
     reviewText:
       "너무 맛있습니다! 족발이 정말 부드럽고 양념이 깔끔해요. 다음에 또 올 예정입니다.",
+    reviews: [
+      {
+        nick: "김철수",
+        rating: 5,
+        createdAt: "2025.05.16",
+        reviewText: "정말 맛있어요! 추천합니다.",
+      },
+      {
+        nick: "이순신",
+        rating: 4,
+        createdAt: "2025.05.15",
+        reviewText: "맛있어요. 하지만 양이 좀 적어요.",
+      },
+      {
+        nick: "강감찬",
+        rating: 5,
+        createdAt: "2025.05.14",
+        reviewText: "매우 맛있어요! 다시 방문할께요.",
+      },
+    ],
   },
   {
-    id: "review_002",
+    id: "place_002",
     name: "이탈리안 파스타, 피자를 파는 너무너무 맛있는 식당",
     bookmark: false,
     rating: 4.5,
+    distance: "3.2km",
     createdAt: "2025.05.12",
     industry: "식당",
     address: "서울특별시 강남구 신사동",
     images: [],
     reviewText:
       "정통 이탈리안 파스타를 맛볼 수 있어요. 면도 쫄깃하고 소스가 진짜 맛있습니다. 가격은 좀 비싸지만 그만한 값어치는 해요.",
+    reviews: [
+      {
+        nick: "김철수",
+        rating: 5,
+        createdAt: "2025.05.16",
+        reviewText: "정말 맛있어요! 추천합니다.",
+      },
+      {
+        nick: "이순신",
+        rating: 4,
+        createdAt: "2025.05.15",
+        reviewText: "맛있어요. 하지만 양이 좀 적어요.",
+      },
+      {
+        nick: "강감찬",
+        rating: 5,
+        createdAt: "2025.05.14",
+        reviewText: "매우 맛있어요! 다시 방문할께요.",
+      },
+    ],
   },
   {
-    id: "review_003",
+    id: "place_003",
     name: "홍대 맛집 카페",
     bookmark: true,
     rating: 4.2,
+    distance: "3.2km",
     createdAt: "2025.05.15",
     industry: "카페",
     address: "서울특별시 마포구 홍익로",
@@ -57,12 +107,33 @@ export const reviewDatas: ReviewData[] = [
     ],
     reviewText:
       "분위기 좋은 카페에요. 커피도 맛있고 디저트도 괜찮습니다. 데이트 코스로 추천!",
+    reviews: [
+      {
+        nick: "김철수",
+        rating: 5,
+        createdAt: "2025.05.16",
+        reviewText: "정말 맛있어요! 추천합니다.",
+      },
+      {
+        nick: "이순신",
+        rating: 4,
+        createdAt: "2025.05.15",
+        reviewText: "맛있어요. 하지만 양이 좀 적어요.",
+      },
+      {
+        nick: "강감찬",
+        rating: 5,
+        createdAt: "2025.05.14",
+        reviewText: "매우 맛있어요! 다시 방문할께요.",
+      },
+    ],
   },
   {
-    id: "review_004",
+    id: "place_004",
     name: "바다횟집",
     bookmark: false,
     rating: 4.8,
+    distance: "3.2km",
     createdAt: "2025.05.14",
     industry: "식당",
     address: "부산광역시 해운대구 해운대해변로",
@@ -72,12 +143,33 @@ export const reviewDatas: ReviewData[] = [
     ],
     reviewText:
       "신선한 회와 친절한 서비스! 부산 여행 왔을 때 꼭 들러야 할 맛집입니다. 가성비도 좋아요.",
+    reviews: [
+      {
+        nick: "김철수",
+        rating: 5,
+        createdAt: "2025.05.16",
+        reviewText: "정말 맛있어요! 추천합니다.",
+      },
+      {
+        nick: "이순신",
+        rating: 4,
+        createdAt: "2025.05.15",
+        reviewText: "맛있어요. 하지만 양이 좀 적어요.",
+      },
+      {
+        nick: "강감찬",
+        rating: 5,
+        createdAt: "2025.05.14",
+        reviewText: "매우 맛있어요! 다시 방문할께요.",
+      },
+    ],
   },
   {
-    id: "review_005",
+    id: "place_005",
     name: "엄마손 떡볶이",
     bookmark: true,
     rating: 3.9,
+    distance: "3.2km",
     createdAt: "2025.05.13",
     industry: "식당",
     address: "경기도 성남시 분당구 정자동",
@@ -86,5 +178,25 @@ export const reviewDatas: ReviewData[] = [
     ],
     reviewText:
       "옛날 떡볶이 맛이에요. 달달하고 쫄깃한 떡이 일품입니다. 어릴 때 생각나는 맛!",
+    reviews: [
+      {
+        nick: "김철수",
+        rating: 5,
+        createdAt: "2025.05.16",
+        reviewText: "정말 맛있어요! 추천합니다.",
+      },
+      {
+        nick: "이순신",
+        rating: 4,
+        createdAt: "2025.05.15",
+        reviewText: "맛있어요. 하지만 양이 좀 적어요.",
+      },
+      {
+        nick: "강감찬",
+        rating: 5,
+        createdAt: "2025.05.14",
+        reviewText: "매우 맛있어요! 다시 방문할께요.",
+      },
+    ],
   },
 ];

@@ -17,7 +17,7 @@ const PageContainer = styled.div`
   width: 100%;
   gap: 60px;
   color: var(--primary-blue-1000);
-  cursor: default;
+  user-select: none;
 `;
 
 const ContentContainer = styled.div`
