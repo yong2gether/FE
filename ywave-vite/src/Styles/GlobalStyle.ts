@@ -74,6 +74,15 @@ export const GlobalStyle = createGlobalStyle`
     --neutral-800: #484848;
     --neutral-900: #2e2e2e;
     --neutral-1000: #141414;
+    --neutral-100-2: #F3F4F6;
+    --neutral-200-2: #D6D9E1;
+    --neutral-300-2: #B8BFCC;
+    --neutral-400-2: #99A4B8;
+    --neutral-500-2: #7a89a5;
+    --neutral-700-2: #495771;
+    --neutral-800-2: #344053;
+    --neutral-900-2: #202935;
+    --neutral-1000-2: #0d1216;
     --neutral-alpha-10: rgba(20, 20, 20, 0.1);
     --neutral-alpha-20: rgba(20, 20, 20, 0.2);
     --neutral-alpha-30: rgba(20, 20, 20, 0.3);
@@ -196,10 +205,10 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.5rem; /* 24px */
   }
   .Body__MediumLarge {
-    font-size: 16px;
+    font-size: 1rem; /* 16px */
     font-family: Pretendard, sans-serif;
     font-weight: 500;
-    line-height: 24px;
+    line-height: 1.5rem; /* 24px */
   }
   .Body__Default {
     font-size: 0.875rem; /* 14px */
