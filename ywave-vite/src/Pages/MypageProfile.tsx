@@ -14,9 +14,10 @@ const PageContainer = styled.div`
   min-height: 100svh;
   box-sizing: border-box;
   margin-top: 24px;
+  padding: 0 16px;
   width: 100%;
   gap: 64px;
-  padding: 0 16px;
+  user-select: none;
 `;
 
 const BackIcon = styled(BiArrowBack)`
@@ -131,7 +132,7 @@ export default function MypageProfile(): React.JSX.Element {
 
   return (
     <PageContainer>
-      <BackIcon onClick={() => navigate("/mypage")} />
+      <BackIcon onClick={() => navigate(-1)} />
       <ImageContainer>
         <BiSolidUserCircle />
         <ImageEditButton onClick={handleImageEdit}>

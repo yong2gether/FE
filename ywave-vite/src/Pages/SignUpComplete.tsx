@@ -14,7 +14,7 @@ const PageContainer = styled.div`
   max-width: 400px;
   width: 100%;
   gap: 120px;
-  cursor: default;
+  user-select: none;
 `;
 
 const TitleContainer = styled.div`
