@@ -205,10 +205,10 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.5rem; /* 24px */
   }
   .Body__MediumLarge {
-    font-size: 16px;
+    font-size: 1rem; /* 16px */
     font-family: Pretendard, sans-serif;
     font-weight: 500;
-    line-height: 24px;
+    line-height: 1.5rem; /* 24px */
   }
   .Body__Default {
     font-size: 0.875rem; /* 14px */
