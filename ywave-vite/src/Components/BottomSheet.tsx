@@ -54,14 +54,17 @@ const Handle = styled.div`
 	height: 4px;
 	background-color: #d1d5db;
 	border-radius: 2px;
-	margin: 12px auto;
+	margin: 12px auto 20px;
 	cursor: grab;
 `;
 
 const Content = styled.div`
 	height: calc(100% - 28px);
 	overflow-y: auto;
-	padding: 0 20px 20px 20px;
+	padding: 0 16px 16px;
+	overflow-y: auto;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
 	-webkit-overflow-scrolling: touch;
 `;
 
