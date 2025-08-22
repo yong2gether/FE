@@ -14,6 +14,9 @@ import CategoryResult from "./Pages/CategoryResult";
 import MypageProfile from "./Pages/MypageProfile";
 import MypageReview from "./Pages/MypageReview";
 import MainPlace from "./Pages/MainPlace";
+import BookMarkAdd from "./Pages/BookMarkAdd";
+import BookMarkDetail from "./Pages/BookMarkDetail";
+import BookMarkEdit from "./Pages/BookMarkEdit";
 
 export default function RouterComponent(): React.JSX.Element {
     return(
@@ -46,6 +49,12 @@ export default function RouterComponent(): React.JSX.Element {
             <Route path="/mypage/review" element={<MypageReview />} />
             {/*즐겨찾기 페이지 라우팅*/}
             <Route path="/bookmark" element={<BookMark />} />
+            {/*즐겨찾기 추가 페이지 라우팅*/}
+            <Route path="/bookmark/add" element={<BookMarkAdd />} />
+            {/*즐겨찾기 상세 페이지 라우팅*/}
+            <Route path="/bookmark/detail" element={<BookMarkDetail />} />
+            {/*즐겨찾기 수정 페이지 라우팅*/}
+            <Route path="/bookmark/edit" element={<BookMarkEdit />} />
         </Routes>
     );
 }

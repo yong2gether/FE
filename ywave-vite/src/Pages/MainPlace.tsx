@@ -174,11 +174,11 @@ export default function MainPlace(): React.JSX.Element {
     }
   }, []);
 
-  const handleBookmarkClick = () => {
+  const handleBookmarkClick = (): void => {
     setIsBookmark((prev) => !prev);
   };
 
-  const handleReviewWrite = () => {
+  const handleReviewWrite = (): void => {
     navigate("/mypage/review", {
       state: {
         name,
