@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi";
+import { PiBookmarkSimpleFill } from "react-icons/pi";
 import { AiFillStar } from "react-icons/ai";
 
-interface PlaceBoxProps {
+interface LargePlaceBoxProps {
   name: string;
-  bookmark: boolean;
   rating: number;
   distance: string;
   industry: string;
@@ -20,22 +19,8 @@ const PlaceContainer = styled.div`
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: var(--spacing-2xs);
-  box-shadow: 0px 6px 15px 0px rgba(0, 0, 0, 0.2);
-  background-color: var(--neutral-100);
-  border: 1px solid transparent;
-  border-radius: 10px;
-  padding: 16px 12px;
+  gap: var(--spacing-xs);
   cursor: pointer;
-
-  &:hover {
-    background-color: rgba(171, 218, 255, 0.1);
-  }
-
-  &:active {
-    background-color: rgba(4, 143, 255, 0.1);
-    border-color: var(--primary-blue-500);
-  }
 `;
 
 const NameContainer = styled.div`
@@ -63,7 +48,7 @@ const RatingContainer = styled.div`
   align-items: center;
   justify-content: center;
   gap: var(--spacing-2xs);
-  color: var(--neutral-1000);
+  color: var(--neutral-800);
 `;
 
 const StarContainer = styled.div`
@@ -88,40 +73,36 @@ const InfoContainer = styled.div`
 `;
 
 const ImageContainer = styled.div`
-  width: 100%;
+  width: calc(100% + 16px);
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: var(--spacing-2xs);
-  overflow: hidden;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
 `;
 
 const ImageItem = styled.img`
-  width: 76.75px;
-  height: 76.75px;
+  width: 138px;
+  height: 200px;
   border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
 `;
 
-export default function PlaceBox({
+export default function LargePlaceBox({
   name,
-  bookmark,
   rating,
   distance,
   industry,
   address,
   images,
   onClick,
-}: PlaceBoxProps): React.JSX.Element {
-  const [isBookmark, setIsBookmark] = useState<boolean>(bookmark);
-
-  const handleBookmarkClick = (e: React.MouseEvent) => {
+}: LargePlaceBoxProps): React.JSX.Element {
+  const handleBookmarkClick = (e: React.MouseEvent): void => {
     e.stopPropagation();
-    setIsBookmark((prev) => !prev);
+    console.log("북마크 해제");
   };
 
   const renderStars = () => {
@@ -141,12 +122,8 @@ export default function PlaceBox({
   return (
     <PlaceContainer onClick={onClick}>
       <NameContainer>
-        <Name className="Title__H4">{name}</Name>
-        {isBookmark ? (
-          <PiBookmarkSimpleFill onClick={handleBookmarkClick} />
-        ) : (
-          <PiBookmarkSimple onClick={handleBookmarkClick} />
-        )}
+        <Name className="Title__H3">{name}</Name>
+        <PiBookmarkSimpleFill onClick={handleBookmarkClick} />
       </NameContainer>
 
       <RatingContainer>

@@ -10,6 +10,7 @@ const PageContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
+  padding: 16px;
   min-height: 100vh;
   box-sizing: border-box;
   user-select: none;

@@ -13,8 +13,8 @@ const PageContainer = styled.div`
   justify-content: flex-start;
   min-height: 100svh;
   box-sizing: border-box;
-  margin-top: 24px;
-  padding: 0 16px;
+  margin-top: 44px;
+  padding: 16px;
   width: 100%;
   gap: 64px;
   user-select: none;

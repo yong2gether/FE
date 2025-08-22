@@ -15,7 +15,9 @@ const NavigationContainer = styled.nav`
   bottom: 0;
   left: 0;
   right: 0;
+
   z-index: 2000;
+
 `;
 
 const NavigationItem = styled.div<{ isActive: boolean }>`

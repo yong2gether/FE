@@ -5,7 +5,7 @@ import { placeDatas } from "../Data/PlaceDatas";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import RecommendBox from "../Components/RecommendBox";
-import PlaceBox from "../Components/PlaceBox";
+import SmallPlaceBox from "../Components/SmallPlaceBox";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -13,6 +13,7 @@ const PageContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  padding: 16px;
   min-height: 100vh;
   box-sizing: border-box;
   gap: var(--spacing-3xl);
@@ -186,7 +187,7 @@ export default function Main(): React.JSX.Element {
           </span>
         </ContentTitle>
         {placeDatas.map((place) => (
-          <PlaceBox
+          <SmallPlaceBox
             key={place.id}
             {...place}
             onClick={() => {

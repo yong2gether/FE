@@ -14,6 +14,7 @@ const PageContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  padding: 16px;
   box-sizing: border-box;
   gap: var(--spacing-m);
   user-select: none;
@@ -173,11 +174,11 @@ export default function MainPlace(): React.JSX.Element {
     }
   }, []);
 
-  const handleBookmarkClick = () => {
+  const handleBookmarkClick = (): void => {
     setIsBookmark((prev) => !prev);
   };
 
-  const handleReviewWrite = () => {
+  const handleReviewWrite = (): void => {
     navigate("/mypage/review", {
       state: {
         name,

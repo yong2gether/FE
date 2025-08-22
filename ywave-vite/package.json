@@ -13,6 +13,7 @@
     "@googlemaps/markerclusterer": "^2.6.2",
     "@react-google-maps/api": "^2.20.7",
     "axios": "^1.11.0",
+    "emoji-picker-react": "^4.13.2",
     "framer-motion": "^12.23.12",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
