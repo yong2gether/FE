@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
 
@@ -18,6 +18,10 @@ export interface BottomSheetProps {
 	showOverlay?: boolean;
 	/** 드래그로 완전히 내렸을 때 닫을지 여부 (기본: false – 닫히지 않음) */
 	dismissible?: boolean;
+	/** 열림 진행도(0~1)를 외부로 전달 */
+	onProgressChange?: (ratio: number) => void;
+	/** 시트 상단에 붙는 부가 요소(예: "이 지역에서 검색" 버튼) */
+	topAccessory?: React.ReactNode;
 }
 
 const Overlay = styled.div<{ visible: boolean; bottomOffsetPx: number }>`
@@ -47,6 +51,7 @@ const Sheet = styled.div<{ translateYPx: number; isDragging: boolean; bottomOffs
 	height: calc(100% - ${(p) => p.bottomOffsetPx}px);
 	max-height: calc(100% - ${(p) => p.bottomOffsetPx}px);
 	touch-action: none; /* PWA 제스처 충돌 방지 */
+	overflow: visible; /* 상단 액세서리/모달 겹침 허용 */
 `;
 
 const Handle = styled.div`
@@ -65,7 +70,16 @@ const Content = styled.div`
 	-webkit-overflow-scrolling: touch;
 `;
 
-export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0.3, 0.6, 0.9], initialSnapIndex = 0, bottomOffsetPx = 0, containerSelector, showOverlay = true, dismissible = false }: BottomSheetProps): React.JSX.Element {
+const TopAccessoryContainer = styled.div`
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translate(-50%, calc(-100% - 16px));
+	z-index: 1600; /* 시트 위로 */
+	pointer-events: auto;
+`;
+
+export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0.3, 0.6, 0.9], initialSnapIndex = 0, bottomOffsetPx = 0, containerSelector, showOverlay = true, dismissible = false, onProgressChange, topAccessory }: BottomSheetProps): React.JSX.Element {
 	const [currentSnapIndex, setCurrentSnapIndex] = useState<number>(initialSnapIndex);
 	const [isDragging, setIsDragging] = useState<boolean>(false);
 	const [startY, setStartY] = useState<number>(0);
@@ -73,39 +87,66 @@ export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0
 	const draggingRef = useRef<boolean>(false);
 	const sheetRootRef = useRef<HTMLDivElement | null>(null);
 	const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
+	
+	// refs to store current values and avoid closure issues
+	const translateYRef = useRef<number>(translateY);
+	const currentSnapIndexRef = useRef<number>(currentSnapIndex);
+	const dismissibleRef = useRef<boolean>(dismissible);
+	const onCloseRef = useRef<() => void>(onClose);
+	const sortedSnapPointsRef = useRef<number[]>([]);
+	const bottomOffsetPxRef = useRef<number>(bottomOffsetPx);
+	const onProgressChangeRef = useRef<typeof onProgressChange>(onProgressChange);
+
+	// Update refs when props change
+	useEffect(() => {
+		translateYRef.current = translateY;
+	}, [translateY]);
+	
+	useEffect(() => {
+		currentSnapIndexRef.current = currentSnapIndex;
+	}, [currentSnapIndex]);
+	
+	useEffect(() => {
+		dismissibleRef.current = dismissible;
+	}, [dismissible]);
+	
+	useEffect(() => {
+		onCloseRef.current = onClose;
+	}, [onClose]);
+	
+	useEffect(() => {
+		bottomOffsetPxRef.current = bottomOffsetPx;
+	}, [bottomOffsetPx]);
+
+	useEffect(() => {
+		onProgressChangeRef.current = onProgressChange;
+	}, [onProgressChange]);
 
 	const sortedSnapPoints = useMemo(() => {
 		const clamped = snapPoints.map((s) => Math.max(0, Math.min(1, s)));
 		return Array.from(new Set(clamped)).sort((a, b) => a - b);
 	}, [snapPoints]);
+	
+	useEffect(() => {
+		sortedSnapPointsRef.current = sortedSnapPoints;
+	}, [sortedSnapPoints]);
 
-	const getAvailableHeightPx = () => {
+	const getAvailableHeightPx = useCallback(() => {
 		const container = (portalEl ?? (sheetRootRef.current?.parentElement as HTMLElement | null));
 		const containerHeight = container?.clientHeight ?? (typeof window !== "undefined" ? window.innerHeight : 0);
-		const availableHeight = Math.max(0, containerHeight - bottomOffsetPx);
-	
-		
+		const availableHeight = Math.max(0, containerHeight - bottomOffsetPxRef.current);
 		return availableHeight;
-	};
-	const getSnapPx = (ratio: number) => getAvailableHeightPx() * (1 - ratio);
+	}, [portalEl]);
 
-	const findNearestSnapIndex = (currentYPx: number) => {
+	const getSnapPx = useCallback((ratio: number) => getAvailableHeightPx() * (1 - ratio), [getAvailableHeightPx]);
+
+	const emitProgress = useCallback((currentYPx: number) => {
 		const available = getAvailableHeightPx();
-		const currentRatio = available === 0 ? 0 : 1 - currentYPx / available;
-		let nearest = 0;
-		let minDiff = Math.abs(sortedSnapPoints[0] - currentRatio);
-		for (let i = 1; i < sortedSnapPoints.length; i++) {
-			const diff = Math.abs(sortedSnapPoints[i] - currentRatio);
-			if (diff < minDiff) {
-				minDiff = diff;
-				nearest = i;
-			}
+		const ratio = available === 0 ? 0 : 1 - currentYPx / available;
+		if (onProgressChangeRef.current) {
+			onProgressChangeRef.current(Math.max(0, Math.min(1, ratio)));
 		}
-		return nearest;
-	};
-
-	const minYPx = () => getSnapPx(sortedSnapPoints[sortedSnapPoints.length - 1]);
-	const maxYPx = () => getAvailableHeightPx();
+	}, [getAvailableHeightPx]);
 
 	// 열림/닫힘 변화에 따른 초기 위치 세팅
 	useEffect(() => {
@@ -116,20 +157,46 @@ export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0
 		if (isOpen) {
 			const idx = Math.max(0, Math.min(sortedSnapPoints.length - 1, initialSnapIndex));
 			setCurrentSnapIndex(idx);
-			setTranslateY(getSnapPx(sortedSnapPoints[idx]));
+			const y = getSnapPx(sortedSnapPoints[idx]);
+			setTranslateY(y);
+			emitProgress(y);
 		} else {
-			setTranslateY(maxYPx());
+			const y = getAvailableHeightPx();
+			setTranslateY(y);
+			emitProgress(y);
 		}
-	}, [isOpen, sortedSnapPoints.join(","), initialSnapIndex, bottomOffsetPx, containerSelector]);
+	}, [isOpen, sortedSnapPoints.join(","), initialSnapIndex, getSnapPx, getAvailableHeightPx, emitProgress]);
 
 	// 리사이즈 시 위치 보정
 	useEffect(() => {
 		const onResize = () => {
-			if (isOpen) setTranslateY(getSnapPx(sortedSnapPoints[currentSnapIndex]));
+			if (isOpen) {
+				const y = getSnapPx(sortedSnapPoints[currentSnapIndex]);
+				setTranslateY(y);
+				emitProgress(y);
+			}
 		};
 		window.addEventListener("resize", onResize);
 		return () => window.removeEventListener("resize", onResize);
-	}, [isOpen, currentSnapIndex, sortedSnapPoints, bottomOffsetPx, portalEl]);
+	}, [isOpen, currentSnapIndex, sortedSnapPoints, getSnapPx, emitProgress]);
+
+	const findNearestSnapIndex = useCallback((currentYPx: number) => {
+		const available = getAvailableHeightPx();
+		const currentRatio = available === 0 ? 0 : 1 - currentYPx / available;
+		let nearest = 0;
+		let minDiff = Math.abs(sortedSnapPointsRef.current[0] - currentRatio);
+		for (let i = 1; i < sortedSnapPointsRef.current.length; i++) {
+			const diff = Math.abs(sortedSnapPointsRef.current[i] - currentRatio);
+			if (diff < minDiff) {
+				minDiff = diff;
+				nearest = i;
+			}
+		}
+		return nearest;
+	}, [getAvailableHeightPx]);
+
+	const minYPx = useCallback(() => getSnapPx(sortedSnapPointsRef.current[sortedSnapPointsRef.current.length - 1]), [getSnapPx]);
+	const maxYPx = useCallback(() => getAvailableHeightPx(), [getAvailableHeightPx]);
 
 	// 터치 핸들러
 	const onTouchStart: React.TouchEventHandler<HTMLDivElement> = (e) => {
@@ -138,6 +205,7 @@ export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0
 		setIsDragging(true);
 		setStartY(e.touches[0].clientY);
 	};
+	
 	const onTouchMove: React.TouchEventHandler<HTMLDivElement> = (e) => {
 		if (!draggingRef.current || !isOpen) return;
 		const currentY = e.touches[0].clientY;
@@ -146,18 +214,22 @@ export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0
 		const newY = baseY + diffY;
 		const clampedY = Math.max(minYPx(), Math.min(maxYPx(), newY));
 		setTranslateY(clampedY);
+		emitProgress(clampedY);
 	};
+	
 	const onTouchEnd: React.TouchEventHandler<HTMLDivElement> = () => {
 		if (!draggingRef.current || !isOpen) return;
 		draggingRef.current = false;
 		setIsDragging(false);
-		if (dismissible && translateY > getAvailableHeightPx() * 0.95) {
-			onClose();
+		if (dismissibleRef.current && translateYRef.current > getAvailableHeightPx() * 0.95) {
+			onCloseRef.current();
 			return;
 		}
-		const nearest = findNearestSnapIndex(translateY);
+		const nearest = findNearestSnapIndex(translateYRef.current);
 		setCurrentSnapIndex(nearest);
-		setTranslateY(getSnapPx(sortedSnapPoints[nearest]));
+		const y = getSnapPx(sortedSnapPointsRef.current[nearest]);
+		setTranslateY(y);
+		emitProgress(y);
 	};
 
 	// 마우스(데스크탑) 핸들러
@@ -167,27 +239,33 @@ export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0
 		setIsDragging(true);
 		setStartY(e.clientY);
 	};
+	
 	useEffect(() => {
 		const onMouseMove = (e: MouseEvent) => {
 			if (!draggingRef.current || !isOpen) return;
 			const diffY = e.clientY - startY;
-			const baseY = getSnapPx(sortedSnapPoints[currentSnapIndex]);
+			const baseY = getSnapPx(sortedSnapPointsRef.current[currentSnapIndexRef.current]);
 			const newY = baseY + diffY;
 			const clampedY = Math.max(minYPx(), Math.min(maxYPx(), newY));
 			setTranslateY(clampedY);
+			emitProgress(clampedY);
 		};
+		
 		const onMouseUp = () => {
 			if (!draggingRef.current || !isOpen) return;
 			draggingRef.current = false;
 			setIsDragging(false);
-			if (dismissible && translateY > getAvailableHeightPx() * 0.95) {
-				onClose();
+			if (dismissibleRef.current && translateYRef.current > getAvailableHeightPx() * 0.95) {
+				onCloseRef.current();
 				return;
 			}
-			const nearest = findNearestSnapIndex(translateY);
+			const nearest = findNearestSnapIndex(translateYRef.current);
 			setCurrentSnapIndex(nearest);
-			setTranslateY(getSnapPx(sortedSnapPoints[nearest]));
+			const y = getSnapPx(sortedSnapPointsRef.current[nearest]);
+			setTranslateY(y);
+			emitProgress(y);
 		};
+		
 		if (isDragging) {
 			document.addEventListener("mousemove", onMouseMove);
 			document.addEventListener("mouseup", onMouseUp);
@@ -196,7 +274,7 @@ export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0
 				document.removeEventListener("mouseup", onMouseUp);
 			};
 		}
-	}, [isDragging, isOpen, startY, currentSnapIndex, translateY, sortedSnapPoints, bottomOffsetPx]);
+	}, [isDragging, isOpen, startY, getSnapPx, minYPx, maxYPx, findNearestSnapIndex, getAvailableHeightPx, emitProgress]);
 
 	const content = (
 		<>
@@ -209,6 +287,9 @@ export default function BottomSheet({ isOpen, onClose, children, snapPoints = [0
 				ref={sheetRootRef}
 				bottomOffsetPx={bottomOffsetPx}
 			>
+				{topAccessory && (
+					<TopAccessoryContainer>{topAccessory}</TopAccessoryContainer>
+				)}
 				<Handle 
 					onTouchStart={onTouchStart}
 					onTouchMove={onTouchMove}

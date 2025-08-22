@@ -32,7 +32,7 @@ const Content = styled.div`
   flex-direction: column;
   position: relative;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden; 
   box-shadow: none;
   border-radius: 0;
 
@@ -55,6 +55,7 @@ const Contents = styled.main`
   flex-direction: column;   
   flex: 1 1 auto;
   width: 100%;
+  position: relative;
   overflow: visible;
   outline: none;
   padding: 0;

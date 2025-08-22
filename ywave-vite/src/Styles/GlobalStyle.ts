@@ -196,16 +196,16 @@ export const GlobalStyle = createGlobalStyle`
     font-size: 1.125rem; /* 18px */
     font-family: Pretendard, sans-serif;
     font-weight: 400;
-    line-height: 1.75rem; /* 28px */
+    line-height: 1.4;
   }
   .Body__Large {
     font-size: 1rem; /* 16px */
     font-family: Pretendard, sans-serif;
     font-weight: 400;
-    line-height: 1.5rem; /* 24px */
+    line-height: 1.4;
   }
   .Body__MediumLarge {
-    font-size: 16px;
+    font-size: 1rem;
     font-family: Pretendard, sans-serif;
     font-weight: 500;
     line-height: 24px;
@@ -220,13 +220,13 @@ export const GlobalStyle = createGlobalStyle`
     font-size: 0.875rem; /* 14px */
     font-family: Pretendard, sans-serif;
     font-weight: 500;
-    line-height: 1.25rem; /* 20px */
+    line-height: 1.4;
   }
   .Body__Small {
     font-size: 0.75rem; /* 12px */
     font-family: Pretendard, sans-serif;
     font-weight: 400;
-    line-height: 1rem; /* 16px */
+    line-height: 1.4; 
   }
   .Body__MediumSmall {
     font-size: 0.75rem; /* 12px */
