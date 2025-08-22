@@ -123,7 +123,7 @@ export default function CategoryIndustry(): React.JSX.Element {
               onClick={() => handleIndustryClick(industry.id)}
               isSelect={selectIndustries.includes(industry.id)}
             >
-              {industry.icon()}
+              {industry.icon({size: 16})}
               <div className="Body__MediumSmall">{industry.name}</div>
             </IndustryItem>
           ))}
