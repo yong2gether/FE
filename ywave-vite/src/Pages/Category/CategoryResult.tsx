@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
-import LargeButton from "../Components/LargeButton";
+import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -56,18 +56,43 @@ const ButtonContainer = styled.div`
 
 export default function CategoryResult(): React.JSX.Element {
   const navigate = useNavigate();
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
 
-  const regions = ["용인시 처인구 모현읍", "창원시 마산회원구 양덕 2동"];
-  const industries = ["음식점", "카페", "생활편의"];
+  useEffect(() => {
+    // localStorage에서 선택된 지역과 업종 정보 가져오기
+    const regions = JSON.parse(localStorage.getItem('selectedRegions') || '[]');
+    const industries = JSON.parse(localStorage.getItem('selectedIndustries') || '[]');
+    
+    setSelectedRegions(regions.map((region: any) => region.value));
+    setSelectedIndustries(industries);
+  }, []);
+
+  const handleStart = () => {
+    // 카테고리 설정 완료 플래그 설정
+    localStorage.setItem('hasCompletedCategories', 'true');
+    
+    // 선택된 정보들을 정리 (필요시 서버에 저장)
+    // localStorage.removeItem('selectedRegions');
+    // localStorage.removeItem('selectedIndustries');
+    
+    // 메인 페이지로 이동
+    navigate("/main");
+  };
+
+  const handleBack = () => {
+    // CategoryIndustry로 돌아가기
+    navigate("/category/industry");
+  };
 
   return (
     <PageContainer>
       <ContentContainer>
-        <BackIcon onClick={() => navigate(-1)} />
+        <BackIcon onClick={handleBack} />
         <TitleContainer>
           <Title className="Title__H1">
             주로 <br />
-            {regions.map((region, index) => (
+            {selectedRegions.map((region, index) => (
               <span key={index}>
                 #{region}
                 <br />
@@ -76,7 +101,7 @@ export default function CategoryResult(): React.JSX.Element {
             지역에 위치한
           </Title>
           <Title className="Title__H1">
-            {industries.map((industry, index) => (
+            {selectedIndustries.map((industry, index) => (
               <span key={index}>
                 #{industry}
                 <br />
@@ -88,7 +113,7 @@ export default function CategoryResult(): React.JSX.Element {
         </TitleContainer>
       </ContentContainer>
       <ButtonContainer>
-        <LargeButton buttonText="시작하기" onClick={() => navigate("/main")} />
+        <LargeButton buttonText="시작하기" onClick={handleStart} />
       </ButtonContainer>
     </PageContainer>
   );

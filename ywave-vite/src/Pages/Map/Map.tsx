@@ -2,17 +2,18 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import styled from "styled-components";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
-import UserIconUrl from "../Images/Marker/User.svg";
-import RestaurantIconUrl from "../Images/Marker/Restaurant.svg";
-import CafeIconUrl from "../Images/Marker/Cafe.svg";
-import MartIconUrl from "../Images/Marker/Mart.svg";
-import HealthcareIconUrl from "../Images/Marker/Healthcare.svg";
-import EducationIconUrl from "../Images/Marker/Education.svg";
-import AcommodationIconUrl from "../Images/Marker/Acommodation.svg";
-import ConvenienceIconUrl from "../Images/Marker/Convenience.svg";
-import FashionIconUrl from "../Images/Marker/Fashion.svg";
-import MapListBottomSheet from "../Components/MapListBottomSheet";
+import UserIconUrl from "../../Images/Marker/User.svg";
+import RestaurantIconUrl from "../../Images/Marker/Restaurant.svg";
+import CafeIconUrl from "../../Images/Marker/Cafe.svg";
+import MartIconUrl from "../../Images/Marker/Mart.svg";
+import HealthcareIconUrl from "../../Images/Marker/Healthcare.svg";
+import EducationIconUrl from "../../Images/Marker/Education.svg";
+import AcommodationIconUrl from "../../Images/Marker/Acommodation.svg";
+import ConvenienceIconUrl from "../../Images/Marker/Convenience.svg";
+import FashionIconUrl from "../../Images/Marker/Fashion.svg";
+import MapListBottomSheet from "../../Components/MapList/MapListBottomSheet";
 import { MdMyLocation } from "react-icons/md";
+import { useStoreApi } from "../../hooks/useApi";
 
 const LIBRARIES: ("places")[] = ["places"];
 
@@ -65,6 +66,11 @@ type StoreMarker = {
   category: MarkerCategory | "기타";
   name: string;
   address: string;
+  images: string[];
+  rating: number;
+  reviewCount: number;
+  userReviews: any[]; // 사용자 리뷰 필드 추가
+  googleReviews: any[]; // Google 리뷰 필드 추가
 };
 
 export default function Map(): React.JSX.Element {
@@ -78,6 +84,9 @@ export default function Map(): React.JSX.Element {
     libraries: LIBRARIES,
   });
 
+  // API 연동
+  const { getNearbyStores, getStoreDetails, nearbyStoresState } = useStoreApi();
+
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [center, setCenter] = useState<LatLngLiteral>(defaultCenter);
   const [userPosition, setUserPosition] = useState<LatLngLiteral | null>(null);
@@ -87,7 +96,6 @@ export default function Map(): React.JSX.Element {
 
   const markersRef = useRef<google.maps.Marker[]>([]);
   const clustererRef = useRef<MarkerClusterer | null>(null);
-  const controlAddedRef = useRef<boolean>(false);
   const isLoadingLocation = useRef<boolean>(false);
   const lastSearchCenterRef = useRef<LatLngLiteral | null>(null);
   const userInteractingRef = useRef<boolean>(false);
@@ -157,7 +165,7 @@ export default function Map(): React.JSX.Element {
           
           console.log("🌍 위도:", latitude);
           console.log("🌍 경도:", longitude);
-          console.log("🎯 정확도:", accuracy, "미터");
+          console.log("�� 정확도:", accuracy, "미터");
           
           const gpsPos = { lat: latitude, lng: longitude };
           console.log("✅ GPS 위치 성공:", gpsPos);
@@ -254,6 +262,88 @@ export default function Map(): React.JSX.Element {
     }
   }, [apiKey]);
 
+  // 주변 가맹점 데이터 가져오기
+  const fetchNearbyStores = useCallback(async (position: LatLngLiteral) => {
+    try {
+      console.log("🔄 주변 가맹점 조회 시작...");
+      const stores = await getNearbyStores({
+        lng: position.lng,
+        lat: position.lat,
+        radius: 500, // 500m로 줄임 (더 가까운 가맹점만 조회)
+        limit: 30    // 30개로 줄임 (너무 많으면 지도가 복잡해짐)
+      });
+      
+      // 각 가게의 상세 정보를 가져오기
+      console.log("🔄 가게 상세 정보 조회 시작...");
+      
+      const detailedMarkers: StoreMarker[] = await Promise.all(
+        stores.map(async (store) => {
+          try {
+            // 가게 상세 정보 가져오기
+            const placeDetails = await getStoreDetails(store.id);
+            
+            return {
+              id: store.id.toString(),
+              position: { lat: store.lat, lng: store.lng },
+              category: (store.category as MarkerCategory) || "기타" as MarkerCategory,
+              name: store.name,
+              address: placeDetails.formattedAddress || store.sigungu,
+              images: placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : [
+                "https://picsum.photos/200/300?random=1",
+                "https://picsum.photos/200/300?random=2",
+                "https://picsum.photos/200/300?random=3"
+              ],
+              rating: placeDetails.rating || 0,
+              reviewCount: placeDetails.reviewCount || 0,
+              userReviews: [], // 사용자 리뷰는 현재 없음
+              googleReviews: [] // Google 리뷰는 MainPlace에서 직접 가져옴
+            };
+          } catch (error) {
+            console.log(`⚠️ 가게 ${store.id} 상세 정보 조회 실패:`, error);
+            // 상세 정보 조회 실패 시 기본 정보만 사용
+            return {
+              id: store.id.toString(),
+              position: { lat: store.lat, lng: store.lng },
+              category: "기타" as MarkerCategory,
+              name: store.name,
+              address: store.sigungu,
+              images: [
+                "https://picsum.photos/200/300?random=1",
+                "https://picsum.photos/200/300?random=2",
+                "https://picsum.photos/200/300?random=3"
+              ],
+              rating: 0,
+              reviewCount: 0,
+              userReviews: [], // 사용자 리뷰는 현재 없음
+              googleReviews: [] // Google 리뷰도 없음
+            };
+          }
+        })
+      );
+      
+      setStoreMarkers(detailedMarkers);
+      console.log("✅ 주변 가맹점 상세 정보 조회 완료:", detailedMarkers.length, "개");
+    } catch (error) {
+      console.error("❌ 주변 가맹점 조회 실패:", error);
+      // API 실패 시 기존 마커 유지
+    }
+  }, [getNearbyStores, getStoreDetails]);
+
+  // 현재 지도 중심과 마지막 검색 중심 간 거리(m) 계산
+  const getDistanceMeters = useCallback((a: LatLngLiteral, b: LatLngLiteral): number => {
+    const toRad = (v: number) => (v * Math.PI) / 180;
+    const R = 6371000; // m
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLng = Math.sin(dLng / 2);
+    const aHarv = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+    const c = 2 * Math.atan2(Math.sqrt(aHarv), Math.sqrt(1 - aHarv));
+    return R * c;
+  }, []);
+
   const getCurrentLocation = useCallback(async () => {
     if (isLoadingLocation.current) {
       console.log("⚠️ 위치 요청이 이미 진행 중입니다");
@@ -273,8 +363,11 @@ export default function Map(): React.JSX.Element {
         setUserPosition(gpsResult.position);
         setCenter(gpsResult.position);
         map?.panTo(gpsResult.position);
-        map?.setZoom(16);
+        map?.setZoom(17); // 15 → 17로 증가 (더 가까이 보임)
         setShowReSearch(false);
+        
+        // 주변 가맹점 조회
+        await fetchNearbyStores(gpsResult.position);
         return;
       }
 
@@ -288,8 +381,11 @@ export default function Map(): React.JSX.Element {
           setUserPosition(googleResult.position);
           setCenter(googleResult.position);
           map?.panTo(googleResult.position);
-          map?.setZoom(16);
+          map?.setZoom(17); // 15 → 17로 증가 (더 가까이 보임)
           setShowReSearch(false);
+          
+          // 주변 가맹점 조회
+          await fetchNearbyStores(googleResult.position);
           return;
         }
       }
@@ -298,9 +394,20 @@ export default function Map(): React.JSX.Element {
     } finally {
       isLoadingLocation.current = false;
     }
-  }, [map, getGPSLocation, getGoogleGeolocation]);
+  }, [map, getGPSLocation, getGoogleGeolocation, fetchNearbyStores]);
 
-  
+  // 이 지역에서 검색 동작: 현재 지도 중심 기준으로 주변 가맹점 조회
+  const handleSearchThisArea = useCallback(async () => {
+    if (!map) return;
+    const centerLatLng = map.getCenter();
+    if (!centerLatLng) return;
+    const c: LatLngLiteral = { lat: centerLatLng.lat(), lng: centerLatLng.lng() };
+    lastSearchCenterRef.current = c;
+    setShowReSearch(false);
+
+    // 현재 지도 중심에서 주변 가맹점 조회
+    await fetchNearbyStores(c);
+  }, [map, fetchNearbyStores]);
 
   const handleMapLoad = useCallback((m: google.maps.Map) => {
     setMap(m);
@@ -314,67 +421,11 @@ export default function Map(): React.JSX.Element {
 
   
 
-  useEffect(() => {
-    const mockStores: StoreMarker[] = [
-      { id: "1", position: { lat: 37.5665, lng: 126.978 }, category: "음식점", name: "맛있는 음식점", address: "서울시 강남구" },
-      { id: "2", position: { lat: 37.5666, lng: 126.979 }, category: "카페", name: "커피숍", address: "서울시 강남구" },
-      { id: "3", position: { lat: 37.5667, lng: 126.980 }, category: "마트슈퍼", name: "편의점", address: "서울시 강남구" },
-      { id: "4", position: { lat: 37.5668, lng: 126.981 }, category: "의료기관", name: "병원", address: "서울시 강남구" },
-      { id: "5", position: { lat: 37.5669, lng: 126.982 }, category: "교육문구", name: "피자집", address: "서울시 강남구" },
-      { id: "6", position: { lat: 37.5670, lng: 126.983 }, category: "숙박", name: "디저트카페", address: "서울시 강남구" },
-      { id: "7", position: { lat: 37.5671, lng: 126.984 }, category: "생활편의", name: "마트", address: "서울시 강남구" },
-      { id: "8", position: { lat: 37.5672, lng: 126.985 }, category: "의류잡화", name: "약국", address: "서울시 강남구" },
-      { id: "9", position: { lat: 37.5673, lng: 126.986 }, category: "체육시설", name: "약국", address: "서울시 강남구" },
-      { id: "10", position: { lat: 37.5674, lng: 126.987 }, category: "주유소", name: "약국", address: "서울시 강남구" },
-      { id: "11", position: { lat: 37.5675, lng: 126.988 }, category: "기타", name: "약국", address: "서울시 강남구" },
-    ];
-    setStoreMarkers(mockStores);
-  }, []);
 
-  // 현재 지도 중심과 마지막 검색 중심 간 거리(m) 계산
-  const getDistanceMeters = useCallback((a: LatLngLiteral, b: LatLngLiteral): number => {
-    const toRad = (v: number) => (v * Math.PI) / 180;
-    const R = 6371000; // m
-    const dLat = toRad(b.lat - a.lat);
-    const dLng = toRad(b.lng - a.lng);
-    const lat1 = toRad(a.lat);
-    const lat2 = toRad(b.lat);
-    const sinDLat = Math.sin(dLat / 2);
-    const sinDLng = Math.sin(dLng / 2);
-    const aHarv = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
-    const c = 2 * Math.atan2(Math.sqrt(aHarv), Math.sqrt(1 - aHarv));
-    return R * c;
-  }, []);
 
-  // 이 지역에서 검색 동작: 현재 지도 중심 기준 목데이터 재생성
-  const handleSearchThisArea = useCallback(() => {
-    if (!map) return;
-    const centerLatLng = map.getCenter();
-    if (!centerLatLng) return;
-    const c: LatLngLiteral = { lat: centerLatLng.lat(), lng: centerLatLng.lng() };
-    lastSearchCenterRef.current = c;
-    setShowReSearch(false);
 
-    // 중심 기준 랜덤 목데이터 생성
-    const gen = (count: number): StoreMarker[] => {
-      const cats: MarkerCategory[] = ["음식점", "카페", "마트슈퍼", "의료기관", "교육문구", "숙박", "생활편의", "의류잡화"];
-      const arr: StoreMarker[] = [];
-      for (let i = 0; i < count; i++) {
-        const latOffset = (Math.random() - 0.5) * 0.01; // ~1km 범위
-        const lngOffset = (Math.random() - 0.5) * 0.01;
-        const category = cats[Math.floor(Math.random() * cats.length)];
-        arr.push({
-          id: `${Date.now()}_${i}`,
-          position: { lat: c.lat + latOffset, lng: c.lng + lngOffset },
-          category,
-          name: `${category} 샘플 ${i + 1}`,
-          address: "서울시 샘플구 샘플로",
-        });
-      }
-      return arr;
-    };
-    setStoreMarkers(gen(12));
-  }, [map]);
+
+
 
   useEffect(() => {
     if (!map || !isLoaded || storeMarkers.length === 0) return;
@@ -390,18 +441,64 @@ export default function Map(): React.JSX.Element {
         map: map
       });
 
-      marker.addListener('click', () => {
-        const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div style="padding: 8px;">
-              <h3 style="margin: 0 0 4px 0; font-size: 14px;">${store.name}</h3>
-              <p style="margin: 0; font-size: 12px; color: #666;">${store.address}</p>
-              <p style="margin: 4px 0 0 0; font-size: 12px; color: #999;">${store.category}</p>
-            </div>
-          `
-        });
-        infoWindow.open(map, marker);
-      });
+       marker.addListener('click', () => {
+         const infoWindow = new google.maps.InfoWindow({
+           content: `
+             <div style="
+               padding: 16px;
+               border-radius: 12px;
+               background: white;
+               box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+               border: none;
+               min-width: 200px;
+               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+               text-align: center;
+             ">
+               <div style="
+                 margin-bottom: 12px;
+                 font-size: 16px;
+                 font-weight: 600;
+                 color: #1a1a1a;
+                 line-height: 1.3;
+               ">${store.name}</div>
+               
+               <div style="
+                 margin-bottom: 16px;
+                 padding: 8px 12px;
+                 background: #f8f9fa;
+                 border-radius: 8px;
+                 font-size: 13px;
+                 color: #6c757d;
+               ">${store.address}</div>
+               
+               <button 
+                 style="
+                   width: 100%;
+                   padding: 10px 16px;
+                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                   color: white;
+                   border: none;
+                   border-radius: 8px;
+                   font-size: 14px;
+                   font-weight: 600;
+                   cursor: pointer;
+                   transition: all 0.2s ease;
+                   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                 " 
+                 onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'" 
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.3)'"
+                 onclick="window.location.href='/main/place/${store.id}'"
+               >
+                 상세보기
+               </button>
+             </div>
+           `,
+           pixelOffset: new google.maps.Size(0, -10),
+           maxWidth: 250,
+           disableAutoPan: false
+         });
+         infoWindow.open(map, marker);
+       });
 
       return marker;
     });
@@ -473,19 +570,19 @@ export default function Map(): React.JSX.Element {
             streetViewControl: false,
             mapTypeControl: false,
           }}
-          onDragStart={() => { userInteractingRef.current = true; }}
-          onIdle={() => {
-            const mc = map?.getCenter();
-            if (!mc) return;
-            const currentCenter: LatLngLiteral = { lat: mc.lat(), lng: mc.lng() };
-            // 사용자 드래그 후에만 판단
-            if (userInteractingRef.current) {
-              const base = lastSearchCenterRef.current ?? userPosition ?? center;
-              const moved = getDistanceMeters(base, currentCenter);
-              setShowReSearch(moved > 150); // 150m 이상 이동 시 표시
-            }
-            userInteractingRef.current = false;
-          }}
+                     onDragStart={() => { userInteractingRef.current = true; }}
+           onIdle={() => {
+             const mc = map?.getCenter();
+             if (!mc) return;
+             const currentCenter: LatLngLiteral = { lat: mc.lat(), lng: mc.lng() };
+             // 사용자 드래그 후에만 판단
+             if (userInteractingRef.current) {
+               const base = lastSearchCenterRef.current ?? userPosition ?? center;
+               const moved = getDistanceMeters(base, currentCenter);
+               setShowReSearch(moved > 150); // 150m 이상 이동 시 표시
+             }
+             userInteractingRef.current = false;
+           }}
         >
           {userPosition && (
             <Marker
@@ -504,13 +601,14 @@ export default function Map(): React.JSX.Element {
           <MdMyLocation size={22} color="var(--neutral-800)" />
         </LocateFab>
 
-        <MapListBottomSheet 
-          onLocationRequest={getCurrentLocation}
-          onSearchThisArea={handleSearchThisArea}
-          showReSearch={showReSearch}
-          storeMarkers={storeMarkers}
-          bottomOffsetPx={0}
-        />
+                                   <MapListBottomSheet 
+            onLocationRequest={getCurrentLocation}
+            onSearchThisArea={handleSearchThisArea}
+            showReSearch={showReSearch}
+            storeMarkers={storeMarkers}
+            bottomOffsetPx={0}
+            userLocation={userPosition}
+          />
       </MapWrapper>
     );
   };

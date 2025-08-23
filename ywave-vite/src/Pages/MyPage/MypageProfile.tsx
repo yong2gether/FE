@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack, BiSolidUserCircle, BiSolidPencil } from "react-icons/bi";
-import PublicInput from "../Components/PublicInput";
-import MediumButton from "../Components/MediumButton";
-import LargeButton from "../Components/LargeButton";
+import PublicInput from "../../Components/PublicInput";
+import MediumButton from "../../Components/Button/MediumButton";
+import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
   display: flex;

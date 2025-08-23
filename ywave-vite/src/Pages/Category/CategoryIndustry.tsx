@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
-import { industries } from "../Data/Industries";
-import LargeButton from "../Components/LargeButton";
+import { industries } from "../../Data/Industries";
+import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -105,11 +105,25 @@ export default function CategoryIndustry(): React.JSX.Element {
     }
   };
 
+  const handleNext = () => {
+    // 업종 선택이 완료되면 CategoryResult로 이동
+    if (selectIndustries.length > 0) {
+      // 선택된 업종 정보를 localStorage에 저장
+      localStorage.setItem('selectedIndustries', JSON.stringify(selectIndustries));
+      navigate("/category/result");
+    }
+  };
+
+  const handleBack = () => {
+    // CategoryRegion으로 돌아가기
+    navigate("/category/region");
+  };
+
   return (
     <PageContainer>
       <ContentContainer>
         <TitleContainer>
-          <BackIcon onClick={() => navigate(-1)} />
+          <BackIcon onClick={handleBack} />
           <Title className="Title__H1">
             주로 <span>어떤 업종</span>의 <br />
             지역 화폐 가맹점을 <br />
@@ -132,7 +146,7 @@ export default function CategoryIndustry(): React.JSX.Element {
       <ButtonContainer>
         <LargeButton
           buttonText="다음"
-          onClick={() => navigate("/category/result")}
+          onClick={handleNext}
         />
       </ButtonContainer>
     </PageContainer>

@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import BottomSheet from "../Components/BottomSheet";
+import { useNavigate, useLocation } from "react-router-dom";
+import BottomSheet from "../../Components/BottomSheet";
 import { Emoji, EmojiStyle } from "emoji-picker-react";
 import { BiSolidPencil } from "react-icons/bi";
-import PublicInput from "../Components/PublicInput";
-import LargeButton from "../Components/LargeButton";
+import PublicInput from "../../Components/PublicInput";
+import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
   display: flex;
@@ -78,16 +78,25 @@ const TitleContainer = styled.div`
   color: var(--primary-blue-1000);
 `;
 
-export default function BookMarkAdd(): React.JSX.Element {
+export default function BookMarkEdit(): React.JSX.Element {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { unicode, title } = location.state;
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
+  const [folderEmoji, setFolderEmoji] = useState<string>("");
   const [folderInput, setFolderInput] = useState<string>("");
+
+  useEffect(() => {
+    setFolderEmoji(unicode);
+    setFolderInput(title);
+    console.log(folderEmoji);
+  }, []);
 
   const handleEmojiEdit = (): void => {
     alert("이모지 변경 기능 추가 예정");
   };
 
-  const handleBookMarkAdd = (): void => {
+  const handleBookMarkEdit = (): void => {
     navigate("/bookmark");
   };
 
@@ -107,9 +116,13 @@ export default function BookMarkAdd(): React.JSX.Element {
         snapPoints={[0.7]}
       >
         <SheetContainer>
-          <div className="Title__H2">새 목록 추가</div>
+          <div className="Title__H2">폴더 수정</div>
           <ImageContainer>
-            <Emoji unified="1f4c1" size={60} emojiStyle={EmojiStyle.NATIVE} />
+            <Emoji
+              unified={folderEmoji}
+              size={60}
+              emojiStyle={EmojiStyle.NATIVE}
+            />
             <ImageEditButton onClick={handleEmojiEdit}>
               <BiSolidPencil />
             </ImageEditButton>
@@ -129,8 +142,8 @@ export default function BookMarkAdd(): React.JSX.Element {
             />
           </TitleContainer>
           <LargeButton
-            buttonText="새 목록 추가하기"
-            onClick={handleBookMarkAdd}
+            buttonText="폴더 수정하기"
+            onClick={handleBookMarkEdit}
           />
         </SheetContainer>
       </BottomSheet>

@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import TitleLogo from "../Images/TitleLogo.svg";
+import TitleLogo from "../../Images/TitleLogo.svg";
 import { useNavigate } from "react-router-dom";
-import LargeButton from "../Components/LargeButton";
+import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
   display: flex;
