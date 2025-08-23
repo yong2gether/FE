@@ -67,10 +67,15 @@ const Content = styled.div`
 	height: calc(100% - 28px);
 	overflow-y: auto;
 	padding: 0 16px 16px;
-	overflow-y: auto;
 	scrollbar-width: none;
 	-ms-overflow-style: none;
 	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
+	overscroll-behavior-y: contain;
+	
+	&::-webkit-scrollbar {
+		display: none;
+	}
 `;
 
 const TopAccessoryContainer = styled.div`
