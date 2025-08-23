@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BiSolidUserCircle } from "react-icons/bi";
-import PencilButton from "../Components/PencilButton";
-import { industries } from "../Data/Industries";
-import LargeButton from "../Components/LargeButton";
-import DeleteTag from "../Components/DeleteTag";
-import LargeReviewBox from "../Components/LargeReviewBox";
-import { placeDatas } from "../Data/PlaceDatas";
+import PencilButton from "../../Components/Button/PencilButton";
+import { industries } from "../../Data/Industries";
+import LargeButton from "../../Components/Button/LargeButton";
+import DeleteTag from "../../Components/DeleteTag";
+import LargeReviewBox from "../../Components/ReviewBox/LargeReviewBox";
+import { placeDatas } from "../../Data/PlaceDatas";
+import { useUserApi } from "../../hooks/useApi";
+import MediumButton from "../../Components/Button/MediumButton";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -144,8 +146,9 @@ const Divider = styled.div`
 
 interface IndustryData {
   id: string;
-  icon: () => React.ReactElement;
+  icon: (props: { size: number }) => React.ReactElement;
   name: string;
+  size?: number;
 }
 
 export default function Mypage(): React.JSX.Element {
@@ -159,22 +162,26 @@ export default function Mypage(): React.JSX.Element {
   const [selectIndustries, setSelectIndustries] = useState<IndustryData[]>([]);
   const [openMoreId, setOpenMoreId] = useState<string | null>(null);
 
+  const { logout } = useUserApi();
+  
   const nick = "닉네임";
-  const RegionDatas = [
+  
+  const RegionDatas = React.useMemo(() => [
     "용인시 처인구 모현읍",
     "창원시 마산회구 양덕2동",
     "서울특별시 동대문구 휘경1동",
-  ];
-  const IndustryDatas = ["restaurant", "cafe", "convenience"];
+  ], []);
+  
+  const IndustryDatas = React.useMemo(() => ["restaurant", "cafe", "convenience"], []);
 
   useEffect(() => {
     setSelectRegions(RegionDatas);
     setSelectIndustries(
-      industries.filter((industry) =>
+      industries.filter((industry: IndustryData) =>
         IndustryDatas.some((industryId) => industryId === industry.id)
       )
     );
-  }, []);
+  }, [RegionDatas, IndustryDatas]);
 
   const handleDeleteRegion = (deleteRegion: string): void => {
     setSelectRegions((prev) =>
@@ -188,7 +195,6 @@ export default function Mypage(): React.JSX.Element {
     );
   };
 
-  const handleCategoryChange = () => {};
 
   const handleTabClick = (tab: "preferences" | "reviews") => {
     setActiveTab(tab);
@@ -197,6 +203,11 @@ export default function Mypage(): React.JSX.Element {
 
   const handleMoreClick = (id: string) => {
     setOpenMoreId((prev) => (prev === id ? null : id));
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -211,6 +222,10 @@ export default function Mypage(): React.JSX.Element {
         buttonText="프로필 편집하기"
         onClick={() => navigate("/mypage/profile")}
         isFill={true}
+      />
+      <MediumButton
+        buttonText="로그아웃"
+        onClick={handleLogout}
       />
       <Content>
         <TabContainer>
@@ -252,7 +267,7 @@ export default function Mypage(): React.JSX.Element {
                         key={industry.id}
                         content={
                           <Industry key={industry.id}>
-                            {industry.icon()}
+                            {industry.icon({ size: industry.size || 16 })}
                             {industry.name}
                           </Industry>
                         }

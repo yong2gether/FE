@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BiX, BiImageAdd } from "react-icons/bi";
 import { AiFillStar } from "react-icons/ai";
-import LargeButton from "../Components/LargeButton";
+import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
   display: flex;

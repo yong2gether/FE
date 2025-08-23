@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import BottomSheet from "./BottomSheet";
+import BottomSheet from "../BottomSheet";
 import MapList from "./MapList";
 import { IoMdRefresh } from "react-icons/io";
 import { VscSettings } from "react-icons/vsc";
-import { industries } from "../Data/Industries";
-import PublicDropdown from "./PublicDropdown";
-import DeleteTag from "./DeleteTag";
+import { industries } from "../../Data/Industries";
+import PublicDropdown from "../PublicDropdown";
+import DeleteTag from "../DeleteTag";
+import { calculateDistance, formatDistance } from "../../utils/distance";
+
 interface MapListBottomSheetProps {
   onLocationRequest: () => void;
   onSearchThisArea: () => void;
@@ -17,8 +19,12 @@ interface MapListBottomSheetProps {
     category: string;
     name: string;
     address: string;
+    images: string[];
+    rating: number;
+    reviewCount: number;
   }>;
   bottomOffsetPx: number;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
 const BottomSheetContainer = styled.div`
@@ -179,7 +185,14 @@ const RegionChips = styled.div`
 
 interface Option { index: number; value: string; }
 
-export default function MapListBottomSheet({ onLocationRequest, onSearchThisArea, showReSearch, storeMarkers, bottomOffsetPx }: MapListBottomSheetProps): React.JSX.Element {
+export default function MapListBottomSheet({ 
+  onLocationRequest, 
+  onSearchThisArea, 
+  showReSearch, 
+  storeMarkers, 
+  bottomOffsetPx, 
+  userLocation 
+}: MapListBottomSheetProps): React.JSX.Element {
   const [selectIndustries, setSelectIndustries] = useState<string[]>([]);
   const [sheetRatio, setSheetRatio] = useState<number>(0);
   const [regionModalOpen, setRegionModalOpen] = useState<boolean>(false);
@@ -197,7 +210,7 @@ export default function MapListBottomSheet({ onLocationRequest, onSearchThisArea
       setSelectIndustries((prev) => [...prev, clickId]);
     }
   };
-  
+   
   const topAccessory = showReSearch && sheetRatio <= 0.5 ? (
     <ReSearchButton className="Body__MediumSmall" onClick={onSearchThisArea}>
       <IoMdRefresh size={16} />
@@ -236,8 +249,21 @@ export default function MapListBottomSheet({ onLocationRequest, onSearchThisArea
     setRegionModalOpen(false);
   };
 
+  // 각 가게와의 거리 계산
+  const getDistance = (storePosition: { lat: number; lng: number }) => {
+    if (!userLocation) return undefined;
+    
+    const distanceInMeters = calculateDistance(
+      userLocation.lat,
+      userLocation.lng,
+      storePosition.lat,
+      storePosition.lng
+    );
+    
+    return formatDistance(distanceInMeters);
+  };
+
   return (
-    <> 
     <BottomSheet 
       isOpen={true} 
       onClose={() => {}} 
@@ -249,64 +275,65 @@ export default function MapListBottomSheet({ onLocationRequest, onSearchThisArea
       onProgressChange={(r) => setSheetRatio(r)}
       topAccessory={topAccessory}
     >
-        <BottomSheetContainer>
-            <SearchInput className="Body__MediumDefault" placeholder="장소 검색 (예: 카페, 서울역)" />
-            
-            <SettingContainer>
-              <RegionSetting onClick={() => setRegionModalOpen(true)}>
-                <VscSettings size={16} />
-                <div className="Body__Small">{selectedRegion}</div>
-              </RegionSetting>
-              {industries.map((industry) => (
-                <IndustryItem key={industry.id} isSelect={selectIndustries.includes(industry.id)} onClick={() => handleIndustryClick(industry.id)}>
-                  {industry.icon({size: 14})}
-                  <div className="Body__Small">{industry.name}</div>
-                </IndustryItem>
-              ))}
-            </SettingContainer>
+      <BottomSheetContainer>
+        <SearchInput className="Body__MediumDefault" placeholder="장소 검색 (예: 카페, 서울역)" />
+        
+        <SettingContainer>
+          <RegionSetting onClick={() => setRegionModalOpen(true)}>
+            <VscSettings size={16} />
+            <div className="Body__Small">{selectedRegion}</div>
+          </RegionSetting>
+          {industries.map((industry) => (
+            <IndustryItem key={industry.id} isSelect={selectIndustries.includes(industry.id)} onClick={() => handleIndustryClick(industry.id)}>
+              {industry.icon({size: 14})}
+              <div className="Body__Small">{industry.name}</div>
+            </IndustryItem>
+          ))}
+        </SettingContainer>
 
-            {regionModalOpen && (
-              <RegionOverlay onClick={() => setRegionModalOpen(false)}>
-                <RegionDialog onClick={(e) => e.stopPropagation()}>
-                  <RegionHeader>
-                    <div className="Body__MediumDefault">지역 설정</div>
-                    <button className="Body__Small" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--neutral-600)" }} onClick={() => setRegionModalOpen(false)}>닫기</button>
-                  </RegionHeader>
-                  <RegionList>
-                    <PublicDropdown options={cityOptions} placeholder="시/도" value={selectCity} onChange={setSelectCity} />
-                    <PublicDropdown options={cityOptions} placeholder="시/구/군" value={selectGu} onChange={setSelectGu} />
-                    <PublicDropdown options={cityOptions} placeholder="동/읍/면" value={selectDong} onChange={setSelectDong} />
-                  </RegionList>
-                  <RegionChips>
-                    {selectRegions.map((v) => (
-                      <DeleteTag key={v} content={<>{v}</>} color={"var(--primary-blue-600)"} onClick={() => handleDeleteRegion(v)} />
-                    ))}
-                  </RegionChips>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                    <button className="Body__MediumDefault" style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--neutral-300)', background: 'var(--neutral-100)', cursor: 'pointer' }} onClick={() => { setSelectCity(null); setSelectGu(null); setSelectDong(null); setSelectRegions([]); }}>초기화</button>
-                    <button className="Body__MediumDefault" style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--primary-blue-500)', background: 'var(--primary-blue-500)', color: '#fff', cursor: 'pointer' }} onClick={handleApplyRegion}>적용</button>
-                  </div>
-                </RegionDialog>
-              </RegionOverlay>
+        {regionModalOpen && (
+          <RegionOverlay onClick={() => setRegionModalOpen(false)}>
+            <RegionDialog onClick={(e) => e.stopPropagation()}>
+              <RegionHeader>
+                <div className="Body__MediumDefault">지역 설정</div>
+                <button className="Body__Small" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--neutral-600)" }} onClick={() => setRegionModalOpen(false)}>닫기</button>
+              </RegionHeader>
+              <RegionList>
+                <PublicDropdown options={cityOptions} placeholder="시/도" value={selectCity} onChange={setSelectCity} />
+                <PublicDropdown options={cityOptions} placeholder="시/구/군" value={selectGu} onChange={setSelectGu} />
+                <PublicDropdown options={cityOptions} placeholder="동/읍/면" value={selectDong} onChange={setSelectDong} />
+              </RegionList>
+              <RegionChips>
+                {selectRegions.map((v) => (
+                  <DeleteTag key={v} content={<>{v}</>} color={"var(--primary-blue-600)"} onClick={() => handleDeleteRegion(v)} />
+                ))}
+              </RegionChips>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <button className="Body__MediumDefault" style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--neutral-300)', background: 'var(--neutral-100)', cursor: 'pointer' }} onClick={() => { setSelectCity(null); setSelectGu(null); setSelectDong(null); setSelectRegions([]); }}>초기화</button>
+                <button className="Body__MediumDefault" style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--primary-blue-500)', background: 'var(--primary-blue-500)', color: '#fff', cursor: 'pointer' }} onClick={handleApplyRegion}>적용</button>
+              </div>
+            </RegionDialog>
+          </RegionOverlay>
+        )}
+
+        {storeMarkers.map((store, index) => (
+          <React.Fragment key={store.id}>
+            <MapList 
+              name={store.name}
+              bookmark={false}
+              rating={store.rating}
+              address={store.address}
+              category={store.category}
+              images={store.images || []}
+              distance={getDistance(store.position)}
+              storeId={store.id}
+            />
+            {index < storeMarkers.length - 1 && (
+              <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />
             )}
-
-            {storeMarkers.map((store, index) => (
-              <React.Fragment key={store.id}>
-                <MapList 
-                  name={store.name}
-                  bookmark={false}
-                  rating={4.5}
-                  address={store.address}
-                  category={store.category}
-                  images={["https://picsum.photos/200/300", "https://picsum.photos/200/300", "https://picsum.photos/200/300"]}
-                />
-                {index < storeMarkers.length - 1 && (
-                  <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />
-                )}
-              </React.Fragment>
-            ))}
-        </BottomSheetContainer>
+          </React.Fragment>
+        ))}
+      </BottomSheetContainer>
     </BottomSheet>
-    </>
   );
 }

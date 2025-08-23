@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import BottomSheet from "../Components/BottomSheet";
-import { useNavigate } from "react-router-dom";
-import FolderBox from "../Components/FolderBox";
-import PencilButton from "../Components/PencilButton";
+import BottomSheet from "../../Components/BottomSheet";
+import { Emoji, EmojiStyle } from "emoji-picker-react";
+import { placeDatas } from "../../Data/PlaceDatas";
+import { useLocation, useNavigate } from "react-router-dom";
+import LargePlaceBox from "../../Components/PlaceBox/LargePlaceBox";
 
 const PageContainer = styled.div`
   display: flex;
@@ -43,7 +44,8 @@ const TitleContainer = styled.div`
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: var(--spacing-s);
   color: var(--neutral-1000);
 `;
 
@@ -57,46 +59,23 @@ const FolderContainer = styled.div`
 `;
 
 const Divider = styled.div`
-  width: calc(100% + 32px);
+  width: 100%;
   height: 1px;
   background-color: var(--neutral-200);
 `;
 
-export default function BookMark(): React.JSX.Element {
+export default function BookMarkDetail(): React.JSX.Element {
   const navigate = useNavigate();
-  const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
-  const [openMoreId, setOpenMoreId] = useState<string | null>(null);
+  const location = useLocation();
+  const { unicode, title: folderTitle } = location.state;
+  const [isSheetOpen, setIsSheetOpen] = useState(true);
+  const [emoji, setEmoji] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
 
-  const folderDatas = [
-    {
-      id: "1",
-      unicode: "1f4c1",
-      title: "내 폴더",
-    },
-    {
-      id: "2",
-      unicode: "1f354",
-      title: "야식 파티",
-    },
-    {
-      id: "3",
-      unicode: "1f30a",
-      title: "부산 맛집",
-    },
-    {
-      id: "4",
-      unicode: "1f3e0",
-      title: "숙소",
-    },
-  ];
-
-  const handleMoreClick = (id: string): void => {
-    setOpenMoreId((prev) => (prev === id ? null : id));
-  };
-
-  const handleFolderClick = (unicode: string, title: string): void => {
-    navigate("/bookmark/detail", { state: { unicode, title } });
-  };
+  useEffect(() => {
+    setEmoji(unicode);
+    setTitle(folderTitle);
+  }, []);
 
   return (
     <PageContainer>
@@ -116,28 +95,17 @@ export default function BookMark(): React.JSX.Element {
       >
         <SheetContainer>
           <TitleContainer>
-            <div className="Title__H2">즐겨찾기</div>
-            <PencilButton
-              buttonText="새 목록 추가하기"
-              onClick={() => navigate("/bookmark/add")}
-            />
+            <Emoji unified={emoji} size={24} emojiStyle={EmojiStyle.NATIVE} />
+            <div className="Title__H2">{title}</div>
           </TitleContainer>
           <FolderContainer>
-            {folderDatas.map((folder, i) => (
+            {placeDatas.map((place) => (
               <>
-                <FolderBox
-                  key={folder.id}
-                  id={folder.id}
-                  unicode={folder.unicode}
-                  title={folder.title}
-                  placeCount={6}
-                  isMoreOpen={openMoreId === folder.id}
-                  onMoreClick={() => handleMoreClick(folder.id)}
-                  onClick={() =>
-                    handleFolderClick(folder.unicode, folder.title)
-                  }
+                <Divider />
+                <LargePlaceBox
+                  {...place}
+                  onClick={() => navigate("/bookmark")}
                 />
-                {i < folderDatas.length - 1 && <Divider />}
               </>
             ))}
           </FolderContainer>

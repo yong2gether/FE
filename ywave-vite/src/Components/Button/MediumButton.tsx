@@ -6,7 +6,7 @@ interface MediumButtonProps {
   onClick: () => void;
 }
 
-const Button = styled.button`
+const Button = styled.div`
   min-width: auto;
   min-height: auto;
   background-color: var(--primary-blue-500);
@@ -14,7 +14,7 @@ const Button = styled.button`
   border-radius: 10px;
   color: var(--neutral-100);
   cursor: pointer;
-  padding: 12px 16px;
+  padding: 8px 16px;
   text-align: center;
   white-space: nowrap;
 

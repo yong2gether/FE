@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi";
 import { AiFillStar } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
+import ImageModal from "../ImageComponent/ImageModal";
 
 interface SmallReviewBoxProps {
   id: string;
@@ -27,6 +28,7 @@ const DetailContainer = styled.div`
   align-items: flex-start;
   justify-content: center;
   gap: var(--spacing-xs);
+  flex: 1;
 `;
 
 const RatingContainer = styled.div`
@@ -67,17 +69,19 @@ const ReviewText = styled.div`
   -webkit-box-orient: vertical;
 `;
 
-const ImageContainer = styled.div<{ backgroundImage: string }>`
+const ImageContainer = styled.div`
   min-width: 77px;
   min-height: 77px;
   border-radius: 10px;
-  background-image: url(${({ backgroundImage }) => backgroundImage});
   background-size: cover;
+  background-position: center;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
   padding: 8px 4px;
   position: relative;
+  cursor: pointer;
+  border: 1px solid var(--neutral-200);
 `;
 
 const ImageCount = styled.div`
@@ -101,8 +105,32 @@ export default function SmallReviewBox({
   nick,
   createdAt,
   reviewText,
-  images,
+  images = [],
 }: SmallReviewBoxProps): React.JSX.Element {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const openModal = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const goToPrevious = () => {
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentImageIndex < images.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+    }
+  };
+
   const renderStars = () => {
     const stars: React.ReactElement[] = [];
     for (let i = 1; i <= 5; i++) {
@@ -118,29 +146,43 @@ export default function SmallReviewBox({
   };
 
   return (
-    <ReviewContainer>
-      <DetailContainer>
-        <RatingContainer>
-          <div className="Body__Default">{rating}</div>
-          <StarContainer>{renderStars()}</StarContainer>
-        </RatingContainer>
+    <>
+      <ReviewContainer>
+        <DetailContainer>
+          <RatingContainer>
+            <div className="Body__Default">{rating}</div>
+            <StarContainer>{renderStars()}</StarContainer>
+          </RatingContainer>
 
-        <InfoContainer className="Body__Default">
-          <div>{nick}님</div>
-          <div>|</div>
-          <div>{createdAt}</div>
-        </InfoContainer>
+          <InfoContainer className="Body__Default">
+            <div>{nick}님</div>
+            <div>|</div>
+            <div>{createdAt}</div>
+          </InfoContainer>
 
-        <ReviewText className="Body__Default">{reviewText}</ReviewText>
-      </DetailContainer>
+          <ReviewText className="Body__Default">{reviewText}</ReviewText>
+        </DetailContainer>
 
-      {images && images.length > 0 && (
-        <ImageContainer backgroundImage={images[0]}>
+        {images && images.length > 0 && (
+          <ImageContainer 
+            style={{ backgroundImage: `url(${images[0]})` }}
+            onClick={() => openModal(0)}
+          >
             {images.length > 1 && (
-                <ImageCount>{images.length}</ImageCount>
+              <ImageCount>{images.length}</ImageCount>
             )}
-        </ImageContainer>
-      )}
-    </ReviewContainer>
+          </ImageContainer>
+        )}
+      </ReviewContainer>
+
+      <ImageModal
+        isOpen={isModalOpen}
+        images={images}
+        currentIndex={currentImageIndex}
+        onClose={closeModal}
+        onPrevious={goToPrevious}
+        onNext={goToNext}
+      />
+    </>
   );
 }
