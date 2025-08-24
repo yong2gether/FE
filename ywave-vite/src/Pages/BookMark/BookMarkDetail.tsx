@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import BottomSheet from "../../Components/BottomSheet";
 import { Emoji, EmojiStyle } from "emoji-picker-react";
@@ -7,43 +7,26 @@ import { useLocation, useNavigate } from "react-router-dom";
 import LargePlaceBox from "../../Components/PlaceBox/LargePlaceBox";
 
 const PageContainer = styled.div`
+  width: 100%;
+  height: calc(100vh - 80px);
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+`;
+
+const BottomSheetContainer = styled.div`
+  width: 100%;
+  min-height: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
-  width: 100%;
-`;
-
-const Title = styled.h1`
-  color: var(--primary-green-600);
-  margin-bottom: 30px;
-  text-align: center;
-  font-size: var(--title-h1);
-  font-weight: var(--font-weight-semibold);
-`;
-
-const Content = styled.div`
-  text-align: center;
-  max-width: 400px;
-  width: 100%;
-`;
-
-const SheetContainer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-l);
 `;
 
 const TitleContainer = styled.div`
   width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
   gap: var(--spacing-s);
   color: var(--neutral-1000);
@@ -71,29 +54,30 @@ export default function BookMarkDetail(): React.JSX.Element {
   const [isSheetOpen, setIsSheetOpen] = useState(true);
   const [emoji, setEmoji] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const [sheetRatio, setSheetRatio] = useState<number>(0);
 
   useEffect(() => {
     setEmoji(unicode);
     setTitle(folderTitle);
   }, []);
 
+  const handleProgressChange = useCallback((ratio: number) => {
+    setSheetRatio(ratio);
+  }, []);
+
   return (
     <PageContainer>
-      <Content>
-        <Title>즐겨찾기</Title>
-        <p className="Body__Default" style={{ color: "var(--neutral-600)" }}>
-          즐겨찾기 페이지입니다.
-        </p>
-        <button onClick={() => setIsSheetOpen(true)}>시트 열기</button>
-      </Content>
-
       <BottomSheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        snapPoints={[0.7, 0.9]}
-        initialSnapIndex={0}
+        snapPoints={[0.15, 0.6, 0.95]}
+        initialSnapIndex={1}
+        bottomOffsetPx={0}
+        showOverlay={false}
+        dismissible={false}
+        onProgressChange={handleProgressChange}
       >
-        <SheetContainer>
+        <BottomSheetContainer>
           <TitleContainer>
             <Emoji unified={emoji} size={24} emojiStyle={EmojiStyle.NATIVE} />
             <div className="Title__H2">{title}</div>
@@ -109,7 +93,7 @@ export default function BookMarkDetail(): React.JSX.Element {
               </>
             ))}
           </FolderContainer>
-        </SheetContainer>
+        </BottomSheetContainer>
       </BottomSheet>
     </PageContainer>
   );

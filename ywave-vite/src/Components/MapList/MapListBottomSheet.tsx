@@ -267,7 +267,7 @@ export default function MapListBottomSheet({
     <BottomSheet 
       isOpen={true} 
       onClose={() => {}} 
-      snapPoints={[0.15, 0.7, 0.95]} 
+      snapPoints={[0.15, 0.6, 0.95]} 
       initialSnapIndex={0} 
       bottomOffsetPx={bottomOffsetPx} 
       showOverlay={false} 

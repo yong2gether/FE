@@ -64,7 +64,7 @@ const Contents = styled.main`
 export default function Mobile({ children }: MobileProps): React.JSX.Element {
   const location = useLocation();
   const currentPath = location.pathname;
-  const noNavigationPath = ["/login", "/signup", "/category"];
+  const noNavigationPath = ["/landing", "/onboarding", "/login", "/signup", "/category"];
   const showNavigation = !(currentPath === "/" || noNavigationPath.some(prefix => currentPath.startsWith(prefix)));
 
   return (

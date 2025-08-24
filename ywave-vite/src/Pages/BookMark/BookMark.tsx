@@ -6,19 +6,20 @@ import FolderBox from "../../Components/FolderBox";
 import PencilButton from "../../Components/Button/PencilButton";
 
 const PageContainer = styled.div`
-  display: flex;
   width: 100%;
-  position: relative;
   height: calc(100vh - 80px);
+  position: relative;
+  display: flex;
   overflow: hidden;
+  user-select: none;
 `;
 
 const BottomSheetContainer = styled.div`
-  display: flex;
   width: 100%;
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+  gap: var(--spacing-m);
   min-height: 100%;
   position: relative;
 `;
@@ -30,19 +31,6 @@ const TitleContainer = styled.div`
   justify-content: space-between;
   color: var(--neutral-1000);
   flex-shrink: 0;
-`;
-
-const FolderContainer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-m);
-`;
-
-const Divider = styled.div`
-  width: calc(100% + 32px);
-  height: 1px;
-  background-color: var(--neutral-200);
 `;
 
 export default function BookMark(): React.JSX.Element {
@@ -111,8 +99,8 @@ export default function BookMark(): React.JSX.Element {
       <BottomSheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        snapPoints={[0.15, 0.7, 0.95]}
-        initialSnapIndex={0}
+        snapPoints={[0.15, 0.6, 0.95]}
+        initialSnapIndex={1}
         bottomOffsetPx={0}
         showOverlay={false}
         dismissible={false}
@@ -126,7 +114,7 @@ export default function BookMark(): React.JSX.Element {
               onClick={() => navigate("/bookmark/add")}
             />
           </TitleContainer>
-          
+
           {folderDatas.map((folder, index) => (
             <React.Fragment key={folder.id}>
               <FolderBox
@@ -136,12 +124,16 @@ export default function BookMark(): React.JSX.Element {
                 placeCount={6}
                 isMoreOpen={openMoreId === folder.id}
                 onMoreClick={() => handleMoreClick(folder.id)}
-                onClick={() =>
-                  handleFolderClick(folder.unicode, folder.title)
-                }
+                onClick={() => handleFolderClick(folder.unicode, folder.title)}
               />
               {index < folderDatas.length - 1 && (
-                <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />
+                <div
+                  style={{
+                    height: 1,
+                    background: "var(--neutral-200)",
+                    width: "100%",
+                  }}
+                />
               )}
             </React.Fragment>
           ))}

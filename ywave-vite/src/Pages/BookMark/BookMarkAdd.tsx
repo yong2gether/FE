@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import BottomSheet from "../../Components/BottomSheet";
@@ -8,36 +8,21 @@ import PublicInput from "../../Components/PublicInput";
 import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
+  width: 100%;
+  height: calc(100vh - 80px);
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+`;
+
+const BottomSheetContainer = styled.div`
+  width: 100%;
+  min-height: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
-  width: 100%;
-`;
-
-const Title = styled.h1`
-  color: var(--primary-green-600);
-  margin-bottom: 30px;
-  text-align: center;
-  font-size: var(--title-h1);
-  font-weight: var(--font-weight-semibold);
-`;
-
-const Content = styled.div`
-  text-align: center;
-  max-width: 400px;
-  width: 100%;
-`;
-
-const SheetContainer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-l);
   color: var(--neutral-1000);
 `;
@@ -82,6 +67,11 @@ export default function BookMarkAdd(): React.JSX.Element {
   const navigate = useNavigate();
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
   const [folderInput, setFolderInput] = useState<string>("");
+  const [sheetRatio, setSheetRatio] = useState<number>(0);
+
+  const handleProgressChange = useCallback((ratio: number) => {
+    setSheetRatio(ratio);
+  }, []);
 
   const handleEmojiEdit = (): void => {
     alert("이모지 변경 기능 추가 예정");
@@ -93,20 +83,17 @@ export default function BookMarkAdd(): React.JSX.Element {
 
   return (
     <PageContainer>
-      <Content>
-        <Title>즐겨찾기</Title>
-        <p className="Body__Default" style={{ color: "var(--neutral-600)" }}>
-          즐겨찾기 페이지입니다.
-        </p>
-        <button onClick={() => setIsSheetOpen(true)}>시트 열기</button>
-      </Content>
-
       <BottomSheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        snapPoints={[0.7]}
+        snapPoints={[0.6]}
+        initialSnapIndex={0}
+        bottomOffsetPx={0}
+        showOverlay={false}
+        dismissible={false}
+        onProgressChange={handleProgressChange}
       >
-        <SheetContainer>
+        <BottomSheetContainer>
           <div className="Title__H2">새 목록 추가</div>
           <ImageContainer>
             <Emoji unified="1f4c1" size={60} emojiStyle={EmojiStyle.NATIVE} />
@@ -132,7 +119,7 @@ export default function BookMarkAdd(): React.JSX.Element {
             buttonText="새 목록 추가하기"
             onClick={handleBookMarkAdd}
           />
-        </SheetContainer>
+        </BottomSheetContainer>
       </BottomSheet>
     </PageContainer>
   );
