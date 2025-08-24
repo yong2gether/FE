@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import styled from "styled-components";
 import BottomSheet from "../../Components/BottomSheet";
-import { useNavigate } from "react-router-dom";
-import FolderBox from "../../Components/BookMarkFolder/FolderBox";
+import { useNavigate, useLocation } from "react-router-dom";
+import FolderList from "../../Components/BookMarkFolder/FolderList";
 import PencilButton from "../../Components/Button/PencilButton";
-import { useBookmark } from "../../hooks/useBookmark";
+import { useBookmarkApi } from "../../hooks/useApi";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { createEmojiMarker } from "../../utils/emojiToMarker";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
@@ -59,13 +59,66 @@ const defaultCenter = { lat: 37.5665, lng: 126.978 };
 
 export default function BookMark(): React.JSX.Element {
   const navigate = useNavigate();
-  const { folders, deleteFolder, places: allBookmarkPlaces } = useBookmark();
+  const location = useLocation();
+  const { getBookmarkGroups, getGroupsState } = useBookmarkApi();
+  
+  // 폴더 목록 상태
+  const [folders, setFolders] = useState<any[]>([]);
+  const [allBookmarkPlaces, setAllBookmarkPlaces] = useState<any[]>([]);
+  
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
   const [openMoreId, setOpenMoreId] = useState<string | null>(null);
   const [sheetRatio, setSheetRatio] = useState<number>(0);
 
   // Google Maps API 훅 사용
   const { isLoaded, loadError, apiKey } = useGoogleMaps();
+
+  // 폴더 목록 조회
+  const fetchBookmarkGroups = useCallback(async () => {
+    try {
+      console.log('북마크 그룹 조회 시작...');
+      const response = await getBookmarkGroups();
+      console.log('북마크 그룹 조회 응답:', response);
+      
+      if (response && response.groups) {
+        console.log('폴더 개수:', response.groups.length);
+        console.log('첫 번째 폴더 구조:', response.groups[0]);
+        setFolders(response.groups);
+        
+        // 모든 북마크 장소 수집
+        const allPlaces: any[] = [];
+        response.groups.forEach((group: any) => {
+          if (group.stores) {
+            allPlaces.push(...group.stores);
+          }
+        });
+        setAllBookmarkPlaces(allPlaces);
+        console.log('전체 북마크 장소 개수:', allPlaces.length);
+      } else {
+        console.log('응답에 groups가 없음:', response);
+        setFolders([]);
+        setAllBookmarkPlaces([]);
+      }
+    } catch (error) {
+      console.error('북마크 그룹 조회 실패:', error);
+      setFolders([]);
+      setAllBookmarkPlaces([]);
+    }
+  }, [getBookmarkGroups]);
+
+  useEffect(() => {
+    fetchBookmarkGroups();
+  }, [fetchBookmarkGroups]);
+
+
+
+  // 폴더 삭제 함수 (임시 구현)
+  const deleteFolder = useCallback((folderId: string | number | null) => {
+    if (folderId === null) return;
+    setFolders(prev => prev.filter(folder => 
+      (folder.groupId?.toString() || folder.id?.toString()) !== folderId.toString()
+    ));
+  }, []);
 
   // 북마크 장소들을 지도에 표시할 데이터
   const bookmarkPlaces = useMemo(() => {
@@ -91,24 +144,35 @@ export default function BookMark(): React.JSX.Element {
     return { lat: avgLat, lng: avgLng };
   }, [bookmarkPlaces]);
 
-  const handleMoreClick = (id: string): void => {
-    setOpenMoreId((prev) => (prev === id ? null : id));
-  };
+  const handleMoreClick = useCallback((id: string | number | null): void => {
+    if (id === null) return;
+    setOpenMoreId((prev) => (prev === id.toString() ? null : id.toString()));
+  }, []);
 
-  const handleFolderClick = (unicode: string, title: string): void => {
+  const handleFolderClick = useCallback((unicode: string, title: string): void => {
     navigate("/bookmark/detail", { state: { unicode, title } });
-  };
+  }, [navigate]);
 
-  const handleFolderDelete = (folderId: string): void => {
+  const handleFolderDelete = useCallback((folderId: string): void => {
     if (window.confirm("정말로 이 폴더를 삭제하시겠습니까?")) {
       deleteFolder(folderId);
       setOpenMoreId(null);
     }
-  };
+  }, [deleteFolder]);
 
   const handleProgressChange = useCallback((ratio: number) => {
     setSheetRatio(ratio);
   }, []);
+
+  // BookMarkAdd에서 돌아왔을 때 새로고침
+  useEffect(() => {
+    if (location.state?.refresh) {
+      console.log('북마크 폴더 새로고침 시작');
+      fetchBookmarkGroups();
+      // 상태 초기화 (replace로 현재 URL의 state를 제거)
+      navigate("/bookmark", { replace: true });
+    }
+  }, [location.state?.refresh, navigate, fetchBookmarkGroups]);
 
   return (
     <PageContainer>
@@ -170,40 +234,13 @@ export default function BookMark(): React.JSX.Element {
             />
           </TitleContainer>
           
-          {folders.length === 0 ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px 20px',
-              color: 'var(--neutral-500)'
-            }}>
-              <div className="Body__MediumLarge" style={{ marginBottom: '8px' }}>
-                아직 북마크 폴더가 없습니다
-              </div>
-              <div className="Body__Small">
-                새 목록 추가하기 버튼을 눌러 첫 번째 폴더를 만들어보세요!
-              </div>
-            </div>
-          ) : (
-            folders.map((folder, index) => (
-              <React.Fragment key={folder.id}>
-                <FolderBox
-                  id={folder.id}
-                  unicode={folder.unicode}
-                  title={folder.title}
-                  placeCount={folder.placeCount}
-                  isMoreOpen={openMoreId === folder.id}
-                  onMoreClick={() => handleMoreClick(folder.id)}
-                  onClick={() =>
-                    handleFolderClick(folder.unicode, folder.title)
-                  }
-                  onDelete={() => handleFolderDelete(folder.id)}
-                />
-                {index < folders.length - 1 && (
-                  <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />
-                )}
-              </React.Fragment>
-            ))
-          )}
+          <FolderList
+            folders={folders}
+            openMoreId={openMoreId}
+            onMoreClick={handleMoreClick}
+            onFolderClick={handleFolderClick}
+            onFolderDelete={handleFolderDelete}
+          />
         </BottomSheetContainer>
       </BottomSheet>
     </PageContainer>
