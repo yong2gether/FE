@@ -335,7 +335,7 @@ export default function Mypage(): React.JSX.Element {
             </Category>
             <LargeButton
               buttonText="변경하기"
-              onClick={() => navigate("/category/region")}
+              onClick={() => navigate("/category/region", { state: { from: 'mypage' } })}
             />
           </CategoryContainer>
         )}
