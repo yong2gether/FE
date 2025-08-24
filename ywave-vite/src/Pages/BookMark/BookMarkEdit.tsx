@@ -1,12 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, useLocation } from "react-router-dom";
-import BottomSheet from "../../Components/BottomSheet";
-import { Emoji, EmojiStyle } from "emoji-picker-react";
 import { BiSolidPencil } from "react-icons/bi";
+import EmojiPicker from "../../Components/EmojiPicker";
+import BottomSheet from "../../Components/BottomSheet";
 import PublicInput from "../../Components/PublicInput";
 import LargeButton from "../../Components/Button/LargeButton";
-import EmojiPicker from "../../Components/EmojiPicker";
 import { unifiedToEmoji } from "../../utils/emojiToMarker";
 
 const PageContainer = styled.div`
@@ -68,7 +67,7 @@ const TitleContainer = styled.div`
 export default function BookMarkEdit(): React.JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
-  const { unicode, title } = location.state;
+  const { unicode = "1f4c1", title = "폴더" } = location.state || {};
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
   const [folderEmoji, setFolderEmoji] = useState<string>("");
   const [folderInput, setFolderInput] = useState<string>("");
@@ -78,14 +77,14 @@ export default function BookMarkEdit(): React.JSX.Element {
     setFolderEmoji(unifiedToEmoji(unicode));
     setFolderInput(title);
     console.log(folderEmoji);
-  }, []);
+  }, [unicode, title]);
 
   const handleEmojiEdit = (): void => {
     setIsEmojiPickerOpen(true);
   };
 
   const handleEmojiSelect = (emoji: string, unified: string) => {
-    setFolderEmoji(unified);
+    setFolderEmoji(emoji); // emoji 문자를 저장 (unicode 코드가 아님)
     setIsEmojiPickerOpen(false);
   };
 
@@ -107,11 +106,14 @@ export default function BookMarkEdit(): React.JSX.Element {
         <BottomSheetContainer>
           <div className="Title__H2">폴더 수정</div>
           <ImageContainer>
-            <Emoji
+            {/* <Emoji
               unified={folderEmoji}
               size={60}
               emojiStyle={EmojiStyle.NATIVE}
-            />
+            /> */}
+            <div style={{ fontSize: '60px' }}>
+              {folderEmoji} {/* 직접 emoji 표시 */}
+            </div>
             <ImageEditButton onClick={handleEmojiEdit}>
               <BiSolidPencil />
             </ImageEditButton>
@@ -142,7 +144,7 @@ export default function BookMarkEdit(): React.JSX.Element {
         isOpen={isEmojiPickerOpen}
         onClose={() => setIsEmojiPickerOpen(false)}
         onSelect={handleEmojiSelect}
-        currentEmoji={unifiedToEmoji(folderEmoji)}
+        currentEmoji={folderEmoji}
       />
     </PageContainer>
   );

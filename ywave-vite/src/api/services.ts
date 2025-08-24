@@ -151,21 +151,8 @@ export const reviewApi = {
 };
 
 // AI 관련 API
-/**export const aiApi = {
-  // ChatGPT 연결 테스트
-  echo: async (data: EchoRequest): Promise<any> => {
-    return apiClient.post<any>('/api/v1/ai/echo', data);
-  },
-
-  // AI 서비스 상태 확인
-  ping: async (): Promise<string> => {
-    return apiClient.get<string>('/api/v1/ai/ping');
-  },
-};
-
 // API 초기화 함수
 export const initializeApi = () => {
   // 저장된 토큰 복원
   userApi.restoreToken();
 };
-*/

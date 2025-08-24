@@ -142,7 +142,7 @@ const mockPlaces = [
     rating: 4.5,
     distance: "0.5km",
     industry: "음식점",
-    images: ["https://via.placeholder.com/300x200"]
+    images: ["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"]
   },
   {
     id: "2",
@@ -154,7 +154,7 @@ const mockPlaces = [
     rating: 4.3,
     distance: "0.8km",
     industry: "카페",
-    images: ["https://via.placeholder.com/300x200"]
+    images: ["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"]
   }
 ];
 
@@ -181,7 +181,7 @@ export default function BookMarkDetail(): React.JSX.Element {
       rating: 4.5,
       distance: '0.5km',
       industry: place.category,
-      images: ["https://via.placeholder.com/300x200"]
+      images: ["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"]
     }));
   }, [allBookmarkPlaces]);
 
