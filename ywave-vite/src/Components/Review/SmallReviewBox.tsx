@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi";
 import { AiFillStar } from "react-icons/ai";
-import { useNavigate } from "react-router-dom";
 import ImageModal from "../ImageComponent/ImageModal";
 
 interface SmallReviewBoxProps {

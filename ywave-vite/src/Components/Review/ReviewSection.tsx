@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
-import SmallReviewBox from "./ReviewBox/SmallReviewBox";
-import PencilButton from "./Button/PencilButton";
+import SmallReviewBox from "./SmallReviewBox";
+import PencilButton from "../Button/PencilButton";
 
 interface ReviewSectionProps {
   title: string;
