@@ -4,6 +4,7 @@ import styled from "styled-components";
 interface LargeButtonProps {
   buttonText: string;
   onClick: () => void;
+  loading?: boolean;
 }
 
 const Button = styled.button`
@@ -45,10 +46,11 @@ const Button = styled.button`
 export default function LargeButton({
   buttonText,
   onClick,
+  loading,
 }: LargeButtonProps): React.JSX.Element {
   return (
     <Button className="Title__H4" onClick={onClick}>
-      {buttonText}
+      {loading ? "로딩중..." : buttonText}
     </Button>
   );
 }
