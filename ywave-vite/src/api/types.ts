@@ -166,7 +166,7 @@ export interface UpdatedBookmarkGroupDto {
   iconUrl: string;
 }
 
-export interface BookmarkGroupDto {
+export interface BookmarkGroupDetailDto {
   groupId: number;
   groupName: string;
   isDefault: boolean;
@@ -176,7 +176,7 @@ export interface BookmarkGroupDto {
 
 export interface BookmarkedGroupsResponse {
   message: string;
-  groups: BookmarkGroupDto[];
+  groups: BookmarkGroupDetailDto[];
 }
 
 export interface BookmarkedStoreDto {
@@ -199,6 +199,19 @@ export interface DeleteBookmarkGroupRequest {
 export interface DeleteBookmarkGroupResponse {
   message: string;
   deletedGroupId: number;
+}
+
+export interface BookmarkGroupDto {
+  groupId: number;
+  groupName: string;
+  iconUrl: string;
+  isDefault: boolean;
+  stores: number[];
+}
+
+export interface BookmarkedGroupResponse {
+  message: string;
+  group: BookmarkGroupDto;
 }
 
 // 리뷰 관련 타입

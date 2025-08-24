@@ -13,14 +13,18 @@ const PlaceContainer = styled.div<{ $backgroundImage: string }>`
   position: relative;
   width: 100%;
   height: 200px;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   background-image: url(${({ $backgroundImage }) => $backgroundImage});
   background-size: cover;
   background-position: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   cursor: pointer;
   transition: transform 0.2s ease;
-  
+
   &:hover {
     transform: scale(1.02);
   }

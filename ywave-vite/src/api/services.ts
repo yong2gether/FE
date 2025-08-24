@@ -24,6 +24,7 @@ import {
   DeleteBookmarkGroupResponse,
   BookmarkedGroupsResponse,
   UserReviewsResponse,
+  BookmarkedGroupResponse,
 } from './types';
 import { createSearchParams } from '../utils/apiUtils';
 
@@ -146,6 +147,11 @@ export const bookmarkApi = {
   // 북마크 그룹 삭제
   deleteBookmarkGroup: async (data: DeleteBookmarkGroupRequest): Promise<DeleteBookmarkGroupResponse> => {
     return apiClient.delete<DeleteBookmarkGroupResponse>('/api/v1/mypage/bookmarks/groups', data);
+  },
+
+  // 특정 북마크 그룹 조회
+  getBookmarkGroup: async (groupId: number): Promise<BookmarkedGroupResponse> => {
+    return apiClient.get<BookmarkedGroupResponse>(`/api/v1/mypage/bookmarks/${groupId}`);
   },
 };
 
