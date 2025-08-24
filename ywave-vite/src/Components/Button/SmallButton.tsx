@@ -1,22 +1,23 @@
 import React from "react";
 import styled from "styled-components";
+import { BsArrowRight } from "react-icons/bs";
 
-interface MediumButtonProps {
-  buttonText: string;
+interface SmallButtonProps {
   onClick: () => void;
 }
 
-const Button = styled.button`
-  min-width: auto;
-  min-height: auto;
+const Button = styled.div`
+  width: 56px;
+  height: 56px;
+  padding: 10px;
   background-color: var(--primary-blue-500);
+  color: var(--neutral-100-2);
+  border-radius: 28px;
   border: none;
-  border-radius: 10px;
-  color: var(--neutral-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 8px 16px;
-  text-align: center;
-  white-space: nowrap;
 
   &:hover {
     background-color: var(--primary-blue-600);
@@ -27,13 +28,12 @@ const Button = styled.button`
   }
 `;
 
-export default function MediumButton({
-  buttonText,
+export default function SmallButton({
   onClick,
-}: MediumButtonProps): React.JSX.Element {
+}: SmallButtonProps): React.JSX.Element {
   return (
     <Button className="Title__H6" onClick={onClick}>
-      {buttonText}
+        <BsArrowRight size={28} />
     </Button>
   );
 }

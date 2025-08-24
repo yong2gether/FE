@@ -9,7 +9,6 @@ import DeleteTag from "../../Components/DeleteTag";
 import LargeReviewBox from "../../Components/ReviewBox/LargeReviewBox";
 import { placeDatas } from "../../Data/PlaceDatas";
 import { useUserApi } from "../../hooks/useApi";
-import MediumButton from "../../Components/Button/MediumButton";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -24,13 +23,19 @@ const PageContainer = styled.div`
   user-select: none;
 `;
 
+const UserWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+`;
+
 const UserContainer = styled.div`
-  align-self: flex-start;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
-  margin-top: 24px;
 `;
 
 const ImageContainer = styled.div`
@@ -42,6 +47,12 @@ const ImageContainer = styled.div`
     height: 100%;
     color: var(--neutral-200);
   }
+`;
+
+const Logout = styled.div`
+  color: var(--neutral-300);
+  margin-right: 16px;
+  cursor: pointer;
 `;
 
 const Content = styled.div`
@@ -163,16 +174,22 @@ export default function Mypage(): React.JSX.Element {
   const [openMoreId, setOpenMoreId] = useState<string | null>(null);
 
   const { logout } = useUserApi();
-  
+
   const nick = "닉네임";
-  
-  const RegionDatas = React.useMemo(() => [
-    "용인시 처인구 모현읍",
-    "창원시 마산회구 양덕2동",
-    "서울특별시 동대문구 휘경1동",
-  ], []);
-  
-  const IndustryDatas = React.useMemo(() => ["restaurant", "cafe", "convenience"], []);
+
+  const RegionDatas = React.useMemo(
+    () => [
+      "용인시 처인구 모현읍",
+      "창원시 마산회구 양덕2동",
+      "서울특별시 동대문구 휘경1동",
+    ],
+    []
+  );
+
+  const IndustryDatas = React.useMemo(
+    () => ["restaurant", "cafe", "convenience"],
+    []
+  );
 
   useEffect(() => {
     setSelectRegions(RegionDatas);
@@ -195,7 +212,6 @@ export default function Mypage(): React.JSX.Element {
     );
   };
 
-
   const handleTabClick = (tab: "preferences" | "reviews") => {
     setActiveTab(tab);
     setSearchParams({ tab });
@@ -212,20 +228,21 @@ export default function Mypage(): React.JSX.Element {
 
   return (
     <PageContainer>
-      <UserContainer className="Title__H4">
-        <ImageContainer>
-          <BiSolidUserCircle />
-        </ImageContainer>
-        {nick}님
-      </UserContainer>
+      <UserWrapper>
+        <UserContainer className="Title__H4">
+          <ImageContainer>
+            <BiSolidUserCircle />
+          </ImageContainer>
+          {nick}님
+        </UserContainer>
+        <Logout className="Body__MediumSmall" onClick={handleLogout}>
+          로그아웃
+        </Logout>
+      </UserWrapper>
       <PencilButton
         buttonText="프로필 편집하기"
         onClick={() => navigate("/mypage/profile")}
         isFill={true}
-      />
-      <MediumButton
-        buttonText="로그아웃"
-        onClick={handleLogout}
       />
       <Content>
         <TabContainer>
