@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import BottomSheet from "../../Components/BottomSheet";
@@ -11,36 +11,21 @@ import LargeButton from "../../Components/Button/LargeButton";
 import { useBookmark } from "../../hooks/useBookmark";
 
 const PageContainer = styled.div`
+  width: 100%;
+  height: calc(100vh - 80px);
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+`;
+
+const BottomSheetContainer = styled.div`
+  width: 100%;
+  min-height: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
-  width: 100%;
-`;
-
-const Title = styled.h1`
-  color: var(--primary-green-600);
-  margin-bottom: 30px;
-  text-align: center;
-  font-size: var(--title-h1);
-  font-weight: var(--font-weight-semibold);
-`;
-
-const Content = styled.div`
-  text-align: center;
-  max-width: 400px;
-  width: 100%;
-`;
-
-const SheetContainer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-l);
   color: var(--neutral-1000);
 `;
@@ -89,6 +74,7 @@ export default function BookMarkAdd(): React.JSX.Element {
   const { createFolder } = useBookmark();
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
   const [folderInput, setFolderInput] = useState<string>("");
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
   const [selectedEmoji, setSelectedEmoji] = useState<string>("1f4c1");
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
@@ -103,6 +89,11 @@ export default function BookMarkAdd(): React.JSX.Element {
     message: '',
     type: 'info'
   });
+  const [sheetRatio, setSheetRatio] = useState<number>(0);
+
+  const handleProgressChange = useCallback((ratio: number) => {
+    setSheetRatio(ratio);
+  }, []);
 
   const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
     setAlertConfig({ isOpen: true, title, message, type });
@@ -145,20 +136,17 @@ export default function BookMarkAdd(): React.JSX.Element {
 
   return (
     <PageContainer>
-      <Content>
-        <Title>즐겨찾기</Title>
-        <p className="Body__Default" style={{ color: "var(--neutral-600)" }}>
-          즐겨찾기 페이지입니다.
-        </p>
-        <button onClick={() => setIsSheetOpen(true)}>시트 열기</button>
-      </Content>
-
       <BottomSheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        snapPoints={[0.7]}
+        snapPoints={[0.6]}
+        initialSnapIndex={0}
+        bottomOffsetPx={0}
+        showOverlay={false}
+        dismissible={false}
+        onProgressChange={handleProgressChange}
       >
-        <SheetContainer>
+        <BottomSheetContainer>
           <div className="Title__H2">새 목록 추가</div>
           <ImageContainer>
             <Emoji unified={selectedEmoji} size={60} emojiStyle={EmojiStyle.NATIVE} />
@@ -191,9 +179,9 @@ export default function BookMarkAdd(): React.JSX.Element {
           <LargeButton
             buttonText={isCreating ? "생성 중..." : "새 목록 추가하기"}
             onClick={handleBookMarkAdd}
-            disabled={isCreating}
+            loading={isCreating}
           />
-        </SheetContainer>
+        </BottomSheetContainer>
       </BottomSheet>
 
       {/* 커스텀 알림 */}

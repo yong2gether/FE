@@ -15,6 +15,9 @@ const PageContainer = styled.div`
   width: 100%;
   height: 100vh;
   position: relative;
+
+  overflow: hidden;
+
 `;
 
 const MapBackground = styled.div`
@@ -34,11 +37,11 @@ const MapContainer = styled.div`
 
 
 const BottomSheetContainer = styled.div`
-  display: flex;
   width: 100%;
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+  gap: var(--spacing-m);
   min-height: 100%;
   position: relative;
 `;
@@ -51,9 +54,6 @@ const TitleContainer = styled.div`
   color: var(--neutral-1000);
   flex-shrink: 0;
 `;
-
-
-
 
 const defaultCenter = { lat: 37.5665, lng: 126.978 };
 

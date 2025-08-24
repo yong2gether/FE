@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import styled from "styled-components";
@@ -116,7 +116,6 @@ const PlaceCount = styled.div`
 
 const LoadingContainer = styled.div`
   display: flex;
-  align-items: center;
   justify-content: center;
   height: 100%;
   color: var(--neutral-600);
@@ -278,7 +277,7 @@ export default function BookMarkDetail(): React.JSX.Element {
         <FolderDetailList
           places={places}
           onPlaceClick={handlePlaceClick}
-          showHeader={true}
+          showHeader={false}
         />
       </BottomSheetContainer>
     </Container>

@@ -6,10 +6,11 @@ interface PencilButtonProps {
   buttonText: string;
   onClick: () => void;
   isFill?: boolean;
+  isIcon?: boolean;
 }
 
 const Button = styled.button<{ isFill: boolean }>`
-  width: ${({ isFill }) => (isFill ? "100%" : "auto")};
+  ${({ isFill }) => (isFill ? "width: 100%" : "min-width: auto")};
   min-height: auto;
   display: flex;
   align-items: center;
@@ -37,10 +38,11 @@ export default function PencilButton({
   buttonText,
   onClick,
   isFill = false,
+  isIcon = true,
 }: PencilButtonProps): React.JSX.Element {
   return (
     <Button onClick={onClick} isFill={isFill}>
-      <BiSolidPencil />
+      {isIcon && <BiSolidPencil />}
       <div className="Body__MediumDefault">{buttonText}</div>
     </Button>
   );

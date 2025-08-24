@@ -17,12 +17,18 @@ import MainPlace from "./Pages/MainPlace";
 import BookMarkAdd from "./Pages/BookMark/BookMarkAdd";
 import BookMarkDetail from "./Pages/BookMark/BookMarkDetail";
 import BookMarkEdit from "./Pages/BookMark/BookMarkEdit";
+import Landing from "./Pages/Landing";
+import Onboarding from "./Pages/Onboarding";
 
 export default function RouterComponent(): React.JSX.Element {
     return(
         <Routes>
             {/*셋팅 페이지 라우팅*/}
             <Route path="/" element={<Setting />} />
+            {/*랜딩 페이지 라우팅*/}
+            <Route path="/landing" element={<Landing />} />
+            {/*서비스 소개 페이지 라우팅*/}
+            <Route path="/onboarding" element={<Onboarding />} />
             {/*로그인 페이지 라우팅*/}
             <Route path="/login" element={<Login />} />
             {/*회원가입 페이지 라우팅*/}
