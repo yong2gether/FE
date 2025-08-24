@@ -24,7 +24,9 @@ export interface BottomSheetProps {
 	topAccessory?: React.ReactNode;
 }
 
-const Overlay = styled.div<{ visible: boolean; bottomOffsetPx: number }>`
+const Overlay = styled.div.withConfig({
+	shouldForwardProp: (prop) => prop !== 'visible' && prop !== 'bottomOffsetPx'
+})<{ visible: boolean; bottomOffsetPx: number }>`
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -37,7 +39,9 @@ const Overlay = styled.div<{ visible: boolean; bottomOffsetPx: number }>`
 	z-index: 1000;
 `;
 
-const Sheet = styled.div<{ translateYPx: number; isDragging: boolean; bottomOffsetPx: number }>`
+const Sheet = styled.div.withConfig({
+	shouldForwardProp: (prop) => prop !== 'translateYPx' && prop !== 'isDragging' && prop !== 'bottomOffsetPx'
+})<{ translateYPx: number; isDragging: boolean; bottomOffsetPx: number }>`
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -46,7 +50,7 @@ const Sheet = styled.div<{ translateYPx: number; isDragging: boolean; bottomOffs
 	border-radius: 16px 16px 0 0;
 	box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
 	transform: translateY(${(p) => p.translateYPx}px);
-	transition: ${(p) => (p.isDragging ? "none" : "transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)")};
+	transition: ${(p) => (p.isDragging ? "none" : "transform 0.25s ease, cubic-bezier(0.25, 0.46, 0.45, 0.94)")};
 	z-index: 1500; 
 	height: calc(100% - ${(p) => p.bottomOffsetPx}px);
 	max-height: calc(100% - ${(p) => p.bottomOffsetPx}px);

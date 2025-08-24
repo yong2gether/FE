@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { userApi, storeApi, aiApi } from '../api/services';
+import { userApi, storeApi } from '../api/services';
+// import { aiApi } from '../api/services';
 import { createInitialApiState, updateApiState, createApiErrorMessage } from '../utils/apiUtils';
 
 // API 상태 타입
@@ -164,7 +165,8 @@ export const useStoreApi = () => {
   };
 };
 
-// AI API Hook
+// AI API Hook - 현재 사용하지 않음
+/*
 export const useAiApi = () => {
   const [echoState, setEchoState] = useState<ApiState<any>>(createInitialApiState());
   const [pingState, setPingState] = useState<ApiState<string>>(createInitialApiState());
@@ -202,3 +204,4 @@ export const useAiApi = () => {
     pingState,
   };
 };
+*/
