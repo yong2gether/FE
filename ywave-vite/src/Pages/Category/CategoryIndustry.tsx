@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
 import { industries } from "../../Data/Industries";
 import LargeButton from "../../Components/Button/LargeButton";
-import { useUserApi } from "../../hooks/useApi";
+import { usePreferenceApi } from "../../hooks/useApi";
 import CustomAlert from "../../Components/Modal/CustomAlert";
 
 const PageContainer = styled.div`
@@ -95,7 +95,7 @@ const ButtonContainer = styled.div`
 
 export default function CategoryIndustry(): React.JSX.Element {
   const navigate = useNavigate();
-  const { updatePreferredCategories } = useUserApi();
+  const { setPreferredCategories } = usePreferenceApi();
   const [selectIndustries, setSelectIndustries] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [alertConfig, setAlertConfig] = useState<{
@@ -126,7 +126,7 @@ export default function CategoryIndustry(): React.JSX.Element {
     if (selectIndustries.length > 0) {
       setIsSubmitting(true);
       try {
-        await updatePreferredCategories({
+        await setPreferredCategories({
           categoryIds: selectIndustries
         });
 

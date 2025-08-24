@@ -6,6 +6,8 @@ import {
   LoginResponse,
   EmailDuplicateRequest,
   EmailDuplicateResponse,
+  UpdateProfileRequest,
+  UpdateProfileResponse,
   PopularStoreDto,
   NearbyStoreDto,
   PlaceDetailsDto,
@@ -60,6 +62,11 @@ export const userApi = {
     if (token) {
       apiClient.setToken(token);
     }
+  },
+
+  // 프로필 변경
+  updateProfile: async (data: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
+    return apiClient.put<UpdateProfileResponse>('/api/v1/mypage/profile', data);
   },
 };
 

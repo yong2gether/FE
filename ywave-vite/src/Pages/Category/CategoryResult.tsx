@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
-import { industries } from "../../Data/Industries";
 import LargeButton from "../../Components/Button/LargeButton";
+import { usePreferenceApi } from "../../hooks/useApi";
+import { convertCategoryCodes } from "../../utils/categoryMapping";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -57,35 +58,40 @@ const ButtonContainer = styled.div`
 
 export default function CategoryResult(): React.JSX.Element {
   const navigate = useNavigate();
+  const { getPreferredRegion, getPreferredCategories } = usePreferenceApi();
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
 
   useEffect(() => {
-    // localStorage에서 선택된 지역과 업종 정보 가져오기
-    const regions = JSON.parse(localStorage.getItem("selectedRegions") || "[]");
-    const industryIds = JSON.parse(localStorage.getItem("selectedIndustries") || "[]");
-    const industryNames = industries
-      .filter((industry) => industryIds.includes(industry.id))
-      .map((industry) => industry.name);
+    const fetchData = async () => {
+      try {
+        const regionData = await getPreferredRegion();
+        if (regionData) {
+          const regionString = `${regionData.sido} ${regionData.sigungu}${regionData.dong ? ` ${regionData.dong}` : ''}`;
+          setSelectedRegions([regionString]);
+        }
 
-    setSelectedRegions(regions.map((region: any) => region.value));
-    setSelectedIndustries(industryNames);
-  }, []);
+        const categoriesData = await getPreferredCategories();
+        if (categoriesData && categoriesData.length > 0) {
+          const koreanCategories = convertCategoryCodes(categoriesData);
+          setSelectedIndustries(koreanCategories);
+        }
+      } catch (error) {
+        console.error('데이터 조회 실패:', error);
+        setSelectedRegions([]);
+        setSelectedIndustries([]);
+      }
+    };
+
+    fetchData();
+  }, [getPreferredRegion, getPreferredCategories]);
 
   const handleStart = () => {
-    // 카테고리 설정 완료 플래그 설정
     localStorage.setItem("hasCompletedCategories", "true");
-
-    // 선택된 정보들을 정리 (필요시 서버에 저장)
-    // localStorage.removeItem('selectedRegions');
-    // localStorage.removeItem('selectedIndustries');
-
-    // 메인 페이지로 이동
     navigate("/main");
   };
 
   const handleBack = () => {
-    // CategoryIndustry로 돌아가기
     navigate("/category/industry");
   };
 

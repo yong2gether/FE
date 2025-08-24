@@ -9,7 +9,7 @@ import DeleteTag from "../../Components/DeleteTag";
 import LargeReviewBox from "../../Components/Review/LargeReviewBox";
 import ReviewStatusDisplay from "../../Components/Review/ReviewStatusDisplay";
 import { convertCategoryCodes } from "../../utils/categoryMapping";
-import { useUserApi } from "../../hooks/useApi";
+import { useUserApi, usePreferenceApi, useReviewApi } from "../../hooks/useApi";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -174,7 +174,9 @@ export default function Mypage(): React.JSX.Element {
   const [openMoreId, setOpenMoreId] = useState<string | number | null>(null);
   const [myReviews, setMyReviews] = useState<any[]>([]);
 
-  const { logout, getPreferredCategories, getMyReviews, myReviewsState } = useUserApi();
+  const { logout } = useUserApi();
+  const { getPreferredCategories, getPreferredRegion } = usePreferenceApi();
+  const { getMyReviews, myReviewsState } = useReviewApi();
 
   const nick = "닉네임";
 
@@ -192,7 +194,6 @@ export default function Mypage(): React.JSX.Element {
           setSelectIndustries([]);
         }
       } catch (error) {
-        console.error('선호 카테고리 조회 실패:', error);
         setSelectIndustries([]);
       }
     };
@@ -201,18 +202,36 @@ export default function Mypage(): React.JSX.Element {
   }, [getPreferredCategories]);
 
   useEffect(() => {
+    const fetchPreferredRegion = async () => {
+      try {
+        const regionData = await getPreferredRegion();
+        if (regionData && regionData.sido && regionData.sigungu) {
+          const regionName = regionData.dong 
+            ? `${regionData.sido} ${regionData.sigungu} ${regionData.dong}`
+            : `${regionData.sido} ${regionData.sigungu}`;
+          setSelectRegions([regionName]);
+        } else {
+          setSelectRegions([]);
+        }
+      } catch (error) {
+        setSelectRegions([]);
+      }
+    };
+
+    fetchPreferredRegion();
+  }, [getPreferredRegion]);
+
+  useEffect(() => {
     if (activeTab === "reviews") {
       const fetchMyReviews = async () => {
         try {
-          const userId = 1;
-          const response = await getMyReviews(userId);
+          const response = await getMyReviews();
           if (response && response.reviews) {
             setMyReviews(response.reviews);
           } else {
             setMyReviews([]);
           }
         } catch (error) {
-          console.error('내 리뷰 조회 실패:', error);
           setMyReviews([]);
         }
       };
