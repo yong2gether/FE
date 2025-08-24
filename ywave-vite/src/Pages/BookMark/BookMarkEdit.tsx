@@ -6,6 +6,8 @@ import { Emoji, EmojiStyle } from "emoji-picker-react";
 import { BiSolidPencil } from "react-icons/bi";
 import PublicInput from "../../Components/PublicInput";
 import LargeButton from "../../Components/Button/LargeButton";
+import EmojiPicker from "../../Components/EmojiPicker";
+import { unifiedToEmoji } from "../../utils/emojiToMarker";
 
 const PageContainer = styled.div`
   display: flex;
@@ -85,15 +87,21 @@ export default function BookMarkEdit(): React.JSX.Element {
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
   const [folderEmoji, setFolderEmoji] = useState<string>("");
   const [folderInput, setFolderInput] = useState<string>("");
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    setFolderEmoji(unicode);
+    setFolderEmoji(unifiedToEmoji(unicode));
     setFolderInput(title);
     console.log(folderEmoji);
   }, []);
 
   const handleEmojiEdit = (): void => {
-    alert("이모지 변경 기능 추가 예정");
+    setIsEmojiPickerOpen(true);
+  };
+
+  const handleEmojiSelect = (emoji: string, unified: string) => {
+    setFolderEmoji(unified);
+    setIsEmojiPickerOpen(false);
   };
 
   const handleBookMarkEdit = (): void => {
@@ -147,6 +155,14 @@ export default function BookMarkEdit(): React.JSX.Element {
           />
         </SheetContainer>
       </BottomSheet>
+
+      {/* 이모지 선택기 */}
+      <EmojiPicker
+        isOpen={isEmojiPickerOpen}
+        onClose={() => setIsEmojiPickerOpen(false)}
+        onSelect={handleEmojiSelect}
+        currentEmoji={unifiedToEmoji(folderEmoji)}
+      />
     </PageContainer>
   );
 }
