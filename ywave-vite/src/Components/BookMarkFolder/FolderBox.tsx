@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import { Emoji, EmojiStyle } from "emoji-picker-react";
 import { PiDotsThreeVertical } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
+import { unifiedToEmoji } from "../../utils/emojiToMarker";
 
 interface FolderBoxProps {
   id: string;
@@ -124,7 +124,7 @@ export default function FolderBox({
   return (
     <FolderContainer onClick={onClick}>
       <EmojiContainer>
-        <Emoji unified={unicode} size={24} emojiStyle={EmojiStyle.NATIVE} />
+        {unifiedToEmoji(unicode)}
         <InfoContainer>
           <Title className="Body__MediumLarge">{title}</Title>
           <div className="Body__Small">저장된 장소: {placeCount}개</div>
