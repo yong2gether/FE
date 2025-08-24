@@ -55,22 +55,23 @@ const ModalButtonContainer = styled.div`
   gap: 12px;
 `;
 
-const ModalButton = styled.button<{ isPrimary?: boolean }>`
+const ModalButton = styled.button<{ $isPrimary?: boolean }>`
   flex: 1;
-  padding: 12px 16px;
+  padding: 14px 20px;
   border-radius: 8px;
   border: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   
-  ${({ isPrimary }) => isPrimary ? `
+  ${({ $isPrimary }) => $isPrimary ? `
     background: var(--primary-blue-500);
     color: white;
     
     &:hover {
       background: var(--primary-blue-600);
+      transform: translateY(-1px);
     }
   ` : `
     background: var(--neutral-100);
@@ -101,10 +102,10 @@ export default function ConfirmModal({
         <ModalMessage>{message}</ModalMessage>
         <ModalButtonContainer>
           <ModalButton onClick={onCancel}>
-            {cancelText}
+            취소
           </ModalButton>
-          <ModalButton isPrimary onClick={onConfirm}>
-            {confirmText}
+          <ModalButton $isPrimary onClick={onConfirm}>
+            확인
           </ModalButton>
         </ModalButtonContainer>
       </ModalContent>

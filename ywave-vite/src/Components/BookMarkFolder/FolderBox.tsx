@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import { Emoji, EmojiStyle } from "emoji-picker-react";
 import { PiDotsThreeVertical } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
+import { unifiedToEmoji } from "../../utils/emojiToMarker";
 
 interface FolderBoxProps {
   id: string;
@@ -12,6 +12,7 @@ interface FolderBoxProps {
   isMoreOpen: boolean;
   onMoreClick: (id: string) => void;
   onClick: () => void;
+  onDelete: () => void;
 }
 
 const FolderContainer = styled.div`
@@ -99,6 +100,7 @@ export default function FolderBox({
   isMoreOpen = false,
   onMoreClick,
   onClick,
+  onDelete,
 }: FolderBoxProps): React.JSX.Element {
   const navigate = useNavigate();
 
@@ -111,18 +113,18 @@ export default function FolderBox({
 
   const handleFolderEdit = (e: React.MouseEvent): void => {
     e.stopPropagation();
-    navigate("/bookmark/edit", { state: { unicode, title } });
+    navigate("/bookmark/edit", { state: { id, unicode, title } });
   };
 
   const handleFolderDelete = (e: React.MouseEvent): void => {
     e.stopPropagation();
-    console.log("폴더 삭제");
+    onDelete();
   };
 
   return (
     <FolderContainer onClick={onClick}>
       <EmojiContainer>
-        <Emoji unified={unicode} size={24} emojiStyle={EmojiStyle.NATIVE} />
+        {unifiedToEmoji(unicode)}
         <InfoContainer>
           <Title className="Body__MediumLarge">{title}</Title>
           <div className="Body__Small">저장된 장소: {placeCount}개</div>
@@ -132,7 +134,7 @@ export default function FolderBox({
       <IconContainer>
         <PiDotsThreeVertical onClick={handleMoreClick} />
         {isMoreOpen && (
-          <MoreContainer>
+          <MoreContainer className="Body__Small">
             <MoreItem onClick={handleFolderEdit}>폴더 수정</MoreItem>
             <MoreItem onClick={handleFolderDelete}>폴더 삭제</MoreItem>
           </MoreContainer>

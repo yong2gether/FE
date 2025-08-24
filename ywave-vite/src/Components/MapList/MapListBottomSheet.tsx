@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import BottomSheet from "../BottomSheet";
 import MapList from "./MapList";
 import { IoMdRefresh } from "react-icons/io";
@@ -12,6 +12,7 @@ import { calculateDistance, formatDistance } from "../../utils/distance";
 interface MapListBottomSheetProps {
   onLocationRequest: () => void;
   onSearchThisArea: () => void;
+  onSearch: (query: string) => void;
   showReSearch: boolean;
   storeMarkers: Array<{
     id: string;
@@ -25,6 +26,7 @@ interface MapListBottomSheetProps {
   }>;
   bottomOffsetPx: number;
   userLocation?: { lat: number; lng: number } | null;
+  searchQuery?: string;
 }
 
 const BottomSheetContainer = styled.div`
@@ -35,6 +37,7 @@ const BottomSheetContainer = styled.div`
    gap: 16px;
    min-height: 100%;
    position: relative;
+   overflow: hidden;
 `
 
 const SearchInput = styled.input`
@@ -85,7 +88,7 @@ const SettingContainer = styled.div`
   &::-webkit-scrollbar { display: none; }
 `
 
-const IndustryItem = styled.div<{ isSelect: boolean }>`
+const IndustryItem = styled.div<{ $isSelect: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,11 +111,11 @@ const IndustryItem = styled.div<{ isSelect: boolean }>`
     color: var(--primary-blue-600);
   }
 
-  ${(props) =>
-    props.isSelect &&
-    `
-     border-color: var(--primary-blue-600);
-     color: var(--primary-blue-600);
+  ${props =>
+    props.$isSelect &&
+    css`
+      border-color: var(--primary-blue-600);
+      color: var(--primary-blue-600);
     `}
 `;
 
@@ -188,12 +191,14 @@ interface Option { index: number; value: string; }
 export default function MapListBottomSheet({ 
   onLocationRequest, 
   onSearchThisArea, 
+  onSearch, 
   showReSearch, 
   storeMarkers, 
   bottomOffsetPx, 
-  userLocation 
+  userLocation,
+  searchQuery = ""
 }: MapListBottomSheetProps): React.JSX.Element {
-  const [selectIndustries, setSelectIndustries] = useState<string[]>([]);
+  const [selectIndustries, setSelectIndustries] = useState<number[]>([]);
   const [sheetRatio, setSheetRatio] = useState<number>(0);
   const [regionModalOpen, setRegionModalOpen] = useState<boolean>(false);
   const [selectedRegion, setSelectedRegion] = useState<string>("지역 설정");
@@ -203,13 +208,39 @@ export default function MapListBottomSheet({
   const [selectDong, setSelectDong] = useState<Option | null>(null);
   const [selectRegions, setSelectRegions] = useState<string[]>([]);
 
-  const handleIndustryClick = (clickId: string): void => {
+  const handleIndustryClick = (clickId: number): void => {
     if (selectIndustries.includes(clickId)) {
       setSelectIndustries(selectIndustries.filter((id) => id !== clickId));
     } else {
       setSelectIndustries((prev) => [...prev, clickId]);
     }
   };
+
+  const filteredStores = storeMarkers.filter(store => {
+    // 업종 필터링
+    if (selectIndustries.length > 0) {
+      const storeCategory = industries.find(ind => ind.name === store.category)?.id;
+      if (!storeCategory || !selectIndustries.includes(storeCategory)) {
+        return false;
+      }
+    }
+    
+    // 검색어 필터링
+    if (searchQuery && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      const storeName = store.name.toLowerCase();
+      const storeAddress = store.address.toLowerCase();
+      const storeCategory = store.category.toLowerCase();
+      
+      if (!storeName.includes(query) && 
+          !storeAddress.includes(query) && 
+          !storeCategory.includes(query)) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
    
   const topAccessory = showReSearch && sheetRatio <= 0.5 ? (
     <ReSearchButton className="Body__MediumSmall" onClick={onSearchThisArea}>
@@ -249,7 +280,6 @@ export default function MapListBottomSheet({
     setRegionModalOpen(false);
   };
 
-  // 각 가게와의 거리 계산
   const getDistance = (storePosition: { lat: number; lng: number }) => {
     if (!userLocation) return undefined;
     
@@ -276,7 +306,12 @@ export default function MapListBottomSheet({
       topAccessory={topAccessory}
     >
       <BottomSheetContainer>
-        <SearchInput className="Body__MediumDefault" placeholder="장소 검색 (예: 카페, 서울역)" />
+        <SearchInput 
+          className="Body__MediumDefault" 
+          placeholder="장소 검색 (예: 카페, 서울역)" 
+          value={searchQuery}
+          onChange={(e) => onSearch(e.target.value)}
+        />
         
         <SettingContainer>
           <RegionSetting onClick={() => setRegionModalOpen(true)}>
@@ -284,7 +319,7 @@ export default function MapListBottomSheet({
             <div className="Body__Small">{selectedRegion}</div>
           </RegionSetting>
           {industries.map((industry) => (
-            <IndustryItem key={industry.id} isSelect={selectIndustries.includes(industry.id)} onClick={() => handleIndustryClick(industry.id)}>
+            <IndustryItem key={industry.id} $isSelect={selectIndustries.includes(industry.id)} onClick={() => handleIndustryClick(industry.id)}>
               {industry.icon({size: 14})}
               <div className="Body__Small">{industry.name}</div>
             </IndustryItem>
@@ -316,23 +351,49 @@ export default function MapListBottomSheet({
           </RegionOverlay>
         )}
 
-        {storeMarkers.map((store, index) => (
-          <React.Fragment key={store.id}>
-            <MapList 
-              name={store.name}
-              bookmark={false}
-              rating={store.rating}
-              address={store.address}
-              category={store.category}
-              images={store.images || []}
-              distance={getDistance(store.position)}
-              storeId={store.id}
-            />
-            {index < storeMarkers.length - 1 && (
-              <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />
+        {filteredStores.length > 0 ? (
+          <>
+            {filteredStores.map((store, index) => (
+              <React.Fragment key={store.id}>
+                <MapList 
+                  name={store.name}
+                  bookmark={false}
+                  rating={store.rating || 0}
+                  address={store.address}
+                  category={store.category || "기타"}
+                  images={store.images || []}
+                  distance={getDistance({ lat: store.position.lat, lng: store.position.lng })}
+                  storeId={store.id.toString()}
+                />
+                {index < filteredStores.length - 1 && (
+                  <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />
+                )}
+              </React.Fragment>
+            ))}
+          </>
+        ) : (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '20px',
+            color: 'var(--neutral-500)'
+          }}>
+            {storeMarkers.length === 0 ? (
+              <>
+                <div>해당 지역에 가맹점이 없습니다</div>
+                <div style={{ fontSize: '12px', marginTop: '8px' }}>
+                  위치 권한을 허용하고 다시 시도해주세요
+                </div>
+              </>
+            ) : (
+              <>
+                <div>선택한 업종에 해당하는 가맹점이 없습니다</div>
+                <div style={{ fontSize: '12px', marginTop: '8px' }}>
+                  다른 업종을 선택해보세요
+                </div>
+              </>
             )}
-          </React.Fragment>
-        ))}
+          </div>
+        )}
       </BottomSheetContainer>
     </BottomSheet>
   );

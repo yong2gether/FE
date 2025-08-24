@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { userApi, storeApi, aiApi } from '../api/services';
+import { userApi, storeApi, bookmarkApi, preferenceApi, reviewApi } from '../api/services';
 import { createInitialApiState, updateApiState, createApiErrorMessage } from '../utils/apiUtils';
 
 // API 상태 타입
@@ -109,6 +109,77 @@ export const useUserApi = () => {
   };
 };
 
+// 선호도 설정 API Hook
+export const usePreferenceApi = () => {
+  const [setRegionState, setSetRegionState] = useState<ApiState<any>>(createInitialApiState());
+  const [getRegionState, setGetRegionState] = useState<ApiState<any>>(createInitialApiState());
+  const [setCategoriesState, setSetCategoriesState] = useState<ApiState<any>>(createInitialApiState());
+  const [getCategoriesState, setGetCategoriesState] = useState<ApiState<any>>(createInitialApiState());
+
+  const setPreferredRegion = useCallback(async (data: any) => {
+    setSetRegionState(prev => updateApiState.start(prev));
+    try {
+      const result = await preferenceApi.setPreferredRegion(data);
+      setSetRegionState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('선호 지역 설정', error);
+      setSetRegionState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const getPreferredRegion = useCallback(async () => {
+    setGetRegionState(prev => updateApiState.start(prev));
+    try {
+      const result = await preferenceApi.getPreferredRegion();
+      setGetRegionState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('선호 지역 조회', error);
+      setGetRegionState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const setPreferredCategories = useCallback(async (data: any) => {
+    setSetCategoriesState(prev => updateApiState.start(prev));
+    try {
+      const result = await preferenceApi.setPreferredCategories(data);
+      setSetCategoriesState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('선호 카테고리 설정', error);
+      setSetCategoriesState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const getPreferredCategories = useCallback(async () => {
+    setGetCategoriesState(prev => updateApiState.start(prev));
+    try {
+      const result = await preferenceApi.getPreferredCategories();
+      setGetCategoriesState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('선호 카테고리 조회', error);
+      setGetCategoriesState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  return {
+    setPreferredRegion,
+    setRegionState,
+    getPreferredRegion,
+    getRegionState,
+    setPreferredCategories,
+    setCategoriesState,
+    getPreferredCategories,
+    getCategoriesState,
+  };
+};
+
 // 가맹점 API Hook
 export const useStoreApi = () => {
   const [popularStoresState, setPopularStoresState] = useState<ApiState<any[]>>(createInitialApiState());
@@ -164,7 +235,102 @@ export const useStoreApi = () => {
   };
 };
 
-// AI API Hook
+// 북마크 API Hook
+export const useBookmarkApi = () => {
+  const [createGroupState, setCreateGroupState] = useState<ApiState<any>>(createInitialApiState());
+  const [getGroupsState, setGetGroupsState] = useState<ApiState<any>>(createInitialApiState());
+  const [updateGroupState, setUpdateGroupState] = useState<ApiState<any>>(createInitialApiState());
+  const [deleteGroupState, setDeleteGroupState] = useState<ApiState<any>>(createInitialApiState());
+
+  const createBookmarkGroup = useCallback(async (data: any) => {
+    setCreateGroupState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.createBookmarkGroup(data);
+      setCreateGroupState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('북마크 그룹 생성', error);
+      setCreateGroupState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const getBookmarkGroups = useCallback(async () => {
+    setGetGroupsState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.getBookmarkGroups();
+      setGetGroupsState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('북마크 그룹 조회', error);
+      setGetGroupsState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const updateBookmarkGroup = useCallback(async (groupId: number, data: any) => {
+    setUpdateGroupState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.updateBookmarkGroup(groupId, data);
+      setUpdateGroupState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('북마크 그룹 수정', error);
+      setUpdateGroupState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const deleteBookmarkGroup = useCallback(async (data: any) => {
+    setDeleteGroupState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.deleteBookmarkGroup(data);
+      setDeleteGroupState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('북마크 그룹 삭제', error);
+      setDeleteGroupState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  return {
+    createBookmarkGroup,
+    createGroupState,
+    getBookmarkGroups,
+    getGroupsState,
+    updateBookmarkGroup,
+    updateGroupState,
+    deleteBookmarkGroup,
+    deleteGroupState,
+  };
+};
+
+// 리뷰 API Hook
+export const useReviewApi = () => {
+  const [myReviewsState, setMyReviewsState] = useState<ApiState<any>>(createInitialApiState());
+
+  const getMyReviews = useCallback(async () => {
+    setMyReviewsState(prev => updateApiState.start(prev));
+    try {
+      const result = await reviewApi.getMyReviews();
+      setMyReviewsState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('내 리뷰 조회', error);
+      setMyReviewsState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  return {
+    getMyReviews,
+    myReviewsState,
+  };
+};
+
+// AI API Hook - 현재 사용하지 않음
+/*
 export const useAiApi = () => {
   const [echoState, setEchoState] = useState<ApiState<any>>(createInitialApiState());
   const [pingState, setPingState] = useState<ApiState<string>>(createInitialApiState());
@@ -202,3 +368,4 @@ export const useAiApi = () => {
     pingState,
   };
 };
+*/

@@ -9,8 +9,10 @@ interface PencilButtonProps {
   isIcon?: boolean;
 }
 
-const Button = styled.button<{ isFill: boolean }>`
-  ${({ isFill }) => (isFill ? "width: 100%" : "min-width: auto")};
+const Button = styled.button.withConfig({
+  shouldForwardProp: (prop) => prop !== 'isFill'
+})<{ isFill: boolean }>`
+  width: ${({ isFill }) => (isFill ? "100%" : "auto")};
   min-height: auto;
   display: flex;
   align-items: center;

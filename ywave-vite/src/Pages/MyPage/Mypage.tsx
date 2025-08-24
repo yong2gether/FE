@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BiSolidUserCircle } from "react-icons/bi";
 import PencilButton from "../../Components/Button/PencilButton";
 import { industries } from "../../Data/Industries";
 import LargeButton from "../../Components/Button/LargeButton";
 import DeleteTag from "../../Components/DeleteTag";
-import LargeReviewBox from "../../Components/ReviewBox/LargeReviewBox";
-import { placeDatas } from "../../Data/PlaceDatas";
+import LargeReviewBox from "../../Components/Review/LargeReviewBox";
+import ReviewStatusDisplay from "../../Components/Review/ReviewStatusDisplay";
+import { convertCategoryCodes } from "../../utils/categoryMapping";
 import { useUserApi } from "../../hooks/useApi";
 
 const PageContainer = styled.div`
@@ -60,37 +61,6 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2xl);
-`;
-
-const TabContainer = styled.div`
-  width: calc(100% + 32px);
-  margin: 0 -16px;
-  display: flex;
-`;
-
-const Tab = styled.button<{ isActive: boolean }>`
-  flex: 1;
-  height: 48px;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  color: ${(props) =>
-    props.isActive ? "var(--primary-blue-500)" : "var(--neutral-300)"};
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: ${(props) =>
-      props.isActive ? "var(--primary-blue-500)" : "transparent"};
-  }
-`;
-
-const TabContent = styled.div`
-  width: 100%;
 `;
 
 const CategoryContainer = styled.div`
@@ -155,8 +125,38 @@ const Divider = styled.div`
   background: var(--neutral-200);
 `;
 
+const TabContainer = styled.div`
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  display: flex;
+`;
+
+const Tab = styled.button<{ $isActive: boolean }>`
+  flex: 1;
+  padding: 12px 24px;
+  color: var(--neutral-600);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--primary-blue-600);
+  }
+
+  ${(props) =>
+    props.$isActive &&
+    css`
+      color: var(--primary-blue-500);
+      border-bottom-color: var(--primary-blue-500);
+    `}
+`;
+
+const TabContent = styled.div`
+  width: 100%;
+`;
+
 interface IndustryData {
-  id: string;
+  id: number;
   icon: (props: { size: number }) => React.ReactElement;
   name: string;
   size?: number;
@@ -171,34 +171,55 @@ export default function Mypage(): React.JSX.Element {
   );
   const [selectRegions, setSelectRegions] = useState<string[]>([]);
   const [selectIndustries, setSelectIndustries] = useState<IndustryData[]>([]);
-  const [openMoreId, setOpenMoreId] = useState<string | null>(null);
+  const [openMoreId, setOpenMoreId] = useState<string | number | null>(null);
+  const [myReviews, setMyReviews] = useState<any[]>([]);
 
-  const { logout } = useUserApi();
+  const { logout, getPreferredCategories, getMyReviews, myReviewsState } = useUserApi();
 
   const nick = "닉네임";
 
-  const RegionDatas = React.useMemo(
-    () => [
-      "용인시 처인구 모현읍",
-      "창원시 마산회구 양덕2동",
-      "서울특별시 동대문구 휘경1동",
-    ],
-    []
-  );
+  useEffect(() => {
+    const fetchPreferredCategories = async () => {
+      try {
+        const preferredCategories = await getPreferredCategories();
+        if (preferredCategories && preferredCategories.length > 0) {
+          const koreanCategories = convertCategoryCodes(preferredCategories);
+          const userIndustries = industries.filter((industry: IndustryData) =>
+            koreanCategories.includes(industry.name)
+          );
+          setSelectIndustries(userIndustries);
+        } else {
+          setSelectIndustries([]);
+        }
+      } catch (error) {
+        console.error('선호 카테고리 조회 실패:', error);
+        setSelectIndustries([]);
+      }
+    };
 
-  const IndustryDatas = React.useMemo(
-    () => ["restaurant", "cafe", "convenience"],
-    []
-  );
+    fetchPreferredCategories();
+  }, [getPreferredCategories]);
 
   useEffect(() => {
-    setSelectRegions(RegionDatas);
-    setSelectIndustries(
-      industries.filter((industry: IndustryData) =>
-        IndustryDatas.some((industryId) => industryId === industry.id)
-      )
-    );
-  }, [RegionDatas, IndustryDatas]);
+    if (activeTab === "reviews") {
+      const fetchMyReviews = async () => {
+        try {
+          const userId = 1;
+          const response = await getMyReviews(userId);
+          if (response && response.reviews) {
+            setMyReviews(response.reviews);
+          } else {
+            setMyReviews([]);
+          }
+        } catch (error) {
+          console.error('내 리뷰 조회 실패:', error);
+          setMyReviews([]);
+        }
+      };
+
+      fetchMyReviews();
+    }
+  }, [activeTab, getMyReviews]);
 
   const handleDeleteRegion = (deleteRegion: string): void => {
     setSelectRegions((prev) =>
@@ -206,7 +227,7 @@ export default function Mypage(): React.JSX.Element {
     );
   };
 
-  const handleDeleteIndustry = (deleteIndustry: string): void => {
+  const handleDeleteIndustry = (deleteIndustry: number): void => {
     setSelectIndustries((prev) =>
       prev.filter((industry) => industry.id !== deleteIndustry)
     );
@@ -217,7 +238,7 @@ export default function Mypage(): React.JSX.Element {
     setSearchParams({ tab });
   };
 
-  const handleMoreClick = (id: string) => {
+  const handleMoreClick = (id: string | number) => {
     setOpenMoreId((prev) => (prev === id ? null : id));
   };
 
@@ -244,40 +265,50 @@ export default function Mypage(): React.JSX.Element {
         onClick={() => navigate("/mypage/profile")}
         isFill={true}
       />
-      <Content>
-        <TabContainer>
-          <Tab
-            className="Title__H6"
-            isActive={activeTab === "preferences"}
-            onClick={() => handleTabClick("preferences")}
-          >
-            선호 카테고리
-          </Tab>
-          <Tab
-            className="Title__H6"
-            isActive={activeTab === "reviews"}
-            onClick={() => handleTabClick("reviews")}
-          >
-            리뷰
-          </Tab>
-        </TabContainer>
-        <TabContent>
-          {activeTab === "preferences" && (
-            <CategoryContainer>
-              <Category>
-                <CategorySection>
-                  <SectionTitle className="Title__H5">위치</SectionTitle>
-                  {selectRegions.map((region, index) => (
-                    <DeleteTag
-                      key={index}
-                      content={<>{region}</>}
-                      color={"var(--neutral-1000)"}
-                      onClick={() => handleDeleteRegion(region)}
-                    />
-                  ))}
-                </CategorySection>
-                <CategorySection>
-                  <SectionTitle className="Title__H5">업종</SectionTitle>
+      <TabContainer>
+        <Tab
+          className="Title__H6"
+          $isActive={activeTab === "preferences"}
+          onClick={() => handleTabClick("preferences")}
+        >
+          선호도 설정
+        </Tab>
+        <Tab
+          className="Title__H6"
+          $isActive={activeTab === "reviews"}
+          onClick={() => handleTabClick("reviews")}
+        >
+          내 리뷰
+        </Tab>
+      </TabContainer>
+      <TabContent>
+        {activeTab === "preferences" && (
+          <CategoryContainer>
+            <Category>
+              <CategorySection>
+                <SectionTitle className="Title__H5">위치</SectionTitle>
+                {selectRegions.length > 0 ? (
+                  <IndustryList>
+                    {selectRegions.map((region) => (
+                      <DeleteTag
+                        key={region}
+                        content={<div>{region}</div>}
+                        color={"var(--neutral-1000)"}
+                        isFix={true}
+                        onClick={() => handleDeleteRegion(region)}
+                      />
+                    ))}
+                  </IndustryList>
+                ) : (
+                  <div className="Body__Default" style={{ color: 'var(--neutral-500)', textAlign: 'center', padding: '20px' }}>
+                    설정된 선호 지역이 없습니다.<br />
+                    카테고리 설정에서 선호하는 지역을 선택해주세요.
+                  </div>
+                )}
+              </CategorySection>
+              <CategorySection>
+                <SectionTitle className="Title__H5">업종</SectionTitle>
+                {selectIndustries.length > 0 ? (
                   <IndustryList>
                     {selectIndustries.map((industry) => (
                       <DeleteTag
@@ -294,31 +325,44 @@ export default function Mypage(): React.JSX.Element {
                       />
                     ))}
                   </IndustryList>
-                </CategorySection>
-              </Category>
-              <LargeButton
-                buttonText="변경하기"
-                onClick={() => navigate("/category/region")}
-              />
-            </CategoryContainer>
-          )}
-          {activeTab === "reviews" && (
-            <ReviewContainer>
-              {placeDatas.map((review, i) => (
+                ) : (
+                  <div className="Body__Default" style={{ color: 'var(--neutral-500)', textAlign: 'center', padding: '20px' }}>
+                    설정된 선호 카테고리가 없습니다.<br />
+                    카테고리 설정에서 선호하는 업종을 선택해주세요.
+                  </div>
+                )}
+              </CategorySection>
+            </Category>
+            <LargeButton
+              buttonText="변경하기"
+              onClick={() => navigate("/category/region", { state: { from: 'mypage' } })}
+            />
+          </CategoryContainer>
+        )}
+        {activeTab === "reviews" && (
+          <ReviewContainer>
+            {myReviewsState.loading ? (
+              <ReviewStatusDisplay type="loading" />
+            ) : myReviewsState.error ? (
+              <ReviewStatusDisplay type="error" subMessage={myReviewsState.error} />
+            ) : myReviews.length === 0 ? (
+              <ReviewStatusDisplay type="empty" />
+            ) : (
+              myReviews.map((review, i) => (
                 <>
                   <LargeReviewBox
-                    key={review.id}
+                    key={review.reviewId}
                     {...review}
-                    isMoreOpen={openMoreId == review.id}
+                    isMoreOpen={openMoreId == review.reviewId}
                     onMoreClick={handleMoreClick}
                   />
-                  {i < placeDatas.length - 1 && <Divider />}
+                  {i < myReviews.length - 1 && <Divider />}
                 </>
-              ))}
-            </ReviewContainer>
-          )}
-        </TabContent>
-      </Content>
+              ))
+            )}
+          </ReviewContainer>
+        )}
+      </TabContent>
     </PageContainer>
   );
 }

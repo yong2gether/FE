@@ -38,6 +38,11 @@ const Title = styled.div`
 export default function SignUpComplete(): React.JSX.Element {
   const navigate = useNavigate();
 
+  const handleLoginClick = () => {
+    localStorage.setItem('hasCompletedCategories', 'false');
+    navigate("/login");
+  };
+
   return (
     <PageContainer>
       <TitleContainer>
@@ -50,9 +55,7 @@ export default function SignUpComplete(): React.JSX.Element {
       </TitleContainer>
       <LargeButton
         buttonText="로그인하기"
-        onClick={() => {
-          navigate("/login");
-        }}
+        onClick={handleLoginClick}
       />
     </PageContainer>
   );

@@ -210,7 +210,7 @@ export default function LargeReviewBox({
           )}
           <PiDotsThreeVertical onClick={handleMoreClick} />
           {isMoreOpen && (
-            <MoreContainer>
+            <MoreContainer className="Body__Small">
               <MoreItem onClick={handleReviewEdit}>리뷰 수정</MoreItem>
               <MoreItem onClick={handleReviewDelete}>리뷰 삭제</MoreItem>
             </MoreContainer>

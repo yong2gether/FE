@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
-import { placeDatas } from "../Data/PlaceDatas";
 import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi";
+import { placeDatas } from "../Data/PlaceDatas";
 import { AiFillStar } from "react-icons/ai";
 import ImageGallery from "../Components/ImageComponent/ImageGallery";
-import ReviewSection from "../Components/ReviewSection";
+import ReviewSection from "../Components/Review/ReviewSection";
+import ReviewWriteModal from "../Components/Review/ReviewWriteModal";
+import CustomAlert from "../Components/Modal/CustomAlert";
 import { useStoreApi } from "../hooks/useApi";
 import { calculateDistance, formatDistance } from "../utils/distance";
+
 
 const PageContainer = styled.div`
   width: 100%;
@@ -55,11 +58,13 @@ const NameContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   color: var(--neutral-1000);
+  gap: var(--spacing-xs);
 
   & > svg {
     min-width: 24px;
     min-height: 24px;
     cursor: pointer;
+    flex-shrink: 0;
   }
 `;
 
@@ -67,6 +72,16 @@ const Name = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 280px;
+  flex-shrink: 1;
+  
+  @media (max-width: 768px) {
+    max-width: 220px;
+  }
+  
+  @media (max-width: 480px) {
+    max-width: 180px;
+  }
 `;
 
 const RatingContainer = styled.div`
@@ -111,9 +126,12 @@ interface MainPlaceProps {
 export default function MainPlace({ userLocation: propUserLocation }: MainPlaceProps): React.JSX.Element {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   
   // API 연동
   const { getStoreDetails } = useStoreApi();
+  
+
 
   const [name, setName] = useState<string>("");
   const [isBookmark, setIsBookmark] = useState<boolean>(false);
@@ -122,10 +140,27 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   const [industry, setIndustry] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
+  const [lat, setLat] = useState<number>(0);
+  const [lng, setLng] = useState<number>(0);
   
   const [userReviews, setUserReviews] = useState<any[]>([]);
   const [googleReviews, setGoogleReviews] = useState<any[]>([]);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [visitVerificationStatus, setVisitVerificationStatus] = useState<'pending' | 'verified' | 'failed'>('pending');
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
   
+
+
   // 사용자 위치 상태 (props가 없을 때 사용)
   const [localUserLocation, setLocalUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -205,9 +240,11 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
             setName(placeDetails.name || "");
             setRating(placeDetails.rating || 0);
             setDistance(""); // API에서 거리 정보가 없음
-            setIndustry(""); // API에서 산업 정보가 없음
+                         setIndustry("기타"); // API에서 산업 정보가 없음
             setAddress(placeDetails.formattedAddress || "");
             setImages(placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : []);
+            setLat(placeDetails.lat || 0);
+            setLng(placeDetails.lng || 0);
             
             // 사용자 위치가 있으면 거리 계산
             if (userLocation && placeDetails.lat && placeDetails.lng) {
@@ -247,7 +284,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
           }
         } catch (error) {
           console.error('가맹점 상세 정보 조회 실패:', error);
-          // API 실패 시 기존 데이터 사용
+          // API 실패 시 기존 데이터에서 bookmark 상태를 설정하도록 수정
           const place = placeDatas.find((place) => place.id === id);
           if (place) {
             setName(place.name);
@@ -257,7 +294,6 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
             setIndustry(place.industry);
             setAddress(place.address);
             setImages(place.images ?? []);
-            // 리뷰는 API로만 가져옴
           }
         }
       };
@@ -270,15 +306,75 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
     setIsBookmark((prev) => !prev);
   };
 
-  const handleReviewWrite = (): void => {
-    navigate("/mypage/review", {
-      state: {
-        name,
-        rating: 0.0,
-        reviewText: "",
-      },
-    });
+  const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    setAlertConfig({ isOpen: true, title, message, type });
   };
+
+  const handleReviewWrite = (): void => {
+    // 방문인증 확인
+    if (!userLocation) {
+      // 위치 권한이 없으면 권한 요청
+      if (navigator.geolocation) {
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5분
+        };
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setLocalUserLocation({ lat: latitude, lng: longitude });
+            // 위치를 받은 후 다시 방문인증 시도
+            setTimeout(() => handleReviewWrite(), 100);
+          },
+          (error) => {
+            console.log('📍 위치 권한이 거부되었습니다:', error.message);
+            showAlert("위치 권한 필요", "리뷰 작성을 위해서는 위치 권한이 필요합니다.\n브라우저 설정에서 위치 권한을 허용해주세요.", "warning");
+            setVisitVerificationStatus('failed');
+          },
+          options
+        );
+        return;
+      } else {
+        showAlert("브라우저 지원 안됨", "이 브라우저는 위치 서비스를 지원하지 않습니다.", "error");
+        setVisitVerificationStatus('failed');
+        return;
+      }
+    }
+
+    if (!lat || !lng) {
+      showAlert("위치 정보 없음", "장소 위치 정보가 없습니다.", "error");
+      setVisitVerificationStatus('failed');
+      return;
+    }
+
+    const distanceInMeters = calculateDistance(
+      userLocation.lat,
+      userLocation.lng,
+      lat,
+      lng
+    );
+
+    if (distanceInMeters > 500) {
+      showAlert("방문인증 실패", `방문인증이 불가능합니다.\n현재 위치에서 ${formatDistance(distanceInMeters)} 떨어져 있습니다.\n장소 근처(500m 이내)에서 시도해주세요.`, "warning");
+      setVisitVerificationStatus('failed');
+      return;
+    }
+
+    setVisitVerificationStatus('verified');
+    setIsReviewModalOpen(true);
+  };
+
+  const handleReviewSubmit = (reviewData: any) => {
+    console.log("리뷰 제출:", reviewData);
+    // 여기에 실제 리뷰 제출 로직 추가
+    setIsReviewModalOpen(false);
+    // 리뷰 제출 후 방문인증 상태 초기화
+    setVisitVerificationStatus('pending');
+  };
+
+
 
   const renderStars = () => {
     const stars: React.ReactElement[] = [];
@@ -297,17 +393,33 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   return (
     <PageContainer>
       <HeaderContainer>
-        <BackIcon onClick={() => navigate(-1)} />
+        <BackIcon onClick={() => {
+          if (location.state?.from === 'map') {
+            // Map 페이지로 돌아가면서 마커 위치 정보를 URL 쿼리 파라미터로 전달
+            navigate(`/map?lat=${location.state.lat}&lng=${location.state.lng}`);
+          } else if (location.state?.from === 'bookmark') {
+            navigate(-1);
+          } else {
+            navigate('/');
+          }
+        }} />
       </HeaderContainer>
       
       <PlaceContainer>
         <NameContainer>
-          <Name className="Title__H3">{name}</Name>
-          {isBookmark ? (
-            <PiBookmarkSimpleFill onClick={handleBookmarkClick} />
-          ) : (
-            <PiBookmarkSimple onClick={handleBookmarkClick} />
-          )}
+          <Name className="Title__H2">{name}</Name>
+          <div 
+            onClick={handleBookmarkClick}
+            style={{
+              cursor: 'pointer',
+              color: isBookmark ? 'var(--primary-blue-500)' : 'var(--neutral-400)'
+            }}
+          >
+            {isBookmark ? 
+              <PiBookmarkSimpleFill style={{width: 24, height: 24}} /> : 
+              <PiBookmarkSimple style={{width: 24, height: 24}} />
+            }
+          </div>
         </NameContainer>
 
         <RatingContainer>
@@ -320,7 +432,12 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
           {distance && <div>|</div>}
           {industry && <div>{industry}</div>}
           {industry && <div>|</div>}
-          <div>{address}</div>
+          <div style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '250px'
+          }}>{address}</div>
         </InfoContainer>
 
         <ImageGallery images={images} altText="가게 이미지" />
@@ -350,6 +467,24 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
         description="조금 더 많은 리뷰가 보고 싶으시다면?"
         reviews={googleReviews}
       />
+
+      {/* 리뷰 작성 모달 */}
+      <ReviewWriteModal
+        isOpen={isReviewModalOpen}
+        placeName={name}
+        onClose={() => setIsReviewModalOpen(false)}
+        onSubmit={handleReviewSubmit}
+      />
+
+      {/* 커스텀 알림 */}
+      <CustomAlert
+        isOpen={alertConfig.isOpen}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+
     </PageContainer>
   );
 }

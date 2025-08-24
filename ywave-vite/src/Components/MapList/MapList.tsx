@@ -17,6 +17,7 @@ const MapListContainer = styled.div`
     border-radius: 10px;
     background: var(--neutral-100);
     cursor: pointer;
+    overflow: hidden;
 `
 
 const TitleContainer = styled.div`
@@ -73,9 +74,11 @@ const ImageContainer = styled.div`
     align-items: center;
     gap: 8px;
     overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding: 4px 0;
+    max-width: 100%;
     
     &::-webkit-scrollbar {
         display: none;
@@ -106,7 +109,9 @@ export default function MapList({
 
     const handleStoreClick = () => {
         if (storeId) {
-            navigate(`/main/place/${storeId}`);
+            navigate(`/main/place/${storeId}`, { 
+              state: { from: 'map' } 
+            });
         }
     }
 
