@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
 import { industries } from "../../Data/Industries";
 import LargeButton from "../../Components/Button/LargeButton";
+import { useUserApi } from "../../hooks/useApi";
+import CustomAlert from "../../Components/Modal/CustomAlert";
 
 const PageContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
   padding: 16px;
   min-height: 100vh;
   box-sizing: border-box;
@@ -62,7 +63,6 @@ const IndustryContainer = styled.div`
 const IndustryItem = styled.button<{ $isSelect: boolean }>`
   display: flex;
   align-items: center;
-  gap: 8px;
   padding: 12px 16px;
   border: 1px solid var(--neutral-600);
   border-radius: 10px;
@@ -95,7 +95,24 @@ const ButtonContainer = styled.div`
 
 export default function CategoryIndustry(): React.JSX.Element {
   const navigate = useNavigate();
+  const { updatePreferredCategories } = useUserApi();
   const [selectIndustries, setSelectIndustries] = useState<number[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+
+  const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    setAlertConfig({ isOpen: true, title, message, type });
+  };
 
   const handleIndustryClick = (clickId: number): void => {
     if (selectIndustries.includes(clickId)) {
@@ -105,18 +122,34 @@ export default function CategoryIndustry(): React.JSX.Element {
     }
   };
 
-  const handleNext = () => {
-    // 업종 선택이 완료되면 CategoryResult로 이동
+  const handleNext = async () => {
     if (selectIndustries.length > 0) {
-      // 선택된 업종 정보를 localStorage에 저장
-      localStorage.setItem('selectedIndustries', JSON.stringify(selectIndustries));
-      console.log(selectIndustries);
-      navigate("/category/result");
+      setIsSubmitting(true);
+      try {
+        await updatePreferredCategories({
+          categoryIds: selectIndustries
+        });
+
+        localStorage.setItem('selectedIndustries', JSON.stringify(selectIndustries));
+        localStorage.setItem('hasCompletedCategories', 'true');
+        
+        showAlert("설정 완료", "업종 선호도가 설정되었습니다.", "success");
+        
+        setTimeout(() => {
+          navigate("/category/result");
+        }, 1500);
+      } catch (error) {
+        console.error('업종 선호도 설정 실패:', error);
+        showAlert("설정 실패", "업종 선호도 설정에 실패했습니다.", "error");
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      showAlert("선택 필요", "최소 하나의 업종을 선택해주세요.", "warning");
     }
   };
 
   const handleBack = () => {
-    // CategoryRegion으로 돌아가기
     navigate("/category/region");
   };
 
@@ -146,10 +179,19 @@ export default function CategoryIndustry(): React.JSX.Element {
       </ContentContainer>
       <ButtonContainer>
         <LargeButton
-          buttonText="다음"
+          buttonText={isSubmitting ? "설정 중..." : "다음"}
           onClick={handleNext}
+          loading={isSubmitting}
         />
       </ButtonContainer>
+
+      <CustomAlert
+        isOpen={alertConfig.isOpen}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </PageContainer>
   );
 }
