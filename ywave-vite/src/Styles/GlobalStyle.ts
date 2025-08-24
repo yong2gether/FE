@@ -8,11 +8,6 @@ export const GlobalStyle = createGlobalStyle`
     scroll-behavior: smooth;
   }
 
-  @font-face {
-    font-family: 'Pretendard';
-    src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
-  }
-
   html {
     font-size: 16px;
     line-height: 1.4;
@@ -20,7 +15,7 @@ export const GlobalStyle = createGlobalStyle`
 
   body {
     margin: 0;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
       "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
       sans-serif;
     -webkit-font-smoothing: antialiased;
