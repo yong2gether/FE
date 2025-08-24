@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
 import PublicDropdown from "../../Components/PublicDropdown";
 import LargeButton from "../../Components/Button/LargeButton";
@@ -228,6 +228,7 @@ const dongOptions: Option[] = [
 
 export default function CategoryRegion(): React.JSX.Element {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectCity, setSelectCity] = useState<Option | null>(null);
   const [selectGu, setSelectGu] = useState<Option | null>(null);
   const [selectDong, setSelectDong] = useState<Option | null>(null);
@@ -263,7 +264,13 @@ export default function CategoryRegion(): React.JSX.Element {
 
   const handleConfirmExit = () => {
     setShowExitModal(false);
-    navigate("/login");
+    // 마이페이지에서 온 경우 마이페이지로, 그 외에는 로그인 페이지로
+    const fromMypage = location.state?.from === 'mypage';
+    if (fromMypage) {
+      navigate("/mypage");
+    } else {
+      navigate("/login");
+    }
   };
 
   const handleCancelExit = () => {
