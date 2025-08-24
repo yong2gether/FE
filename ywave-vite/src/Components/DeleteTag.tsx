@@ -9,7 +9,9 @@ interface DeleteTagProps {
   onClick: () => void;
 }
 
-const Tag = styled.div<{ color: string; isFix: boolean }>`
+const Tag = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== 'isFix'
+})<{ color: string; isFix: boolean }>`
   width: ${(props) => (props.isFix ? "auto" : "100%")};
   display: flex;
   align-items: center;
