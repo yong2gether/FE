@@ -89,6 +89,7 @@ export const storeApi = {
   },
 };
 
+/** 
 // AI 관련 API
 export const aiApi = {
   // ChatGPT 연결 테스트
@@ -112,3 +113,4 @@ export const initializeApi = () => {
     console.warn('AI 서버 연결 실패:', error);
   });
 };
+*/

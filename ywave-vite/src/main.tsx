@@ -1,9 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import { initializeApi } from './api/services'
+import { userApi } from './api/services'
+// import { initializeApi } from './api/services'
 
-initializeApi();
+// initializeApi();
+
+// 앱 시작 시 저장된 토큰 복원
+userApi.restoreToken();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
