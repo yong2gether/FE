@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
+import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi";
 import { placeDatas } from "../Data/PlaceDatas";
-
 import { AiFillStar } from "react-icons/ai";
 import ImageGallery from "../Components/ImageComponent/ImageGallery";
 import ReviewSection from "../Components/Review/ReviewSection";
@@ -58,11 +58,13 @@ const NameContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   color: var(--neutral-1000);
+  gap: var(--spacing-xs);
 
   & > svg {
     min-width: 24px;
     min-height: 24px;
     cursor: pointer;
+    flex-shrink: 0;
   }
 `;
 
@@ -70,6 +72,16 @@ const Name = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 280px;
+  flex-shrink: 1;
+  
+  @media (max-width: 768px) {
+    max-width: 220px;
+  }
+  
+  @media (max-width: 480px) {
+    max-width: 180px;
+  }
 `;
 
 const RatingContainer = styled.div`
@@ -106,10 +118,6 @@ const LargeDivider = styled.div`
   height: 5px;
   background: var(--neutral-200);
 `;
-
-
-
-
 
 interface MainPlaceProps {
   userLocation?: { lat: number; lng: number } | null;
@@ -276,7 +284,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
           }
         } catch (error) {
           console.error('가맹점 상세 정보 조회 실패:', error);
-          // API 실패 시 기존 데이터 사용
+          // API 실패 시 기존 데이터에서 bookmark 상태를 설정하도록 수정
           const place = placeDatas.find((place) => place.id === id);
           if (place) {
             setName(place.name);
@@ -286,7 +294,6 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
             setIndustry(place.industry);
             setAddress(place.address);
             setImages(place.images ?? []);
-            // 리뷰는 API로만 가져옴
           }
         }
       };
@@ -401,6 +408,18 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
       <PlaceContainer>
         <NameContainer>
           <Name className="Title__H2">{name}</Name>
+          <div 
+            onClick={handleBookmarkClick}
+            style={{
+              cursor: 'pointer',
+              color: isBookmark ? 'var(--primary-blue-500)' : 'var(--neutral-400)'
+            }}
+          >
+            {isBookmark ? 
+              <PiBookmarkSimpleFill style={{width: 24, height: 24}} /> : 
+              <PiBookmarkSimple style={{width: 24, height: 24}} />
+            }
+          </div>
         </NameContainer>
 
         <RatingContainer>
