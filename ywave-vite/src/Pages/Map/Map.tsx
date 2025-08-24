@@ -104,6 +104,7 @@ export default function Map(): React.JSX.Element {
   
   const [showReSearch, setShowReSearch] = useState<boolean>(false);
   const [selectedMarker, setSelectedMarker] = useState<StoreMarker | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const markersRef = useRef<google.maps.Marker[]>([]);
   const clustererRef = useRef<MarkerClusterer | null>(null);
@@ -318,14 +319,15 @@ export default function Map(): React.JSX.Element {
     }
   }, [apiKey]);
 
-  const fetchNearbyStores = useCallback(async (position: LatLngLiteral) => {
+  const fetchNearbyStores = useCallback(async (position: LatLngLiteral, searchQuery?: string) => {
     try {
-      console.log("주변 가맹점 조회 시작...");
+      console.log("주변 가맹점 조회 시작...", searchQuery ? `검색어: ${searchQuery}` : "");
       const stores = await getNearbyStores({
         lng: position.lng,
         lat: position.lat,
         radius: 500,
-        limit: 5
+        limit: 10,
+        ...(searchQuery && searchQuery.trim() ? { q: searchQuery.trim() } : {})
       });
       
       console.log("가게 상세 정보 조회 시작...");
@@ -466,6 +468,20 @@ export default function Map(): React.JSX.Element {
     await fetchNearbyStores(c);
   }, [map, fetchNearbyStores]);
 
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  // 검색어 변경 시 API 재호출
+  useEffect(() => {
+    if (searchQuery !== undefined) {
+      const currentPosition = lastSearchCenterRef.current ?? userPosition ?? center;
+      if (currentPosition) {
+        fetchNearbyStores(currentPosition, searchQuery);
+      }
+    }
+  }, [searchQuery, fetchNearbyStores, userPosition, center]);
+
   const handleMapLoad = useCallback((m: google.maps.Map) => {
     setMap(m);
   }, []);
@@ -539,23 +555,24 @@ export default function Map(): React.JSX.Element {
     clustererRef.current = new MarkerClusterer({
       map,
       markers: newMarkers,
-      renderer: {
-        render: ({ count, position }) => {
-          return new google.maps.Marker({
-            position,
-            icon: {
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="20" cy="20" r="18" fill="#1976d2" stroke="#fff" stroke-width="2"/>
-                  <text x="20" y="26" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${count}</text>
-                </svg>
-              `),
-              scaledSize: new google.maps.Size(40, 40),
-              anchor: new google.maps.Point(20, 20)
-            }
-          });
+              renderer: {
+          render: ({ count, position }) => {
+            const displayCount = count > 99 ? '99+' : count.toString();
+            return new google.maps.Marker({
+              position,
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                  <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="18" fill="#1976d2" stroke="#fff" stroke-width="2"/>
+                    <text x="20" y="26" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${displayCount}</text>
+                  </svg>
+                `),
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 20)
+              }
+            });
+          }
         }
-      }
     });
   }, [map, isLoaded, storeMarkers, getIcon]);
 
@@ -620,10 +637,12 @@ export default function Map(): React.JSX.Element {
         <MapListBottomSheet 
           onLocationRequest={getCurrentLocation}
           onSearchThisArea={handleSearchThisArea}
+          onSearch={handleSearch}
           showReSearch={showReSearch}
           storeMarkers={storeMarkers}
           bottomOffsetPx={0}
           userLocation={userPosition}
+          searchQuery={searchQuery}
         />
 
         <MarkerInfoBottomSheet
