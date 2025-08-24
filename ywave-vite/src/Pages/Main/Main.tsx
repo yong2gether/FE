@@ -6,8 +6,9 @@ import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import RecommendBox from "../../Components/RecommendBox";
 import SmallPlaceBox from "../../Components/PlaceBox/SmallPlaceBox";
-import { useStoreApi } from "../../hooks/useApi";
+import { useStoreApi, usePreferenceApi } from "../../hooks/useApi";
 import { PopularStoreDto } from "../../api/types";
+import { getAuthToken } from "../../utils/authUtils";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -115,76 +116,206 @@ const ContentTitle = styled.div`
   }
 `;
 
+// 추천 섹션 컴포넌트
+const RecommendSection = ({ 
+  isRecommend, 
+  nick, 
+  total, 
+  VISIBLE, 
+  start, 
+  showPrev, 
+  showNext, 
+  visiblePlaces, 
+  navigate 
+}: {
+  isRecommend: boolean;
+  nick: string;
+  total: number;
+  VISIBLE: number;
+  start: number;
+  showPrev: () => void;
+  showNext: () => void;
+  visiblePlaces: any[];
+  navigate: (path: string) => void;
+}) => (
+  <RecommendContainer>
+    <TitleLogoImage src={TitleLogo} alt="Title Logo" />
+    <TitleContainer>
+      <Title className="Title__H3">오늘의 추천</Title>
+      <TitleDetail className="Body__Large">
+        {isRecommend ? (
+          <>
+            {nick}님의 취향을 기반으로 <br />
+            AI가 장소를 추천해드려요
+            <IconContainer isHidden={total <= VISIBLE}>
+              <AiOutlineLeft onClick={showPrev} />
+              <AiOutlineRight onClick={showNext} />
+            </IconContainer>
+          </>
+        ) : (
+          <>
+            잠시만 기다려주세요 <br />
+            Y:Wave가 열심히 좋아하실 <br />
+            장소를 찾고 있어요!
+          </>
+        )}
+      </TitleDetail>
+    </TitleContainer>
+    {isRecommend && (
+      <RecommendBoxContainer>
+        {visiblePlaces.map((place) => (
+          <RecommendBox
+            key={place.id}
+            image={
+              place.images?.[0] ||
+              "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=300&fit=crop"
+            }
+            name={place.name}
+            rating={place.rating}
+            onClick={() => {
+              navigate(`/main/place/${place.id}`);
+            }}
+          />
+        ))}
+      </RecommendBoxContainer>
+    )}
+  </RecommendContainer>
+);
+
+// 인기 가게 섹션 컴포넌트
+const PopularStoresSection = ({ 
+  userRegion, 
+  isLoadingPopular, 
+  popularStores, 
+  navigate 
+}: {
+  userRegion: string;
+  isLoadingPopular: boolean;
+  popularStores: PopularStoreDto[];
+  navigate: (path: string, state?: any) => void;
+}) => (
+  <Content>
+    <ContentTitle className="Body__MediumLarge">
+      요즘 {userRegion || '처인구'}민들은 어디갈까? <br />
+      <span className="Title__H3">
+        <span className="Highlight">실제로 많이 간 곳</span>만 모았어요
+      </span>
+    </ContentTitle>
+    {isLoadingPopular ? (
+      <div className="Body__Default" style={{ textAlign: 'center', color: 'var(--neutral-500)' }}>
+        인기 가게를 불러오는 중...
+      </div>
+    ) : popularStores.length > 0 ? (
+      <PopularStoresContainer>
+        {popularStores.map((store) => (
+          <SmallPlaceBox
+            key={store.id}
+            name={store.name}
+            rating={store.rating}
+            distance={`${Math.round(store.distM)}m`}
+            industry={store.category}
+            address={store.sigungu}
+            images={(store as any).images || []}
+            bookmark={false}
+            onClick={() => {
+              if (store.placeId) {
+                navigate(`/main/place/${store.placeId}`, { 
+                  state: { 
+                    storeId: store.id,
+                    placeId: store.placeId,
+                    storeData: store,
+                    from: 'main'
+                  } 
+                });
+              } else {
+                navigate(`/main/place/${store.id}`, { 
+                  state: { 
+                    storeId: store.id,
+                    storeData: store,
+                    from: 'main'
+                  } 
+                });
+              }
+            }}
+          />
+        ))}
+      </PopularStoresContainer>
+    ) : (
+      <div className="Body__Default" style={{ textAlign: 'center', color: 'var(--neutral-500)' }}>
+        인기 가게 정보를 불러올 수 없습니다.
+      </div>
+    )}
+  </Content>
+);
+
 export default function Main(): React.JSX.Element {
   const navigate = useNavigate();
   const { getPopularStores } = useStoreApi();
+  const { getPreferredRegion } = usePreferenceApi();
   
   const [isRecommend, setIsRecommend] = useState<boolean>(false);
   const [start, setStart] = useState<number>(0);
   const [popularStores, setPopularStores] = useState<PopularStoreDto[]>([]);
   const [isLoadingPopular, setIsLoadingPopular] = useState<boolean>(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userRegion, setUserRegion] = useState<string>("");
   
   const VISIBLE = 2;
   const total = placeDatas.length;
   const nick = "닉네임";
 
-  // 사용자 현재 위치 가져오기 (Google Geolocation API 사용)
-  const getUserLocation = async () => {
+  // 백엔드 API로 placeId 기반 상세 정보 가져오기
+  const fetchPlaceDetailsByPlaceId = async (placeId: string) => {
     try {
-      // Google Geolocation API 사용
-      const response = await fetch(`https://www.googleapis.com/geolocation/v1/geolocate?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          considerIp: true,
-          wifiAccessPoints: [],
-          cellTowers: []
-        })
+      const token = getAuthToken();
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`https://ywave.site/api/v1/places/${placeId}/details`, {
+        method: 'GET',
+        headers
       });
-
+      
       if (response.ok) {
         const data = await response.json();
-        const { lat, lng } = data.location;
-        setUserLocation({ lat, lng });
+        return data;
       } else {
-        // Google API 실패 시 브라우저 geolocation으로 대체
-        requestBrowserLocation();
+        console.error(`백엔드 placeId API 호출 실패: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      // Google API 에러 시 브라우저 geolocation으로 대체
-      requestBrowserLocation();
+      console.error('백엔드 placeId API 호출 실패:', error);
     }
-  };
-
-  // 브라우저 geolocation으로 위치 요청 (백업)
-  const requestBrowserLocation = () => {
-    if (navigator.geolocation) {
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000 // 5분
-      };
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-        },
-        (error) => {
-          console.log('📍 위치 정보를 가져올 수 없습니다:', error.message);
-        },
-        options
-      );
-    }
+    return null;
   };
 
   useEffect(() => {
     setIsRecommend(true);
-    getUserLocation();
   }, []);
+
+  // 지역 설정 기반 기본 위치 설정
+  useEffect(() => {
+    const setDefaultLocationFromPreferences = async () => {
+      try {
+        const regionData = await getPreferredRegion();
+        if (regionData && regionData.lat && regionData.lng) {
+          setUserLocation({ lat: regionData.lat, lng: regionData.lng });
+          
+          // 지역명 설정 (시/도 시/구/군 동/읍/면)
+          const regionString = `${regionData.sido} ${regionData.sigungu}${regionData.dong ? ` ${regionData.dong}` : ''}`;
+          setUserRegion(regionString);
+        }
+      } catch (error) {
+        console.log("지역 설정 조회 실패:", error);
+      }
+    };
+
+    setDefaultLocationFromPreferences();
+  }, [getPreferredRegion]);
 
   // 사용자 위치가 변경될 때마다 인기 가게 목록 재조회
   useEffect(() => {
@@ -201,10 +332,33 @@ export default function Main(): React.JSX.Element {
       const stores = await getPopularStores({
         lng: userLocation.lng,
         lat: userLocation.lat,
-        radius: 2000, // 2km 반경
-        limit: 30
+        radius: 2000,
+        limit: 200
       });
-      setPopularStores(stores);
+      
+      // placeId가 있는 가맹점들만 필터링
+      const storesWithPlaceId = stores.filter(store => store.placeId);
+      
+      if (storesWithPlaceId.length > 0) {
+        // placeId가 있는 가맹점들의 백엔드 API 상세 정보 가져오기
+        const enhancedStores = await Promise.all(
+          storesWithPlaceId.map(async (store) => {
+            const placeDetails = await fetchPlaceDetailsByPlaceId(store.placeId!);
+            if (placeDetails) {
+              return {
+                ...store,
+                rating: placeDetails.rating || store.rating,
+                userRatingsTotal: placeDetails.reviewCount || store.userRatingsTotal,
+                images: placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : []
+              };
+            }
+            return store;
+          })
+        );
+        setPopularStores(enhancedStores);
+      } else {
+        setPopularStores([]);
+      }
     } catch (error) {
       console.error('인기 가게 목록 조회 실패:', error);
     } finally {
@@ -229,85 +383,23 @@ export default function Main(): React.JSX.Element {
 
   return (
     <PageContainer>
-      <RecommendContainer>
-        <TitleLogoImage src={TitleLogo} alt="Title Logo" />
-        <TitleContainer>
-          <Title className="Title__H3">오늘의 추천</Title>
-          <TitleDetail className="Body__Large">
-            {isRecommend ? (
-              <>
-                <>
-                  {nick}님의 취향을 기반으로 <br />
-                  AI가 장소를 추천해드려요
-                </>
-                <IconContainer isHidden={total <= VISIBLE}>
-                  <AiOutlineLeft onClick={showPrev} />
-                  <AiOutlineRight onClick={showNext} />
-                </IconContainer>
-              </>
-            ) : (
-              <>
-                잠시만 기다려주세요 <br />
-                Y:Wave가 열심히 좋아하실 <br />
-                장소를 찾고 있어요!
-              </>
-            )}
-          </TitleDetail>
-        </TitleContainer>
-        {isRecommend && (
-          <RecommendBoxContainer>
-            {visiblePlaces.map((place) => (
-              <RecommendBox
-                key={place.id}
-                image={
-                  place.images?.[0] ||
-                  "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=300&fit=crop"
-                }
-                name={place.name}
-                rating={place.rating}
-                onClick={() => {
-                  navigate(`/main/place/${place.id}`);
-                }}
-              />
-            ))}
-          </RecommendBoxContainer>
-        )}
-      </RecommendContainer>
-      <Content>
-        <ContentTitle className="Body__MediumLarge">
-          요즘 처인구민들은 어디갈까? <br />
-          <span className="Title__H3">
-            <span className="Highlight">실제로 많이 간 곳</span>만 모았어요
-          </span>
-        </ContentTitle>
-        {isLoadingPopular ? (
-          <div className="Body__Default" style={{ textAlign: 'center', color: 'var(--neutral-500)' }}>
-            인기 가게를 불러오는 중...
-          </div>
-        ) : popularStores.length > 0 ? (
-          <PopularStoresContainer>
-            {popularStores.map((store) => (
-              <SmallPlaceBox
-                key={store.id}
-                name={store.name}
-                rating={store.rating}
-                distance={`${Math.round(store.distM)}m`}
-                industry={store.category}
-                address={store.sigungu}
-                images={[]} // API에서 이미지 정보가 없으므로 빈 배열
-                bookmark={false}
-                onClick={() => {
-                  navigate(`/main/place/${store.id}`);
-                }}
-              />
-            ))}
-          </PopularStoresContainer>
-        ) : (
-          <div className="Body__Default" style={{ textAlign: 'center', color: 'var(--neutral-500)' }}>
-            인기 가게 정보를 불러올 수 없습니다.
-          </div>
-        )}
-      </Content>
+      <RecommendSection
+        isRecommend={isRecommend}
+        nick={nick}
+        total={total}
+        VISIBLE={VISIBLE}
+        start={start}
+        showPrev={showPrev}
+        showNext={showNext}
+        visiblePlaces={visiblePlaces}
+        navigate={navigate}
+      />
+      <PopularStoresSection
+        userRegion={userRegion}
+        isLoadingPopular={isLoadingPopular}
+        popularStores={popularStores}
+        navigate={navigate}
+      />
     </PageContainer>
   );
 }
