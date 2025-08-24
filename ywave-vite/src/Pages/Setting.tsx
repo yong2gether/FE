@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import ReviewWriteModal from "../Components/Review/ReviewWriteModal";
+import CustomAlert from "../Components/Modal/CustomAlert";
 
 const PageContainer = styled.div`
   display: flex;
@@ -113,9 +115,46 @@ const SectionTitle = styled.h3`
 
 export default function Setting(): React.JSX.Element {
   const navigate = useNavigate();
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
   const gotoPage = (path: string): void => {
     navigate(path);
+  };
+
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+
+  const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    setAlertConfig({ isOpen: true, title, message, type });
+  };
+
+  const handleReviewSubmit = (reviewData: any) => {
+    console.log("리뷰 제출:", reviewData);
+    showAlert("리뷰 제출 완료", "리뷰가 제출되었습니다! (데모용)", "success");
+    setIsReviewModalOpen(false);
+  };
+
+  const handleReviewEdit = (reviewData: any) => {
+    console.log("리뷰 수정:", reviewData);
+    showAlert("리뷰 수정 완료", "리뷰가 수정되었습니다! (데모용)", "success");
+    setIsEditModalOpen(false);
+  };
+
+  // 데모용 기존 리뷰 데이터
+  const demoReviewData = {
+    rating: 4,
+    images: [],
+    content: "이곳은 정말 좋은 카페입니다. 커피 맛도 좋고 분위기도 좋아요!"
   };
 
   return (
@@ -142,6 +181,50 @@ export default function Setting(): React.JSX.Element {
           즐겨찾기
         </NavigationButton>
       </ButtonGrid>
+
+      <SectionTitle>컴포넌트 데모</SectionTitle>
+      
+      <ButtonGrid>
+        <NavigationButton 
+          onClick={() => setIsReviewModalOpen(true)}
+          style={{ backgroundColor: 'var(--primary-blue-500)' }}
+        >
+          리뷰 작성 모달 데모
+        </NavigationButton>
+        <NavigationButton 
+          onClick={() => setIsEditModalOpen(true)}
+          style={{ backgroundColor: 'var(--warning-300)' }}
+        >
+          리뷰 수정 모달 데모
+        </NavigationButton>
+      </ButtonGrid>
+
+      {/* 리뷰 작성 모달 */}
+      <ReviewWriteModal
+        isOpen={isReviewModalOpen}
+        placeName="스타벅스 강남점 (데모)"
+        onClose={() => setIsReviewModalOpen(false)}
+        onSubmit={handleReviewSubmit}
+      />
+
+      {/* 리뷰 수정 모달 */}
+      <ReviewWriteModal
+        isOpen={isEditModalOpen}
+        placeName="스타벅스 강남점 (데모)"
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleReviewEdit}
+        mode="edit"
+        initialData={demoReviewData}
+      />
+
+      {/* 커스텀 알림 */}
+      <CustomAlert
+        isOpen={alertConfig.isOpen}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </PageContainer>
   );
 }
