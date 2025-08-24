@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
+import { industries } from "../../Data/Industries";
 import LargeButton from "../../Components/Button/LargeButton";
 
 const PageContainer = styled.div`
@@ -61,21 +62,24 @@ export default function CategoryResult(): React.JSX.Element {
 
   useEffect(() => {
     // localStorage에서 선택된 지역과 업종 정보 가져오기
-    const regions = JSON.parse(localStorage.getItem('selectedRegions') || '[]');
-    const industries = JSON.parse(localStorage.getItem('selectedIndustries') || '[]');
-    
+    const regions = JSON.parse(localStorage.getItem("selectedRegions") || "[]");
+    const industryIds = JSON.parse(localStorage.getItem("selectedIndustries") || "[]");
+    const industryNames = industries
+      .filter((industry) => industryIds.includes(industry.id))
+      .map((industry) => industry.name);
+
     setSelectedRegions(regions.map((region: any) => region.value));
-    setSelectedIndustries(industries);
+    setSelectedIndustries(industryNames);
   }, []);
 
   const handleStart = () => {
     // 카테고리 설정 완료 플래그 설정
-    localStorage.setItem('hasCompletedCategories', 'true');
-    
+    localStorage.setItem("hasCompletedCategories", "true");
+
     // 선택된 정보들을 정리 (필요시 서버에 저장)
     // localStorage.removeItem('selectedRegions');
     // localStorage.removeItem('selectedIndustries');
-    
+
     // 메인 페이지로 이동
     navigate("/main");
   };

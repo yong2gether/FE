@@ -95,9 +95,9 @@ const ButtonContainer = styled.div`
 
 export default function CategoryIndustry(): React.JSX.Element {
   const navigate = useNavigate();
-  const [selectIndustries, setSelectIndustries] = useState<string[]>([]);
+  const [selectIndustries, setSelectIndustries] = useState<number[]>([]);
 
-  const handleIndustryClick = (clickId: string): void => {
+  const handleIndustryClick = (clickId: number): void => {
     if (selectIndustries.includes(clickId)) {
       setSelectIndustries(selectIndustries.filter((id) => id !== clickId));
     } else {
@@ -110,6 +110,7 @@ export default function CategoryIndustry(): React.JSX.Element {
     if (selectIndustries.length > 0) {
       // 선택된 업종 정보를 localStorage에 저장
       localStorage.setItem('selectedIndustries', JSON.stringify(selectIndustries));
+      console.log(selectIndustries);
       navigate("/category/result");
     }
   };
