@@ -24,6 +24,8 @@ class ApiClient {
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'User-Agent': 'Y-Wave-App/1.0',
+      'Accept': 'application/json',
     };
 
     // options.headers가 있으면 추가
@@ -48,23 +50,68 @@ class ApiClient {
       headers,
     };
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
-      }
+    // 재시도 로직 (최대 3번)
+    const maxRetries = 3;
+    let lastError: Error = new Error('Unknown error');
 
-      // 응답이 JSON이 아닐 수 있음
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 API 요청 시도 ${attempt}/${maxRetries}: ${endpoint}`);
+        
+        const response = await fetch(url, config);
+        
+        if (!response.ok) {
+          // 403 오류일 때는 재시도
+          if (response.status === 403 && attempt < maxRetries) {
+            console.log(`⚠️ 403 오류 발생, ${attempt}초 후 재시도...`);
+            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+            continue;
+          }
+          
+          
+          
+          throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+
+        console.log(`✅ API 요청 성공: ${endpoint}`);
+        
+        // 응답이 JSON이 아닐 수 있음
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return await response.json();
+        }
+        
+        return await response.text() as T;
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`❌ API 요청 실패 (시도 ${attempt}/${maxRetries}):`, error);
+        
+        // 마지막 시도가 아니면 잠시 대기 후 재시도
+        if (attempt < maxRetries) {
+          const delay = attempt * 1000; // 1초, 2초, 3초
+          console.log(`⏳ ${delay}ms 후 재시도...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-      
-      return await response.text() as T;
-    } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
+    }
+
+    // 모든 재시도 실패
+    console.error(`💥 모든 재시도 실패: ${endpoint}`);
+    throw lastError;
+  }
+
+  // 토큰 만료 처리
+  private handleTokenExpiration() {
+    // 토큰 제거
+    this.clearToken();
+    
+    // 로컬 스토리지에서도 토큰 제거
+    localStorage.removeItem('accessToken');
+    
+    // 로그인 페이지로 리다이렉트 (현재 페이지가 로그인 페이지가 아닌 경우)
+    if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+      console.log("🔄 로그인 페이지로 리다이렉트...");
+      window.location.href = '/login';
     }
   }
 
