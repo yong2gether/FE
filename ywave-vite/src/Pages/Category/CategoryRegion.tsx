@@ -6,6 +6,8 @@ import PublicDropdown from "../../Components/PublicDropdown";
 import LargeButton from "../../Components/Button/LargeButton";
 import DeleteTag from "../../Components/DeleteTag";
 import ConfirmModal from "../../Components/Modal/ConfirmModal";
+import { usePreferenceApi } from "../../hooks/useApi";
+import { SetPreferredRegionRequest } from "../../api/types";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -87,10 +89,22 @@ interface Option {
   value: string;
 }
 
+interface RegionDataItem {
+  sido: string;
+  sigungu: string;
+  dong: string;
+}
+
 interface RegionData {
   id: number;
   value: string;
 }
+
+// RegionData.tsx에서 실제 지역 데이터 가져오기
+import regionData from "../../Data/RegionData";
+
+// 지역 데이터 (RegionData.tsx에서 가져온 실제 데이터)
+const regionDataItems: RegionDataItem[] = regionData.gyeonggi_do;
 
 interface DropdownProps {
   options: Option[];
@@ -116,7 +130,10 @@ const RegionSelector: React.FC<{
   onGuChange: (gu: Option | null) => void;
   onDongChange: (dong: Option | null) => void;
   disabled: boolean;
-}> = ({ selectCity, selectGu, selectDong, onCityChange, onGuChange, onDongChange, disabled }) => (
+  cityOptions: Option[];
+  guOptions: Option[];
+  dongOptions: Option[];
+}> = ({ selectCity, selectGu, selectDong, onCityChange, onGuChange, onDongChange, disabled, cityOptions, guOptions, dongOptions }) => (
   <DropdownContainer>
     <RegionDropdown
       options={cityOptions}
@@ -162,69 +179,26 @@ const SelectedRegions: React.FC<{
   </>
 );
 
-const cityOptions: Option[] = [
-  { index: 0, value: "서울특별시" },
-  { index: 1, value: "부산광역시" },
-  { index: 2, value: "인천광역시" },
-  { index: 3, value: "대구광역시" },
-  { index: 4, value: "광주광역시" },
-  { index: 5, value: "대전광역시" },
-  { index: 6, value: "울산광역시" },
-  { index: 7, value: "세종특별자치시" },
-  { index: 8, value: "경기도" },
-  { index: 9, value: "강원도" },
-  { index: 10, value: "충청북도" },
-  { index: 11, value: "충청남도" },
-  { index: 12, value: "전라북도" },
-  { index: 13, value: "전라남도" },
-  { index: 14, value: "경상북도" },
-  { index: 15, value: "경상남도" },
-  { index: 16, value: "제주특별자치도" },
-];
+// 기본 시/도 옵션 (고정)
+const cityOptions: Option[] = Array.from(new Set(regionDataItems.map(item => item.sido)))
+  .map((sido, index) => ({ index, value: sido }));
 
-const guOptions: Option[] = [
-  { index: 0, value: "강남구" },
-  { index: 1, value: "강동구" },
-  { index: 2, value: "강북구" },
-  { index: 3, value: "강서구" },
-  { index: 4, value: "관악구" },
-  { index: 5, value: "광진구" },
-  { index: 6, value: "구로구" },
-  { index: 7, value: "금천구" },
-  { index: 8, value: "노원구" },
-  { index: 9, value: "도봉구" },
-  { index: 10, value: "동대문구" },
-  { index: 11, value: "동작구" },
-  { index: 12, value: "마포구" },
-  { index: 13, value: "서대문구" },
-  { index: 14, value: "서초구" },
-  { index: 15, value: "성동구" },
-  { index: 16, value: "성북구" },
-  { index: 17, value: "송파구" },
-  { index: 18, value: "양천구" },
-  { index: 19, value: "영등포구" },
-  { index: 20, value: "용산구" },
-  { index: 21, value: "은평구" },
-  { index: 22, value: "종로구" },
-  { index: 23, value: "중구" },
-  { index: 24, value: "중랑구" },
-];
+// 시/구/군 및 동/읍/면 옵션을 동적으로 생성하는 함수
+const getGuOptions = (selectedCity: Option | null): Option[] => {
+  if (!selectedCity) return [];
+  return Array.from(new Set(regionDataItems
+    .filter(item => item.sido === selectedCity.value)
+    .map(item => item.sigungu)))
+    .map((sigungu, index) => ({ index, value: sigungu }));
+};
 
-const dongOptions: Option[] = [
-  { index: 0, value: "강남동" },
-  { index: 1, value: "개포동" },
-  { index: 2, value: "논현동" },
-  { index: 3, value: "대치동" },
-  { index: 4, value: "도곡동" },
-  { index: 5, value: "삼성동" },
-  { index: 6, value: "세곡동" },
-  { index: 7, value: "수서동" },
-  { index: 8, value: "신사동" },
-  { index: 9, value: "압구정동" },
-  { index: 10, value: "역삼동" },
-  { index: 11, value: "일원동" },
-  { index: 12, value: "청담동" },
-];
+const getDongOptions = (selectedCity: Option | null, selectedGu: Option | null): Option[] => {
+  if (!selectedCity || !selectedGu) return [];
+  return Array.from(new Set(regionDataItems
+    .filter(item => item.sido === selectedCity.value && item.sigungu === selectedGu.value)
+    .map(item => item.dong)))
+    .map((dong, index) => ({ index, value: dong }));
+};
 
 export default function CategoryRegion(): React.JSX.Element {
   const navigate = useNavigate();
@@ -234,9 +208,16 @@ export default function CategoryRegion(): React.JSX.Element {
   const [selectDong, setSelectDong] = useState<Option | null>(null);
   const [selectRegions, setSelectRegions] = useState<RegionData[]>([]);
   const [showExitModal, setShowExitModal] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const { setPreferredRegion, setRegionState } = usePreferenceApi();
 
   const nickname = "상현";
   const isRegionSelected = selectRegions.length >= 1;
+
+  // 동적으로 시/구/군 및 동/읍/면 옵션 생성
+  const guOptions: Option[] = getGuOptions(selectCity);
+  const dongOptions: Option[] = getDongOptions(selectCity, selectGu);
 
   useEffect(() => {
     if (selectCity && selectGu && selectDong) {
@@ -277,6 +258,36 @@ export default function CategoryRegion(): React.JSX.Element {
     setShowExitModal(false);
   };
 
+  const handleSaveRegion = async () => {
+    if (!selectRegions.length) return;
+    
+    const regionValue = selectRegions[0].value;
+    const parts = regionValue.split(' ');
+    
+    if (parts.length < 2) return;
+    
+    const requestData: SetPreferredRegionRequest = {
+      sido: parts[0],
+      sigungu: parts[1],
+      dong: parts[2] || undefined
+    };
+
+    try {
+      setIsSubmitting(true);
+      const response = await setPreferredRegion(requestData);
+      
+      if (response) {
+        // 지역 설정 성공 후 다음 페이지로 이동
+        navigate("/category/industry");
+      }
+    } catch (error) {
+      console.error('지역 설정 실패:', error);
+      // 에러 처리 (사용자에게 알림 등)
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <PageContainer>
@@ -299,6 +310,9 @@ export default function CategoryRegion(): React.JSX.Element {
             onGuChange={(gu) => !isRegionSelected && setSelectGu(gu)}
             onDongChange={(dong) => !isRegionSelected && setSelectDong(dong)}
             disabled={isRegionSelected}
+            cityOptions={cityOptions}
+            guOptions={guOptions}
+            dongOptions={dongOptions}
           />
           
           <SelectedRegions
@@ -308,10 +322,11 @@ export default function CategoryRegion(): React.JSX.Element {
         </ContentContainer>
         
         <ButtonContainer>
-          <LargeButton
-            buttonText="다음"
-            onClick={() => navigate("/category/industry")}
-          />
+                  <LargeButton
+          buttonText="다음"
+          onClick={handleSaveRegion}
+          disabled={!isRegionSelected || isSubmitting}
+        />
         </ButtonContainer>
       </PageContainer>
       
