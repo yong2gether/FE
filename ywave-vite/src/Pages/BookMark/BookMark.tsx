@@ -15,9 +15,7 @@ const PageContainer = styled.div`
   width: 100%;
   height: 100vh;
   position: relative;
-
   overflow: hidden;
-
 `;
 
 const MapBackground = styled.div`
@@ -33,8 +31,6 @@ const MapContainer = styled.div`
   width: 100%;
   height: 100%;
 `;
-
-
 
 const BottomSheetContainer = styled.div`
   width: 100%;
@@ -60,12 +56,15 @@ const defaultCenter = { lat: 37.5665, lng: 126.978 };
 export default function BookMark(): React.JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
-  const { getBookmarkGroups, getGroupsState } = useBookmarkApi();
-  
+  const { getBookmarkGroups, getGroupsState, deleteBookmarkGroup } =
+    useBookmarkApi();
+
   // 폴더 목록 상태
   const [folders, setFolders] = useState<any[]>([]);
   const [allBookmarkPlaces, setAllBookmarkPlaces] = useState<any[]>([]);
-  
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  // 바텀 시트 상태
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
   const [openMoreId, setOpenMoreId] = useState<string | null>(null);
   const [sheetRatio, setSheetRatio] = useState<number>(0);
@@ -76,15 +75,15 @@ export default function BookMark(): React.JSX.Element {
   // 폴더 목록 조회
   const fetchBookmarkGroups = useCallback(async () => {
     try {
-      console.log('북마크 그룹 조회 시작...');
+      console.log("북마크 그룹 조회 시작...");
       const response = await getBookmarkGroups();
-      console.log('북마크 그룹 조회 응답:', response);
-      
+      console.log("북마크 그룹 조회 응답:", response);
+
       if (response && response.groups) {
-        console.log('폴더 개수:', response.groups.length);
-        console.log('첫 번째 폴더 구조:', response.groups[0]);
+        console.log("폴더 개수:", response.groups.length);
+        console.log("첫 번째 폴더 구조:", response.groups[0]);
         setFolders(response.groups);
-        
+
         // 모든 북마크 장소 수집
         const allPlaces: any[] = [];
         response.groups.forEach((group: any) => {
@@ -93,14 +92,14 @@ export default function BookMark(): React.JSX.Element {
           }
         });
         setAllBookmarkPlaces(allPlaces);
-        console.log('전체 북마크 장소 개수:', allPlaces.length);
+        console.log("전체 북마크 장소 개수:", allPlaces.length);
       } else {
-        console.log('응답에 groups가 없음:', response);
+        console.log("응답에 groups가 없음:", response);
         setFolders([]);
         setAllBookmarkPlaces([]);
       }
     } catch (error) {
-      console.error('북마크 그룹 조회 실패:', error);
+      console.error("북마크 그룹 조회 실패:", error);
       setFolders([]);
       setAllBookmarkPlaces([]);
     }
@@ -110,37 +109,72 @@ export default function BookMark(): React.JSX.Element {
     fetchBookmarkGroups();
   }, [fetchBookmarkGroups]);
 
+  // 폴더 삭제
+  const deleteFolder = useCallback(
+    async (folderId: string | number | null) => {
+      if (folderId === null || isDeleting) return;
 
+      try {
+        setIsDeleting(true);
 
-  // 폴더 삭제 함수 (임시 구현)
-  const deleteFolder = useCallback((folderId: string | number | null) => {
-    if (folderId === null) return;
-    setFolders(prev => prev.filter(folder => 
-      (folder.groupId?.toString() || folder.id?.toString()) !== folderId.toString()
-    ));
-  }, []);
+        console.log("북마크 폴더 삭제 시작...");
+        const response = await deleteBookmarkGroup({
+          groupId: Number(folderId),
+        });
+        console.log("북마크 그룹 삭제 응답:", response);
+
+        // 로컬 상태에서도 제거
+        setFolders((prev) =>
+          prev.filter(
+            (folder) =>
+              (folder.groupId?.toString() || folder.id?.toString()) !==
+              folderId.toString()
+          )
+        );
+
+        // 전체 북마크 장소에서도 해당 그룹의 장소들 제거
+        setAllBookmarkPlaces((prev) =>
+          prev.filter(
+            (place) => place.groupId?.toString() !== folderId.toString()
+          )
+        );
+
+        // More 메뉴 닫기
+        setOpenMoreId(null);
+      } catch (error) {
+        console.error("북마크 그룹 삭제 실패:", error);
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [deleteBookmarkGroup, isDeleting]
+  );
 
   // 북마크 장소들을 지도에 표시할 데이터
   const bookmarkPlaces = useMemo(() => {
     if (!allBookmarkPlaces) return [];
-    
-    return allBookmarkPlaces.map(place => ({
+
+    return allBookmarkPlaces.map((place) => ({
       id: place.id,
       name: place.name,
       lat: place.lat,
       lng: place.lng,
-      unicode: '1f4c1' // 기본 폴더 이모지
+      unicode: "1f4c1", // 기본 폴더 이모지
     }));
   }, [allBookmarkPlaces]);
 
   // 지도 중심점 계산
   const mapCenter = useMemo(() => {
     if (bookmarkPlaces.length === 0) return defaultCenter;
-    
+
     // 모든 장소의 평균 위치 계산
-    const avgLat = bookmarkPlaces.reduce((sum, place) => sum + place.lat, 0) / bookmarkPlaces.length;
-    const avgLng = bookmarkPlaces.reduce((sum, place) => sum + place.lng, 0) / bookmarkPlaces.length;
-    
+    const avgLat =
+      bookmarkPlaces.reduce((sum, place) => sum + place.lat, 0) /
+      bookmarkPlaces.length;
+    const avgLng =
+      bookmarkPlaces.reduce((sum, place) => sum + place.lng, 0) /
+      bookmarkPlaces.length;
+
     return { lat: avgLat, lng: avgLng };
   }, [bookmarkPlaces]);
 
@@ -149,16 +183,22 @@ export default function BookMark(): React.JSX.Element {
     setOpenMoreId((prev) => (prev === id.toString() ? null : id.toString()));
   }, []);
 
-  const handleFolderClick = useCallback((unicode: string, title: string): void => {
-    navigate("/bookmark/detail", { state: { unicode, title } });
-  }, [navigate]);
+  const handleFolderClick = useCallback(
+    (unicode: string, title: string): void => {
+      navigate("/bookmark/detail", { state: { unicode, title } });
+    },
+    [navigate]
+  );
 
-  const handleFolderDelete = useCallback((folderId: string): void => {
-    if (window.confirm("정말로 이 폴더를 삭제하시겠습니까?")) {
-      deleteFolder(folderId);
-      setOpenMoreId(null);
-    }
-  }, [deleteFolder]);
+  const handleFolderDelete = useCallback(
+    (folderId: string): void => {
+      if (window.confirm("정말로 이 폴더를 삭제하시겠습니까?")) {
+        deleteFolder(folderId);
+        setOpenMoreId(null);
+      }
+    },
+    [deleteFolder]
+  );
 
   const handleProgressChange = useCallback((ratio: number) => {
     setSheetRatio(ratio);
@@ -167,7 +207,7 @@ export default function BookMark(): React.JSX.Element {
   // BookMarkAdd에서 돌아왔을 때 새로고침
   useEffect(() => {
     if (location.state?.refresh) {
-      console.log('북마크 폴더 새로고침 시작');
+      console.log("북마크 폴더 새로고침 시작");
       fetchBookmarkGroups();
       // 상태 초기화 (replace로 현재 URL의 state를 제거)
       navigate("/bookmark", { replace: true });
@@ -180,7 +220,7 @@ export default function BookMark(): React.JSX.Element {
         <MapContainer>
           {isLoaded && !loadError && (
             <GoogleMap
-              mapContainerStyle={{ width: '100%', height: '100%' }}
+              mapContainerStyle={{ width: "100%", height: "100%" }}
               center={mapCenter}
               zoom={12}
               options={{
@@ -191,9 +231,13 @@ export default function BookMark(): React.JSX.Element {
                 streetViewControl: false,
                 mapTypeControl: false,
                 styles: [
-                  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+                  {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }],
+                  },
                   { featureType: "transit", stylers: [{ visibility: "off" }] },
-                ]
+                ],
               }}
             >
               {bookmarkPlaces.map((place) => (
@@ -204,7 +248,7 @@ export default function BookMark(): React.JSX.Element {
                     size: 40,
                     backgroundColor: "#ffffff",
                     borderColor: "#1976d2",
-                    borderWidth: 3
+                    borderWidth: 3,
                   })}
                   title={place.name}
                 />
@@ -213,7 +257,6 @@ export default function BookMark(): React.JSX.Element {
           )}
         </MapContainer>
       </MapBackground>
-
 
       <BottomSheet
         isOpen={isSheetOpen}
@@ -233,7 +276,7 @@ export default function BookMark(): React.JSX.Element {
               onClick={() => navigate("/bookmark/add")}
             />
           </TitleContainer>
-          
+
           <FolderList
             folders={folders}
             openMoreId={openMoreId}

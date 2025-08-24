@@ -9,6 +9,17 @@ const FolderListContainer = styled.div`
   width: 100%;
 `;
 
+const EmptyContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--neutral-500);
+`;
+
 interface Folder {
   groupId?: number;
   id?: number;
@@ -36,18 +47,14 @@ export default function FolderList({
 }: FolderListProps): React.JSX.Element {
   if (folders.length === 0) {
     return (
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '40px 20px',
-        color: 'var(--neutral-500)'
-      }}>
+      <EmptyContainer>
         <div className="Body__MediumLarge" style={{ marginBottom: '8px' }}>
           아직 북마크 폴더가 없습니다
         </div>
         <div className="Body__Small">
           새 목록 추가하기 버튼을 눌러 첫 번째 폴더를 만들어보세요!
         </div>
-      </div>
+      </EmptyContainer>
     );
   }
 
