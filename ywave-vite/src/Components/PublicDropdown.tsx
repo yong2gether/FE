@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 
 interface Option {
@@ -20,45 +20,34 @@ const DropdownContainer = styled.div`
   min-width: 200px;
 `;
 
-const DropdownHeader = styled.div<{ isOpen: boolean; isSelect: boolean }>`
-  width: 100%;
-  min-width: 200px;
+const DropdownHeader = styled.div<{ $isOpen: boolean; $isSelect: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 12px 16px;
   border: 1px solid var(--neutral-200);
-  border-radius: 10px;
-  color: var(--neutral-500);
+  border-radius: 8px;
+  background: white;
   cursor: pointer;
-  padding: 8px 12px;
-
+  transition: all 0.2s ease;
+  
   &:hover {
-    border-color: var(--neutral-500);
+    border-color: var(--neutral-300);
   }
-
-  &:active {
-    border-color: var(--neutral-500);
-  }
-
-  ${(props) =>
-    !props.isOpen &&
-    props.isSelect &&
-    `
-      border-color: var(--primary-blue-1000);
-      color: var(--primary-blue-1000);
+  
+  ${props =>
+    props.$isOpen &&
+    css`
+      border-color: var(--primary-blue-500);
+      box-shadow: 0 0 0 3px var(--primary-blue-alpha-10);
     `}
-
-  @media (max-width: 768px) {
-    font-size: 12px;
-    height: 42px;
-    min-width: 180px;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 11px;
-    height: 40px;
-    min-width: 160px;
-  }
+  
+  ${props =>
+    props.$isSelect &&
+    css`
+      border-color: var(--primary-blue-500);
+      background: var(--primary-blue-alpha-5);
+    `}
 `;
 
 const DownIcon = styled(BiChevronDown)`
@@ -144,10 +133,9 @@ export default function PublicDropdown({
   return (
     <DropdownContainer ref={dropdownRef}>
       <DropdownHeader
-        className="Body__Default"
+        $isOpen={isOpen}
+        $isSelect={!!value}
         onClick={handleDropdown}
-        isOpen={isOpen}
-        isSelect={!!value}
       >
         <div>{value ? value.value : placeholder}</div>
         {isOpen ? <UpIcon /> : <DownIcon />}

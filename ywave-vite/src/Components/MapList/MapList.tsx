@@ -106,7 +106,9 @@ export default function MapList({
 
     const handleStoreClick = () => {
         if (storeId) {
-            navigate(`/main/place/${storeId}`);
+            navigate(`/main/place/${storeId}`, { 
+              state: { from: 'map' } 
+            });
         }
     }
 

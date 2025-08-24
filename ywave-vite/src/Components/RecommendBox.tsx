@@ -9,44 +9,20 @@ interface RecommendBoxProps {
   onClick: () => void;
 }
 
-const PlaceContainer = styled.div<{ backgroundImage: string }>`
-  width: 168px;
-  height: 223px;
-  border-radius: 10px;
-  background-image: url(${({ backgroundImage }) => backgroundImage});
-  background-size: cover;
-  box-sizing: border-box;
-  box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.25);
+const PlaceContainer = styled.div<{ $backgroundImage: string }>`
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
   overflow: hidden;
-  flex-shrink: 0;
+  background-image: url(${({ $backgroundImage }) => $backgroundImage});
+  background-size: cover;
+  background-position: center;
   cursor: pointer;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 10px;
-    background-color: transparent;
-  }
-
-  &:hover::before {
-    background-color: rgba(171, 218, 255, 0.3);
-  }
-
-  &:active {
-    border: 1px solid var(--primary-blue-500);
-  }
-
-  &:active::before {
-    background-color: rgba(4, 143, 255, 0.4);
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.02);
   }
 `;
 
@@ -84,11 +60,11 @@ const StarContainer = styled.div`
   justify-content: center;
 `;
 
-const Star = styled(AiFillStar)<{ isFill: boolean }>`
+const Star = styled(AiFillStar)<{ $isFill: boolean }>`
   width: 16px;
   height: 16px;
-  color: ${({ isFill }) =>
-    isFill ? "var(--primary-blue-500)" : "var(--neutral-200)"};
+  color: ${({ $isFill }) =>
+    $isFill ? "var(--primary-blue-500)" : "var(--neutral-200)"};
 `;
 
 export default function RecommendBox({
@@ -102,9 +78,9 @@ export default function RecommendBox({
     for (let i = 1; i <= 5; i++) {
       stars.push(
         i <= Math.round(rating) ? (
-          <Star key={`filled-${i}`} isFill={true} />
+          <Star key={`filled-${i}`} $isFill={true} />
         ) : (
-          <Star key={`empty-${i}`} isFill={false} />
+          <Star key={`empty-${i}`} $isFill={false} />
         )
       );
     }
@@ -112,7 +88,7 @@ export default function RecommendBox({
   };
 
   return (
-    <PlaceContainer backgroundImage={image} onClick={onClick}>
+    <PlaceContainer $backgroundImage={image} onClick={onClick}>
       <InfoContainer>
         <Name className="Body__MediumDefault">{name}</Name>
         <RatingContainer>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import BottomSheet from "../BottomSheet";
 import MapList from "./MapList";
 import { IoMdRefresh } from "react-icons/io";
@@ -85,7 +85,7 @@ const SettingContainer = styled.div`
   &::-webkit-scrollbar { display: none; }
 `
 
-const IndustryItem = styled.div<{ isSelect: boolean }>`
+const IndustryItem = styled.div<{ $isSelect: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,11 +108,11 @@ const IndustryItem = styled.div<{ isSelect: boolean }>`
     color: var(--primary-blue-600);
   }
 
-  ${(props) =>
-    props.isSelect &&
-    `
-     border-color: var(--primary-blue-600);
-     color: var(--primary-blue-600);
+  ${props =>
+    props.$isSelect &&
+    css`
+      border-color: var(--primary-blue-600);
+      color: var(--primary-blue-600);
     `}
 `;
 
@@ -284,7 +284,7 @@ export default function MapListBottomSheet({
             <div className="Body__Small">{selectedRegion}</div>
           </RegionSetting>
           {industries.map((industry) => (
-            <IndustryItem key={industry.id} isSelect={selectIndustries.includes(industry.id)} onClick={() => handleIndustryClick(industry.id)}>
+            <IndustryItem key={industry.id} $isSelect={selectIndustries.includes(industry.id)} onClick={() => handleIndustryClick(industry.id)}>
               {industry.icon({size: 14})}
               <div className="Body__Small">{industry.name}</div>
             </IndustryItem>

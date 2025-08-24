@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BiHomeAlt, BiMap, BiBookmark, BiUser } from "react-icons/bi";
 
@@ -20,32 +20,26 @@ const NavigationContainer = styled.nav`
 
 `;
 
-const NavigationItem = styled.div<{ isActive: boolean }>`
-  flex: 1;
+const NavigationItem = styled.div<{ $isActive: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--neutral-300);
-  gap: var(--spacing-2xs);
-  padding: 11.5px 0;
+  gap: 4px;
+  flex: 1;
+  padding: 8px 0;
   cursor: pointer;
-
-  &:hover {
-    color: var(--primary-blue-600);
-    background-color: var(--primary-blue-alpha-10);
-  }
-
-  &:active {
-    color: var(--primary-blue-700);
-    background-color: var(--primary-blue-alpha-10);
-  }
-
-  ${(props) =>
-    props.isActive &&
-    `
-    color: var(--primary-blue-500);
-  `}
+  transition: all 0.2s ease;
+  
+  ${props =>
+    props.$isActive &&
+    css`
+      color: var(--primary-blue-500);
+      
+      svg {
+        color: var(--primary-blue-500);
+      }
+    `}
 `;
 
 const IconWrapper = styled.div`
@@ -70,7 +64,7 @@ export default function Navigation(): React.JSX.Element {
   return (
     <NavigationContainer id="app-navigation">
       <NavigationItem
-        isActive={isActive("/main")}
+        $isActive={isActive("/main")}
         onClick={() => navigate("/main")}
       >
         <IconWrapper>
@@ -79,7 +73,7 @@ export default function Navigation(): React.JSX.Element {
         <div className="Body__MediumSmall">홈</div>
       </NavigationItem>
       <NavigationItem
-        isActive={isActive("/map")}
+        $isActive={isActive("/map")}
         onClick={() => navigate("/map")}
       >
         <IconWrapper>
@@ -88,7 +82,7 @@ export default function Navigation(): React.JSX.Element {
         <div className="Body__MediumSmall">지도</div>
       </NavigationItem>
       <NavigationItem
-        isActive={isActive("/bookmark")}
+        $isActive={isActive("/bookmark")}
         onClick={() => navigate("/bookmark")}
       >
         <IconWrapper>
@@ -97,7 +91,7 @@ export default function Navigation(): React.JSX.Element {
         <div className="Body__MediumSmall">즐겨찾기</div>
       </NavigationItem>
       <NavigationItem
-        isActive={isActive("/mypage")}
+        $isActive={isActive("/mypage")}
         onClick={() => navigate("/mypage")}
       >
         <IconWrapper>

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BiSolidUserCircle } from "react-icons/bi";
 import PencilButton from "../../Components/Button/PencilButton";
 import { industries } from "../../Data/Industries";
 import LargeButton from "../../Components/Button/LargeButton";
 import DeleteTag from "../../Components/DeleteTag";
-import LargeReviewBox from "../../Components/ReviewBox/LargeReviewBox";
+import LargeReviewBox from "../../Components/Review/LargeReviewBox";
 import { placeDatas } from "../../Data/PlaceDatas";
 import { useUserApi } from "../../hooks/useApi";
 
@@ -68,25 +68,27 @@ const TabContainer = styled.div`
   display: flex;
 `;
 
-const Tab = styled.button<{ isActive: boolean }>`
-  flex: 1;
-  height: 48px;
+const Tab = styled.button<{ $isActive: boolean }>`
+  padding: 12px 24px;
   border: none;
+  background: transparent;
+  color: var(--neutral-600);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  position: relative;
-  color: ${(props) =>
-    props.isActive ? "var(--primary-blue-500)" : "var(--neutral-300)"};
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: ${(props) =>
-      props.isActive ? "var(--primary-blue-500)" : "transparent"};
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: var(--primary-blue-600);
   }
+  
+  ${props =>
+    props.$isActive &&
+    css`
+      color: var(--primary-blue-500);
+      border-bottom-color: var(--primary-blue-500);
+    `}
 `;
 
 const TabContent = styled.div`
@@ -247,18 +249,16 @@ export default function Mypage(): React.JSX.Element {
       <Content>
         <TabContainer>
           <Tab
-            className="Title__H6"
-            isActive={activeTab === "preferences"}
+            $isActive={activeTab === "preferences"}
             onClick={() => handleTabClick("preferences")}
           >
-            선호 카테고리
+            선호도 설정
           </Tab>
           <Tab
-            className="Title__H6"
-            isActive={activeTab === "reviews"}
+            $isActive={activeTab === "reviews"}
             onClick={() => handleTabClick("reviews")}
           >
-            리뷰
+            내 리뷰
           </Tab>
         </TabContainer>
         <TabContent>

@@ -5,6 +5,7 @@ import { BiArrowBack, BiSolidUserCircle, BiSolidPencil } from "react-icons/bi";
 import PublicInput from "../../Components/PublicInput";
 import MediumButton from "../../Components/Button/MediumButton";
 import LargeButton from "../../Components/Button/LargeButton";
+import CustomAlert from "../../Components/Modal/CustomAlert";
 
 const PageContainer = styled.div`
   display: flex;
@@ -94,6 +95,17 @@ export default function MypageProfile(): React.JSX.Element {
   const [nick, setNick] = useState<string>("");
   const [isPwEdit, setIsPwEdit] = useState<boolean>(false);
   const [isNickEdit, setIsNickEdit] = useState<boolean>(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   useEffect(() => {
     setId("nickname@gmail.com");
@@ -101,8 +113,12 @@ export default function MypageProfile(): React.JSX.Element {
     setNick("닉네임");
   }, []);
 
+  const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    setAlertConfig({ isOpen: true, title, message, type });
+  };
+
   const handleImageEdit = () => {
-    alert("이미지 변경 기능 추가 예정");
+    showAlert("기능 준비 중", "이미지 변경 기능 추가 예정", "info");
   };
 
   const handlePwEdit = () => {
@@ -117,12 +133,12 @@ export default function MypageProfile(): React.JSX.Element {
 
   const handleSave = () => {
     if (isPwEdit && pw === "") {
-      alert("비밀번호를 입력해주세요.");
+      showAlert("입력 필요", "비밀번호를 입력해주세요.", "warning");
       return;
     }
 
     if (isNickEdit && nick === "") {
-      alert("닉네임을 입력해주세요.");
+      showAlert("입력 필요", "닉네임을 입력해주세요.", "warning");
       return;
     }
 
@@ -184,6 +200,15 @@ export default function MypageProfile(): React.JSX.Element {
         </InfoRow>
       </InfoContainer>
       <LargeButton buttonText="저장하기" onClick={handleSave} />
+
+      {/* 커스텀 알림 */}
+      <CustomAlert
+        isOpen={alertConfig.isOpen}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </PageContainer>
   );
 }
