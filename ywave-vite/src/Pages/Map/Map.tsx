@@ -11,12 +11,21 @@ import EducationIconUrl from "../../Images/Marker/Education.svg";
 import AcommodationIconUrl from "../../Images/Marker/Acommodation.svg";
 import ConvenienceIconUrl from "../../Images/Marker/Convenience.svg";
 import FashionIconUrl from "../../Images/Marker/Fashion.svg";
+import ArtIconUrl from "../../Images/Marker/Art.svg";
+import BeautyIconUrl from "../../Images/Marker/Beauty.svg";
+import GasStationIconUrl from "../../Images/Marker/GasStation.svg";
+import HairCutIconUrl from "../../Images/Marker/HairCut.svg";
+import MicIconUrl from "../../Images/Marker/Mic.svg";
+import StoreIconUrl from "../../Images/Marker/Store.svg";
+import EtcIconUrl from "../../Images/Marker/Etc.svg";
+import PhysicsIconUrl from "../../Images/Marker/Physics.svg";
 import MapListBottomSheet from "../../Components/MapList/MapListBottomSheet";
 import MarkerInfoBottomSheet from "../../Components/MarkerInfoBottomSheet";
 import { MdMyLocation } from "react-icons/md";
-import { useStoreApi } from "../../hooks/useApi";
+import { useStoreApi, usePreferenceApi } from "../../hooks/useApi";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
 import CustomAlert from "../../Components/Modal/CustomAlert";
+import { industries } from "../../Data/Industries";
 
 const PageContainer = styled.div`
   display: flex;
@@ -59,12 +68,12 @@ const mapStyles = [
 ] as google.maps.MapTypeStyle[];
 
 type LatLngLiteral = google.maps.LatLngLiteral;
-type MarkerCategory = "음식점" | "카페" | "마트슈퍼" | "의료기관" | "교육문구" | "숙박" | "생활편의" | "의류잡화" | "체육시설" | "주유소" | "기타";
+type MarkerCategory = "음식점" | "카페" | "마트슈퍼" | "의료기관" | "교육문구" | "숙박" | "생활편의" | "의류잡화" | "체육시설" | "주유소" | "기타" | "오락" | "편의점" | "헤어샵" | "뷰티" | "꽃집" | "영화/공연";
 
 type StoreMarker = {
   id: string;
   position: LatLngLiteral;
-  category: MarkerCategory | "기타";
+  category: MarkerCategory;
   name: string;
   address: string;
   images: string[];
@@ -96,6 +105,34 @@ export default function Map(): React.JSX.Element {
   });
 
   const { getNearbyStores, getStoreDetails, nearbyStoresState } = useStoreApi();
+  const { getPreferredRegion } = usePreferenceApi();
+
+  // 백엔드 카테고리를 Industries.tsx 카테고리로 매핑
+  const mapBackendCategoryToIndustry = useCallback((backendCategory: string): MarkerCategory => {
+    const industry = industries.find(ind => ind.name === backendCategory);
+    if (industry) {
+      switch (industry.name) {
+        case "음식점": return "음식점";
+        case "카페": return "카페";
+        case "슈퍼/마트": return "마트슈퍼";
+        case "의료기관": return "의료기관";
+        case "교육/문구": return "교육문구";
+        case "숙박": return "숙박";
+        case "생활편의": return "생활편의";
+        case "의류 잡화": return "의류잡화";
+        case "체육시설": return "체육시설";
+        case "주유소": return "주유소";
+        case "오락": return "오락";
+        case "편의점": return "편의점";
+        case "헤어샵": return "헤어샵";
+        case "뷰티": return "뷰티";
+        case "꽃집": return "꽃집";
+        case "영화/공연": return "영화/공연";
+        default: return "기타";
+      }
+    }
+    return "기타";
+  }, []);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [center, setCenter] = useState<LatLngLiteral>(defaultCenter);
@@ -186,15 +223,21 @@ export default function Map(): React.JSX.Element {
         "숙박": buildIcon(AcommodationIconUrl, ICON_SIZE),
         "생활편의": buildIcon(ConvenienceIconUrl, ICON_SIZE),
         "의류잡화": buildIcon(FashionIconUrl, ICON_SIZE),
-        "체육시설": buildIcon(RestaurantIconUrl, ICON_SIZE),
-        "주유소": buildIcon(RestaurantIconUrl, ICON_SIZE),
-        "기타": buildIcon(RestaurantIconUrl, ICON_SIZE),
-      } as Record<MarkerCategory | "기타", google.maps.Icon>,
+        "체육시설": buildIcon(PhysicsIconUrl, ICON_SIZE),
+        "주유소": buildIcon(GasStationIconUrl, ICON_SIZE),
+        "기타": buildIcon(EtcIconUrl, ICON_SIZE),
+        "오락": buildIcon(MicIconUrl, ICON_SIZE),
+        "편의점": buildIcon(StoreIconUrl, ICON_SIZE),
+        "헤어샵": buildIcon(HairCutIconUrl, ICON_SIZE),
+        "뷰티": buildIcon(BeautyIconUrl, ICON_SIZE),
+        "꽃집": buildIcon(ArtIconUrl, ICON_SIZE),
+        "영화/공연": buildIcon(ArtIconUrl, ICON_SIZE),
+      } as Record<MarkerCategory, google.maps.Icon>,
     };
   }, [isLoaded]);
 
   const getIcon = useCallback(
-    (category: MarkerCategory | "기타"): google.maps.Icon | undefined => {
+    (category: MarkerCategory): google.maps.Icon | undefined => {
       if (!icons) return undefined;
       return icons.byCategory[category] ?? icons.byCategory["음식점"];
     },
@@ -219,39 +262,15 @@ export default function Map(): React.JSX.Element {
       
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log(" GPS 위치 정보:", position);
-          
           const latitude = position.coords.latitude;
           const longitude = position.coords.longitude;
           const accuracy = position.coords.accuracy;
           
-          console.log("위도:", latitude);
-          console.log("경도:", longitude);
-          console.log("정확도:", accuracy, "미터");
-          
           const gpsPos = { lat: latitude, lng: longitude };
-          console.log("GPS 위치 성공:", gpsPos);
           resolve({ position: gpsPos, accuracy });
         },
         (error) => {
           console.log("GPS 위치 실패:", error.message);
-          console.log("GPS 에러 코드:", error.code);
-          
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              console.log("사용자가 위치 권한을 거부했습니다");
-              break;
-            case error.POSITION_UNAVAILABLE:
-              console.log("위치 정보를 사용할 수 없습니다 (GPS 신호 약함 또는 차단됨)");
-              console.log("해결 방법: 실외로 이동하거나 GPS 설정 확인");
-              break;
-            case error.TIMEOUT:
-              console.log("위치 요청 시간이 초과되었습니다");
-              break;
-            default:
-              console.log("알 수 없는 GPS 에러가 발생했습니다");
-          }
-          
           resolve(null);
         },
         options
@@ -296,7 +315,6 @@ export default function Map(): React.JSX.Element {
       }
 
       const data = await response.json();
-      console.log("Google Geolocation API 응답:", data);
 
       if (data.location) {
         const position = {
@@ -304,10 +322,6 @@ export default function Map(): React.JSX.Element {
           lng: data.location.lng
         };
         const accuracy = data.accuracy || 1000;
-
-        console.log("Google 위도:", position.lat);
-        console.log("Google 경도:", position.lng);
-        console.log("Google 정확도:", accuracy, "미터");
 
         return { position, accuracy };
       }
@@ -321,7 +335,6 @@ export default function Map(): React.JSX.Element {
 
   const fetchNearbyStores = useCallback(async (position: LatLngLiteral, searchQuery?: string) => {
     try {
-      console.log("주변 가맹점 조회 시작...", searchQuery ? `검색어: ${searchQuery}` : "");
       const stores = await getNearbyStores({
         lng: position.lng,
         lat: position.lat,
@@ -330,8 +343,6 @@ export default function Map(): React.JSX.Element {
         ...(searchQuery && searchQuery.trim() ? { q: searchQuery.trim() } : {})
       });
       
-      console.log("가게 상세 정보 조회 시작...");
-      
       const detailedMarkers: StoreMarker[] = await Promise.all(
         stores.map(async (store) => {
           try {
@@ -339,9 +350,9 @@ export default function Map(): React.JSX.Element {
             
             return {
               id: store.id.toString(),
-              position: { lat: store.lat, lng: store.lng },
-              category: (store.category as MarkerCategory) || "기타" as MarkerCategory,
-              name: store.name,
+              position: { lat: placeDetails.lat, lng: placeDetails.lng },
+              category: mapBackendCategoryToIndustry(placeDetails.category || ""),
+              name: placeDetails.name && placeDetails.name.trim() ? placeDetails.name : store.name,
               address: placeDetails.formattedAddress || store.sigungu,
               images: placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : [
                 "https://picsum.photos/200/300?random=1",
@@ -354,11 +365,10 @@ export default function Map(): React.JSX.Element {
               googleReviews: []
             };
           } catch (error) {
-            console.log(`가게 ${store.id} 상세 정보 조회 실패:`, error);
             return {
               id: store.id.toString(),
               position: { lat: store.lat, lng: store.lng },
-              category: "기타" as MarkerCategory,
+              category: "기타",
               name: store.name,
               address: store.sigungu,
               images: [
@@ -376,13 +386,10 @@ export default function Map(): React.JSX.Element {
       );
       
       setStoreMarkers(detailedMarkers);
-      console.log("주변 가맹점 상세 정보 조회 완료:", detailedMarkers.length, "개");
     } catch (error) {
       console.error("주변 가맹점 조회 실패:", error);
       
       if (error instanceof Error && error.message.includes('403')) {
-        console.log("API 접근이 일시적으로 제한되었습니다. 잠시 후 다시 시도해주세요.");
-        
         const token = localStorage.getItem('accessToken');
         if (!token) {
           console.log("토큰이 없습니다. 로그인이 필요합니다.");
@@ -393,7 +400,24 @@ export default function Map(): React.JSX.Element {
       
       setStoreMarkers([]);
     }
-  }, [getNearbyStores, getStoreDetails]);
+  }, [getNearbyStores, getStoreDetails, mapBackendCategoryToIndustry]);
+
+  // 지역 설정 기반 기본 위치 설정
+  useEffect(() => {
+    const setDefaultLocationFromPreferences = async () => {
+      try {
+        const regionData = await getPreferredRegion();
+        if (regionData && regionData.lat && regionData.lng) {
+          setUserPosition({ lat: regionData.lat, lng: regionData.lng });
+          setCenter({ lat: regionData.lat, lng: regionData.lng });
+        }
+      } catch (error) {
+        console.log("지역 설정 조회 실패, 기본 위치 사용:", error);
+      }
+    };
+
+    setDefaultLocationFromPreferences();
+  }, [getPreferredRegion]);
 
   const getDistanceMeters = useCallback((a: LatLngLiteral, b: LatLngLiteral): number => {
     const toRad = (v: number) => (v * Math.PI) / 180;
@@ -411,19 +435,15 @@ export default function Map(): React.JSX.Element {
 
   const getCurrentLocation = useCallback(async () => {
     if (isLoadingLocation.current) {
-      console.log("위치 요청이 이미 진행 중입니다");
       return;
     }
     
     isLoadingLocation.current = true;
-    console.log("=== 위치 요청 시작 ===");
     
     try {
-      console.log("브라우저 Geolocation 시도...");
       const gpsResult = await getGPSLocation();
       
       if (gpsResult && gpsResult.accuracy < 100) {
-        console.log("브라우저 GPS 위치 사용 (고정밀):", gpsResult.position, "정확도:", gpsResult.accuracy, "m");
         setUserPosition(gpsResult.position);
         setCenter(gpsResult.position);
         map?.panTo(gpsResult.position);
@@ -435,11 +455,9 @@ export default function Map(): React.JSX.Element {
       }
 
       if (!gpsResult || gpsResult.accuracy >= 100) {
-        console.log("Google Geolocation API 시도...");
         const googleResult = await getGoogleGeolocation();
         
         if (googleResult) {
-          console.log("Google Geolocation API 위치 사용:", googleResult.position, "정확도:", googleResult.accuracy, "m");
           setUserPosition(googleResult.position);
           setCenter(googleResult.position);
           map?.panTo(googleResult.position);
@@ -450,8 +468,6 @@ export default function Map(): React.JSX.Element {
           return;
         }
       }
-
-      console.log("모든 위치 서비스로 위치를 가져오지 못했습니다");
     } finally {
       isLoadingLocation.current = false;
     }
@@ -485,45 +501,6 @@ export default function Map(): React.JSX.Element {
   const handleMapLoad = useCallback((m: google.maps.Map) => {
     setMap(m);
   }, []);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const lat = urlParams.get('lat');
-    const lng = urlParams.get('lng');
-    
-    if (lat && lng && map) {
-      const latValue = parseFloat(lat);
-      const lngValue = parseFloat(lng);
-      
-      if (isNaN(latValue) || isNaN(lngValue) || 
-          latValue < -90 || latValue > 90 || 
-          lngValue < -180 || lngValue > 180) {
-        console.error('유효하지 않은 좌표값:', { lat, lng });
-        if (map) {
-          getCurrentLocation();
-        }
-        return;
-      }
-      
-      const markerPosition = { 
-        lat: latValue, 
-        lng: lngValue 
-      };
-      
-      console.log('마커 위치로 이동:', markerPosition);
-      setCenter(markerPosition);
-      map.panTo(markerPosition);
-      map.setZoom(15);
-      setShowReSearch(false);
-      
-      fetchNearbyStores(markerPosition);
-      return;
-    }
-    
-    if (map) {
-      getCurrentLocation();
-    }
-  }, [map]);
 
   useEffect(() => {
     if (!map || !isLoaded || storeMarkers.length === 0) return;
@@ -630,6 +607,7 @@ export default function Map(): React.JSX.Element {
           )}
         </GoogleMap>
 
+        
         <LocateFab aria-label="현재 위치로 이동" onClick={() => getCurrentLocation()}>
           <MdMyLocation size={22} color="var(--neutral-800)" />
         </LocateFab>

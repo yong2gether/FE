@@ -44,3 +44,13 @@ export const validatePasswordInput = (password: string): string | null => {
 export const validateNicknameInput = (nickname: string): string | null => {
   return validateInput(nickname, "닉네임");
 };
+
+// 토큰 관련 유틸리티 함수들
+export const getAuthToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
+export const isAuthenticated = (): boolean => {
+  const token = getAuthToken();
+  return token !== null && token !== '';
+};

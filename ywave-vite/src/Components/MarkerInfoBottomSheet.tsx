@@ -10,7 +10,7 @@ interface MarkerInfoBottomSheetProps {
     id: string;
     name: string;
     address: string;
-    category: "음식점" | "카페" | "마트슈퍼" | "의료기관" | "교육문구" | "숙박" | "생활편의" | "의류잡화" | "체육시설" | "주유소" | "기타";
+    category: "음식점" | "카페" | "마트슈퍼" | "의료기관" | "교육문구" | "숙박" | "생활편의" | "의류잡화" | "체육시설" | "주유소" | "기타" | "오락" | "편의점" | "헤어샵" | "뷰티" | "꽃집" | "영화/공연";
     rating: number;
     reviewCount: number;
     images: string[];
