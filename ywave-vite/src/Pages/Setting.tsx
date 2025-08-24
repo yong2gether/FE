@@ -123,6 +123,9 @@ export default function Setting(): React.JSX.Element {
       <Title>설정 페이지</Title>
 
       <ButtonGrid>
+        <NavigationButton onClick={() => gotoPage("/landing")}>
+          랜딩 페이지
+        </NavigationButton>
         <NavigationButton onClick={() => gotoPage("/main")}>
           메인 페이지
         </NavigationButton>

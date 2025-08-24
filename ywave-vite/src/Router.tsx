@@ -1,28 +1,34 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Setting from "./Pages/Setting";
-import Login from "./Pages/Login";
-import SignUp from "./Pages/SignUp";
-import Main from "./Pages/Main";
-import Map from "./Pages/Map";
-import Mypage from "./Pages/Mypage";
-import BookMark from "./Pages/BookMark";
-import SignUpComplete from "./Pages/SignUpComplete";
-import CategoryRegion from "./Pages/CategoryRegion";
-import CategoryIndustry from "./Pages/CategoryIndustry";
-import CategoryResult from "./Pages/CategoryResult";
-import MypageProfile from "./Pages/MypageProfile";
-import MypageReview from "./Pages/MypageReview";
+import Login from "./Pages/Login/Login";
+import SignUp from "./Pages/SignUp/SignUp";
+import Main from "./Pages/Main/Main";
+import Map from "./Pages/Map/Map";
+import Mypage from "./Pages/MyPage/Mypage";
+import BookMark from "./Pages/BookMark/BookMark";
+import SignUpComplete from "./Pages/SignUp/SignUpComplete";
+import CategoryRegion from "./Pages/Category/CategoryRegion";
+import CategoryIndustry from "./Pages/Category/CategoryIndustry";
+import CategoryResult from "./Pages/Category/CategoryResult";
+import MypageProfile from "./Pages/MyPage/MypageProfile";
+import MypageReview from "./Pages/MyPage/MypageReview";
 import MainPlace from "./Pages/MainPlace";
-import BookMarkAdd from "./Pages/BookMarkAdd";
-import BookMarkDetail from "./Pages/BookMarkDetail";
-import BookMarkEdit from "./Pages/BookMarkEdit";
+import BookMarkAdd from "./Pages/BookMark/BookMarkAdd";
+import BookMarkDetail from "./Pages/BookMark/BookMarkDetail";
+import BookMarkEdit from "./Pages/BookMark/BookMarkEdit";
+import Landing from "./Pages/Landing";
+import Onboarding from "./Pages/Onboarding";
 
 export default function RouterComponent(): React.JSX.Element {
     return(
         <Routes>
             {/*셋팅 페이지 라우팅*/}
             <Route path="/" element={<Setting />} />
+            {/*랜딩 페이지 라우팅*/}
+            <Route path="/landing" element={<Landing />} />
+            {/*서비스 소개 페이지 라우팅*/}
+            <Route path="/onboarding" element={<Onboarding />} />
             {/*로그인 페이지 라우팅*/}
             <Route path="/login" element={<Login />} />
             {/*회원가입 페이지 라우팅*/}

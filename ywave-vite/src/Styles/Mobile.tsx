@@ -32,7 +32,7 @@ const Content = styled.div`
   flex-direction: column;
   position: relative;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden; 
   box-shadow: none;
   border-radius: 0;
 
@@ -55,6 +55,7 @@ const Contents = styled.main`
   flex-direction: column;   
   flex: 1 1 auto;
   width: 100%;
+  position: relative;
   overflow: visible;
   outline: none;
   padding: 0;
@@ -63,7 +64,7 @@ const Contents = styled.main`
 export default function Mobile({ children }: MobileProps): React.JSX.Element {
   const location = useLocation();
   const currentPath = location.pathname;
-  const noNavigationPath = ["/login", "/signup", "/category"];
+  const noNavigationPath = ["/landing", "/onboarding", "/login", "/signup", "/category"];
   const showNavigation = !(currentPath === "/" || noNavigationPath.some(prefix => currentPath.startsWith(prefix)));
 
   return (
