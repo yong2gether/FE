@@ -1,6 +1,3 @@
-/**
- * API 카테고리 코드를 한글 이름으로 매핑하는 유틸리티
- */
 
 export const CATEGORY_MAPPING: { [key: string]: string } = {
   'MART_SUPER': '슈퍼/마트',
@@ -22,9 +19,7 @@ export const CATEGORY_MAPPING: { [key: string]: string } = {
   'BEAUTY': '뷰티'
 };
 
-/**
- * API 카테고리 코드 배열을 한글 이름으로 변환
- */
+
 export const convertCategoryCodes = (categoryCodes: string[]): string[] => {
   return categoryCodes.map(code => CATEGORY_MAPPING[code] || code);
 };
