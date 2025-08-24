@@ -113,7 +113,7 @@ export default function FolderBox({
 
   const handleFolderEdit = (e: React.MouseEvent): void => {
     e.stopPropagation();
-    navigate("/bookmark/edit", { state: { unicode, title } });
+    navigate("/bookmark/edit", { state: { id, unicode, title } });
   };
 
   const handleFolderDelete = (e: React.MouseEvent): void => {
@@ -134,7 +134,7 @@ export default function FolderBox({
       <IconContainer>
         <PiDotsThreeVertical onClick={handleMoreClick} />
         {isMoreOpen && (
-          <MoreContainer>
+          <MoreContainer className="Body__Small">
             <MoreItem onClick={handleFolderEdit}>폴더 수정</MoreItem>
             <MoreItem onClick={handleFolderDelete}>폴더 삭제</MoreItem>
           </MoreContainer>

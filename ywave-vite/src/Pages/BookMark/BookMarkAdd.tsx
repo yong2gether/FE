@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { BiSolidPencil } from "react-icons/bi";
+import { BiArrowBack, BiSolidPencil } from "react-icons/bi";
 import CustomEmojiPicker from "../../Components/EmojiPicker";
 import CustomAlert from "../../Components/Modal/CustomAlert";
 import PublicInput from "../../Components/PublicInput";
@@ -28,50 +28,20 @@ const ContentContainer = styled.div`
   align-items: center;
   gap: var(--spacing-l);
   color: var(--neutral-1000);
-  padding: 20px;
+  padding: 16px;
 `;
 
-const Header = styled.div`
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-l);
-  flex-shrink: 0;
-`;
-
-const BackButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 16px;
-  color: var(--neutral-700);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background-color 0.2s ease;
-  font-weight: 500;
-
-  &:hover {
-    background: var(--neutral-200);
-  }
-`;
-
-const PageTitle = styled.h1`
-  font-size: 20px;
-  font-weight: 600;
+const BackIcon = styled(BiArrowBack)`
+  align-self: flex-start;
   color: var(--neutral-1000);
-  margin: 0;
+  width: 32px;
+  height: 32px;
 `;
 
 const ImageContainer = styled.div`
   width: 80px;
   height: 80px;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--spacing-m);
 `;
 
 const ImageEditButton = styled.div`
@@ -108,20 +78,12 @@ const TitleContainer = styled.div`
   justify-content: center;
   gap: var(--spacing-xs);
   color: var(--primary-blue-1000);
-  margin-bottom: var(--spacing-l);
-`;
-
-const Label = styled.label`
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--neutral-1000);
-  margin-bottom: var(--spacing-xs);
 `;
 
 const ButtonContainer = styled.div`
   width: 100%;
   max-width: 400px;
-  margin-top: var(--spacing-m);
+  margin-top: var(--spacing-3xl);
 `;
 
 export default function BookMarkAdd(): React.JSX.Element {
@@ -135,15 +97,19 @@ export default function BookMarkAdd(): React.JSX.Element {
     isOpen: boolean;
     title: string;
     message: string;
-    type: 'info' | 'success' | 'warning' | 'error';
+    type: "info" | "success" | "warning" | "error";
   }>({
     isOpen: false,
-    title: '',
-    message: '',
-    type: 'info'
+    title: "",
+    message: "",
+    type: "info",
   });
 
-  const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "info" | "success" | "warning" | "error" = "info"
+  ) => {
     setAlertConfig({ isOpen: true, title, message, type });
   };
 
@@ -166,14 +132,14 @@ export default function BookMarkAdd(): React.JSX.Element {
     try {
       // API 호출 시에는 unicode 코드를 사용
       const iconUrl = emojiToUnified(selectedEmoji);
-      
+
       const result = await createBookmarkGroup({
         groupName: folderInput.trim(),
-        iconUrl: iconUrl
+        iconUrl: iconUrl,
       });
 
       showAlert("생성 완료", "새 목록이 생성되었습니다.", "success");
-      
+
       setTimeout(() => {
         navigate("/bookmark", { state: { refresh: true } });
       }, 1500);
@@ -185,30 +151,23 @@ export default function BookMarkAdd(): React.JSX.Element {
     }
   };
 
-
-
   return (
     <PageContainer>
       <ContentContainer>
-        <Header>
-          <BackButton onClick={() => navigate("/bookmark")}>
-            ← 뒤로
-          </BackButton>
-          <PageTitle>새 목록 추가</PageTitle>
-          <div style={{ width: 40 }}></div>
-        </Header>
+        <BackIcon onClick={() => navigate("/bookmark")} />
+        <div className="Title__H2">새 목록 추가</div>
 
         <ImageContainer>
-          <div style={{ fontSize: '60px' }}>
-            {selectedEmoji}
-          </div>
+          <div style={{ fontSize: "60px" }}>{selectedEmoji}</div>
           <ImageEditButton onClick={handleEmojiEdit}>
             <BiSolidPencil />
           </ImageEditButton>
         </ImageContainer>
 
         <TitleContainer>
-          <Label htmlFor="folder-name">폴더명</Label>
+          <label className="Body__Large" htmlFor="folder-name">
+            폴더명
+          </label>
           <PublicInput
             type="text"
             id="folder-name"
@@ -240,8 +199,8 @@ export default function BookMarkAdd(): React.JSX.Element {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
-        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
-        onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
         showConfirmButton={true}
         confirmText="확인"
       />
