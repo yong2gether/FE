@@ -70,7 +70,13 @@ export default function Login(): React.JSX.Element {
       });
       
       // 로그인 성공 후 카테고리 설정 완료 여부 확인
-      const hasCompletedCategories = localStorage.getItem('hasCompletedCategories');
+      let hasCompletedCategories = localStorage.getItem('hasCompletedCategories');
+      
+      // hasCompletedCategories가 설정되지 않은 경우 false로 초기화
+      if (hasCompletedCategories === null) {
+        hasCompletedCategories = 'false';
+        localStorage.setItem('hasCompletedCategories', 'false');
+      }
       
       if (hasCompletedCategories === 'true') {
         // 카테고리 설정을 이미 완료한 경우 메인 페이지로 이동
