@@ -33,6 +33,17 @@ export interface UserInfo {
   email: string;
 }
 
+export interface UpdateProfileRequest {
+  nickname: string;
+  password: string;
+}
+
+export interface UpdateProfileResponse {
+  message: string;
+  success?: boolean;
+  nickname?: string;
+}
+
 export interface EmailDuplicateRequest {
   email: string;
 }
