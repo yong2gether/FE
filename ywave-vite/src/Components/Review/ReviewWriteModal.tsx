@@ -27,17 +27,18 @@ const ModalOverlay = styled.div`
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  z-index: 1000;
-  padding: 12px;
+  z-index: 9999;
+  padding: 0;
   
   @media (min-width: 768px) {
+    align-items: center;
     padding: 16px;
   }
   
   @media (max-width: 480px) {
-    padding: 8px;
+    padding: 0;
   }
 `;
 
@@ -54,12 +55,27 @@ const ModalContent = styled.div`
   @media (min-width: 768px) {
     max-width: 480px;
     padding: 24px;
+    max-height: 85vh;
   }
   
   @media (max-width: 480px) {
-    padding: 16px;
+    padding: 20px 16px;
     max-height: 90vh;
-    border-radius: 12px;
+    border-radius: 16px 16px 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    transform: translateY(0);
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 `;
 
@@ -82,6 +98,12 @@ const ModalTitle = styled.div`
   font-size: 18px;
   font-weight: 600;
   color: var(--neutral-1000);
+  
+  @media (max-width: 480px) {
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -99,6 +121,11 @@ const CloseButton = styled.button`
   &:hover {
     background: var(--neutral-200);
   }
+  
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+  }
 `;
 
 const PlaceName = styled.div`
@@ -112,8 +139,10 @@ const PlaceName = styled.div`
   }
   
   @media (max-width: 480px) {
-    font-size: 14px;
-    margin-bottom: 12px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+    padding: 0 8px;
   }
 `;
 
@@ -140,6 +169,12 @@ const RatingContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  
+  @media (max-width: 480px) {
+    gap: 12px;
+    justify-content: center;
+    padding: 16px 0;
+  }
 `;
 
 const StarButton = styled.button`
@@ -155,6 +190,10 @@ const StarButton = styled.button`
   &:hover {
     transform: scale(1.1);
   }
+  
+  @media (max-width: 480px) {
+    padding: 4px;
+  }
 `;
 
 const Star = styled.div<{ $isFilled: boolean }>`
@@ -162,6 +201,11 @@ const Star = styled.div<{ $isFilled: boolean }>`
   height: 24px;
   color: ${({ $isFilled }) =>
     $isFilled ? "var(--primary-blue-500)" : "var(--neutral-300)"};
+    
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+  }
 `;
 
 const RatingText = styled.div`
@@ -189,8 +233,13 @@ const ImageUploadContainer = styled.div`
   }
   
   @media (max-width: 480px) {
-    padding: 12px;
+    padding: 20px 16px;
     border-radius: 8px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 `;
 
@@ -371,14 +420,10 @@ const Button = styled.button<{ $isPrimary?: boolean }>`
     }
   `}
   
-  @media (min-width: 768px) {
-    padding: 14px 20px;
-  }
-  
   @media (max-width: 480px) {
-    padding: 10px 14px;
-    font-size: 13px;
-    border-radius: 6px;
+    padding: 16px 20px;
+    font-size: 16px;
+    min-height: 48px;
   }
 `;
 

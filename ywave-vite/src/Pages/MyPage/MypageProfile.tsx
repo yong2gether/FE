@@ -6,6 +6,8 @@ import PublicInput from "../../Components/PublicInput";
 import MediumButton from "../../Components/Button/MediumButton";
 import LargeButton from "../../Components/Button/LargeButton";
 import CustomAlert from "../../Components/Modal/CustomAlert";
+import { userApi } from "../../api/services";
+import { UpdateProfileRequest } from "../../api/types";
 
 const PageContainer = styled.div`
   display: flex;
@@ -131,7 +133,7 @@ export default function MypageProfile(): React.JSX.Element {
     setNick("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (isPwEdit && pw === "") {
       showAlert("입력 필요", "비밀번호를 입력해주세요.", "warning");
       return;
@@ -142,8 +144,40 @@ export default function MypageProfile(): React.JSX.Element {
       return;
     }
 
-    setIsPwEdit(false);
-    setIsNickEdit(false);
+    try {
+      const updateData: UpdateProfileRequest = {
+        nickname: nick,
+        password: pw
+      };
+
+      const response = await userApi.updateProfile(updateData);
+      
+      if (response.message && response.message.includes("성공")) {
+        showAlert("성공", response.message, "success");
+        setIsPwEdit(false);
+        setIsNickEdit(false);
+        
+        if (response.nickname) {
+          setNick(response.nickname);
+        }
+      } else {
+        showAlert("실패", response.message || "프로필 변경에 실패했습니다.", "error");
+      }
+    } catch (error: any) {
+      let errorMessage = "프로필 변경에 실패했습니다.";
+      
+      if (error.response?.status === 409) {
+        errorMessage = "닉네임이 중복됩니다. 다른 닉네임을 사용해주세요.";
+      } else if (error.response?.status === 400) {
+        errorMessage = "잘못된 요청입니다. 입력값을 확인해주세요.";
+      } else if (error.response?.status === 403) {
+        errorMessage = "권한이 없습니다. 로그인을 확인해주세요.";
+      } else if (error.response?.status === 404) {
+        errorMessage = "사용자를 찾을 수 없습니다.";
+      }
+      
+      showAlert("오류", errorMessage, "error");
+    }
   };
 
   return (
@@ -199,7 +233,10 @@ export default function MypageProfile(): React.JSX.Element {
           )}
         </InfoRow>
       </InfoContainer>
-      <LargeButton buttonText="저장하기" onClick={handleSave} />
+      
+      {(isPwEdit || isNickEdit) && (
+        <LargeButton buttonText="저장하기" onClick={handleSave} />
+      )}
 
       {/* 커스텀 알림 */}
       <CustomAlert

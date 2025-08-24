@@ -56,8 +56,7 @@ const defaultCenter = { lat: 37.5665, lng: 126.978 };
 export default function BookMark(): React.JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
-  const { getBookmarkGroups, getGroupsState, deleteBookmarkGroup } =
-    useBookmarkApi();
+  const { getBookmarkGroups, deleteBookmarkGroup } = useBookmarkApi();
 
   // 폴더 목록 상태
   const [folders, setFolders] = useState<any[]>([]);
@@ -184,8 +183,8 @@ export default function BookMark(): React.JSX.Element {
   }, []);
 
   const handleFolderClick = useCallback(
-    (unicode: string, title: string): void => {
-      navigate("/bookmark/detail", { state: { unicode, title } });
+    (id: string, unicode: string, title: string): void => {
+      navigate("/bookmark/detail", { state: { id, unicode, title } });
     },
     [navigate]
   );

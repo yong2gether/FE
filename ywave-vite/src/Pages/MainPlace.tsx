@@ -11,6 +11,8 @@ import ReviewWriteModal from "../Components/Review/ReviewWriteModal";
 import CustomAlert from "../Components/Modal/CustomAlert";
 import { useStoreApi } from "../hooks/useApi";
 import { calculateDistance, formatDistance } from "../utils/distance";
+import { useGoogleMaps } from "../hooks/useGoogleMaps";
+import { getAuthToken } from "../utils/authUtils";
 
 
 const PageContainer = styled.div`
@@ -113,11 +115,182 @@ const InfoContainer = styled.div`
   color: var(--neutral-800);
 `;
 
+
 const LargeDivider = styled.div`
   width: calc(100% + 32px);
   height: 5px;
   background: var(--neutral-200);
 `;
+
+// 장소 기본 정보 컴포넌트
+const PlaceBasicInfo = ({ 
+  name, 
+  rating, 
+  distance, 
+  industry, 
+  address, 
+  isBookmark, 
+  onBookmarkClick, 
+  renderStars 
+}: {
+  name: string;
+  rating: number;
+  distance: string;
+  industry: string;
+  address: string;
+  isBookmark: boolean;
+  onBookmarkClick: () => void;
+  renderStars: () => React.ReactElement[];
+}) => (
+  <>
+    <NameContainer>
+      <Name className="Title__H2">{name}</Name>
+      <div 
+        onClick={onBookmarkClick}
+        style={{
+          cursor: 'pointer',
+          color: isBookmark ? 'var(--primary-blue-500)' : 'var(--neutral-400)'
+        }}
+      >
+        {isBookmark ? 
+          <PiBookmarkSimpleFill style={{width: 24, height: 24}} /> : 
+          <PiBookmarkSimple style={{width: 24, height: 24}} />
+        }
+      </div>
+    </NameContainer>
+
+    <RatingContainer>
+      <div className="Body__Default">{rating}</div>
+      <StarContainer>{renderStars()}</StarContainer>
+    </RatingContainer>
+
+    <InfoContainer className="Body__Default">
+      {distance && <div>{distance}</div>}
+      {distance && <div>|</div>}
+      {industry && <div>{industry}</div>}
+      {industry && <div>|</div>}
+      <div style={{
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '250px'
+      }}>{address}</div>
+    </InfoContainer>
+  </>
+);
+
+// 추가 정보 컴포넌트
+const AdditionalInfo = ({ 
+  phoneNumber, 
+  website, 
+  weekdayText 
+}: {
+  phoneNumber: string;
+  website: string;
+  weekdayText: string[];
+}) => {
+  if (!phoneNumber && !website && weekdayText.length === 0) return null;
+  
+  return (
+    <InfoContainer className="Body__Default" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 'var(--spacing-s)' }}>
+      {phoneNumber && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2xs)' }}>
+          <span style={{ fontWeight: 'bold', color: 'var(--neutral-700)' }}>전화번호</span>
+          <span>{phoneNumber}</span>
+        </div>
+      )}
+      
+      {website && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2xs)' }}>
+          <span style={{ fontWeight: 'bold', color: 'var(--neutral-700)' }}>🌐</span>
+          <a 
+            href={website} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ color: 'var(--primary-blue-500)', textDecoration: 'none' }}
+          >
+            {website}
+          </a>
+        </div>
+      )}
+      
+      {weekdayText.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2xs)' }}>
+          <span style={{ fontWeight: 'bold', color: 'var(--neutral-700)' }}>영업시간</span>
+          {weekdayText.map((text, index) => (
+            <div key={index} style={{ fontSize: '0.9em', color: 'var(--neutral-600)' }}>
+              {text}
+            </div>
+          ))}
+        </div>
+      )}
+    </InfoContainer>
+  );
+};
+
+// 리뷰 섹션 컴포넌트
+const ReviewSections = ({ 
+  hasPlaceId, 
+  userReviews, 
+  googleReviews, 
+  onReviewWrite, 
+  isReviewModalOpen, 
+  onReviewSubmit, 
+  onCloseReviewModal, 
+  placeName 
+}: {
+  hasPlaceId: boolean;
+  userReviews: any[];
+  googleReviews: any[];
+  onReviewWrite: () => void;
+  isReviewModalOpen: boolean;
+  onReviewSubmit: (data: any) => void;
+  onCloseReviewModal: () => void;
+  placeName: string;
+}) => (
+  <>
+    {/* 방문자 리뷰 섹션 - storeId 기반일 때만 표시 */}
+    {!hasPlaceId && (
+      <>
+        <ReviewSection
+          title="방문자 리뷰"
+          description={
+            <>
+              해당 장소를 방문하셨나요?<br />
+              방문인증을 통해 리뷰를 작성하세요!
+            </>
+          }
+          reviews={userReviews}
+          showWriteButton={true}
+          onWriteClick={onReviewWrite}
+        />
+        <LargeDivider />
+      </>
+    )}
+    
+    {/* 구글 방문자 리뷰 섹션 - Google 리뷰가 있을 때 항상 표시 */}
+    {googleReviews.length > 0 && (
+      <>
+        <ReviewSection
+          title="구글 방문자 리뷰"
+          description="조금 더 많은 리뷰가 보고 싶으시다면?"
+          reviews={googleReviews}
+        />
+        <LargeDivider />
+      </>
+    )}
+
+    {/* 리뷰 작성 모달 - storeId 기반일 때만 표시 */}
+    {!hasPlaceId && (
+      <ReviewWriteModal
+        isOpen={isReviewModalOpen}
+        placeName={placeName}
+        onClose={onCloseReviewModal}
+        onSubmit={onReviewSubmit}
+      />
+    )}
+  </>
+);
 
 interface MainPlaceProps {
   userLocation?: { lat: number; lng: number } | null;
@@ -128,10 +301,8 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   
-  // API 연동
   const { getStoreDetails } = useStoreApi();
-  
-
+  const { isLoaded, apiKey } = useGoogleMaps();
 
   const [name, setName] = useState<string>("");
   const [isBookmark, setIsBookmark] = useState<boolean>(false);
@@ -142,6 +313,10 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   const [images, setImages] = useState<string[]>([]);
   const [lat, setLat] = useState<number>(0);
   const [lng, setLng] = useState<number>(0);
+  
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [website, setWebsite] = useState<string>("");
+  const [weekdayText, setWeekdayText] = useState<string[]>([]);
   
   const [userReviews, setUserReviews] = useState<any[]>([]);
   const [googleReviews, setGoogleReviews] = useState<any[]>([]);
@@ -159,20 +334,65 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
     type: 'info'
   });
   
-
-
-  // 사용자 위치 상태 (props가 없을 때 사용)
   const [localUserLocation, setLocalUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-
-  // props로 받은 userLocation이 있으면 사용, 없으면 localUserLocation 사용
   const userLocation = propUserLocation || localUserLocation;
+
+  // 백엔드 API로 placeId 기반 상세 정보 가져오기
+  const fetchPlaceDetailsByPlaceId = async (placeId: string) => {
+    try {
+      const token = getAuthToken();
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`https://ywave.site/api/v1/places/${placeId}/details`, {
+        method: 'GET',
+        headers
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('placeId API 응답 데이터:', data);
+        return data;
+      } else {
+        console.error(`백엔드 placeId API 호출 실패: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('백엔드 placeId API 호출 실패:', error);
+    }
+    return null;
+  };
+
+  // placeId를 사용해서 Google Places API로 상세 정보 가져오기 (백업용)
+  const fetchGooglePlaceDetails = async (placeId: string) => {
+    if (!apiKey || !isLoaded) return null;
+    
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,rating,formatted_address,photos,geometry,types,reviews&key=${apiKey}`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.result) {
+          return data.result;
+        }
+      }
+    } catch (error) {
+      console.error('Google Places API 호출 실패:', error);
+    }
+    return null;
+  };
 
   // 사용자 현재 위치 가져오기 (Google Geolocation API 사용) - props가 없을 때만 실행
   const getUserLocation = async () => {
-    if (propUserLocation) return; // props로 받은 위치가 있으면 실행하지 않음
+    if (propUserLocation) return;
     
     try {
-      // Google Geolocation API 사용
       const response = await fetch(`https://www.googleapis.com/geolocation/v1/geolocate?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`, {
         method: 'POST',
         headers: {
@@ -190,24 +410,22 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
         const { lat, lng } = data.location;
         setLocalUserLocation({ lat, lng });
       } else {
-        // Google API 실패 시 브라우저 geolocation으로 대체
         requestBrowserLocation();
       }
     } catch (error) {
-      // Google API 에러 시 브라우저 geolocation으로 대체
       requestBrowserLocation();
     }
   };
 
   // 브라우저 geolocation으로 위치 요청 (백업) - props가 없을 때만 실행
   const requestBrowserLocation = () => {
-    if (propUserLocation) return; // props로 받은 위치가 있으면 실행하지 않음
+    if (propUserLocation) return;
     
     if (navigator.geolocation) {
       const options = {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000 // 5분
+        maximumAge: 300000
       };
 
       navigator.geolocation.getCurrentPosition(
@@ -224,7 +442,6 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   };
 
   useEffect(() => {
-    // props로 userLocation이 없을 때만 자체적으로 위치 가져오기
     if (!propUserLocation) {
       getUserLocation();
     }
@@ -232,59 +449,121 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
 
   useEffect(() => {
     if (id) {
-      // API로 가맹점 상세 정보 조회
       const fetchPlaceDetails = async () => {
         try {
+          // 디버깅을 위한 로그 추가
+          console.log('MainPlace useEffect 실행');
+          console.log('location.state:', location.state);
+          console.log('id:', id);
+          
+          const placeId = location.state?.placeId;
+          
+          if (placeId && placeId !== "null") {
+            console.log('placeId로 데이터 조회 시작:', placeId);
+            const backendPlaceDetails = await fetchPlaceDetailsByPlaceId(placeId);
+            if (backendPlaceDetails) {
+              console.log('백엔드 API 응답 성공:', backendPlaceDetails);
+              console.log('가맹점 이름:', backendPlaceDetails.name);
+              
+              // 백엔드 API에서 받은 데이터로 설정
+              setName(backendPlaceDetails.name || "");
+              setRating(backendPlaceDetails.rating || 0);
+              setDistance("");
+              setIndustry(backendPlaceDetails.category || "기타");
+              setAddress(backendPlaceDetails.formattedAddress || "");
+              setImages(backendPlaceDetails.photos ? backendPlaceDetails.photos.map(photo => photo.url) : []);
+              setLat(backendPlaceDetails.lat || 0);
+              setLng(backendPlaceDetails.lng || 0);
+              
+              setPhoneNumber(backendPlaceDetails.internationalPhoneNumber || "");
+              setWebsite(backendPlaceDetails.website || "");
+              setWeekdayText(backendPlaceDetails.weekdayText || []);
+              
+              if (backendPlaceDetails.reviews && backendPlaceDetails.reviews.length > 0) {
+                const convertedReviews = backendPlaceDetails.reviews.map((review, index) => ({
+                  id: index.toString(),
+                  rating: review.rating || 0,
+                  nick: review.authorName || "익명",
+                  createdAt: review.time ? new Date(review.time * 1000).toLocaleDateString('ko-KR') : "",
+                  reviewText: review.text || "",
+                  images: review.photos ? review.photos.map(photo => photo.url) : []
+                }));
+                setGoogleReviews(convertedReviews);
+              } else {
+                setGoogleReviews([]);
+              }
+              
+              setUserReviews([]);
+            } else {
+              // 백엔드 API 실패 시 Google Places API 사용 (백업)
+              if (isLoaded && apiKey) {
+                const googlePlaceDetails = await fetchGooglePlaceDetails(placeId);
+                if (googlePlaceDetails) {
+                  setName(googlePlaceDetails.name || "");
+                  setRating(googlePlaceDetails.rating || 0);
+                  setDistance("");
+                  setIndustry("기타");
+                  setAddress(googlePlaceDetails.formatted_address || "");
+                  setImages(googlePlaceDetails.photos ? googlePlaceDetails.photos.map(photo => 
+                    `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=${apiKey}`
+                  ) : []);
+                  setLat(googlePlaceDetails.geometry?.location?.lat || 0);
+                  setLng(googlePlaceDetails.geometry?.location?.lng || 0);
+                  setGoogleReviews([]);
+                  setUserReviews([]);
+                  setPhoneNumber("");
+                  setWebsite("");
+                  setWeekdayText([]);
+                }
+              }
+            }
+          } else {
+            // storeId 기반으로 가맹점 정보 조회
           const placeDetails = await getStoreDetails(parseInt(id));
           if (placeDetails) {
             setName(placeDetails.name || "");
             setRating(placeDetails.rating || 0);
-            setDistance(""); // API에서 거리 정보가 없음
-                         setIndustry("기타"); // API에서 산업 정보가 없음
+              setDistance("");
+              setIndustry(placeDetails.category || "기타");
             setAddress(placeDetails.formattedAddress || "");
             setImages(placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : []);
             setLat(placeDetails.lat || 0);
             setLng(placeDetails.lng || 0);
+              setPhoneNumber("");
+              setWebsite("");
+              setWeekdayText([]);
+              
+              // 백엔드에서 받은 reviews 데이터를 googleReviews로 설정
+              if (placeDetails.reviews && placeDetails.reviews.length > 0) {
+                const convertedReviews = placeDetails.reviews.map((review, index) => ({
+                  id: index.toString(),
+                  rating: review.rating || 0,
+                  nick: review.authorName || "익명",
+                  createdAt: review.time ? new Date(review.time * 1000).toLocaleDateString('ko-KR') : "",
+                  reviewText: review.text || "",
+                  images: review.photos ? review.photos.map(photo => photo.url) : []
+                }));
+                setGoogleReviews(convertedReviews);
+              } else {
+                setGoogleReviews([]);
+              }
+              
+              setUserReviews([]);
+            }
+          }
             
             // 사용자 위치가 있으면 거리 계산
-            if (userLocation && placeDetails.lat && placeDetails.lng) {
+          if (userLocation && lat && lng) {
               const distanceInMeters = calculateDistance(
                 userLocation.lat,
                 userLocation.lng,
-                placeDetails.lat,
-                placeDetails.lng
+              lat,
+              lng
               );
               setDistance(formatDistance(distanceInMeters));
-            }
-            
-            // 사용자 리뷰와 Google 리뷰를 구분해서 설정
-            setUserReviews([]); // 현재는 사용자 리뷰가 없음
-            setGoogleReviews(placeDetails.reviews ? placeDetails.reviews.map((review: any) => {
-              let formattedDate = "날짜 없음";
-              if (review.time) {
-                try {
-                  const date = new Date(review.time * 1000);
-                  if (!isNaN(date.getTime())) {
-                    formattedDate = date.toLocaleDateString('ko-KR');
-                  }
-                } catch (error) {
-                  console.log('🔍 날짜 변환 에러:', error);
-                }
-              }
-              
-              return {
-                id: review.id || "",
-                nick: review.authorName || "익명",
-                rating: review.rating || 0,
-                reviewText: review.text || "",
-                createdAt: formattedDate,
-                images: review.photos ? review.photos.map((photo: any) => photo.url) : []
-              };
-            }) : []);
           }
         } catch (error) {
           console.error('가맹점 상세 정보 조회 실패:', error);
-          // API 실패 시 기존 데이터에서 bookmark 상태를 설정하도록 수정
           const place = placeDatas.find((place) => place.id === id);
           if (place) {
             setName(place.name);
@@ -294,13 +573,16 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
             setIndustry(place.industry);
             setAddress(place.address);
             setImages(place.images ?? []);
+            setPhoneNumber("");
+            setWebsite("");
+            setWeekdayText([]);
           }
         }
       };
       
       fetchPlaceDetails();
     }
-  }, [id, getStoreDetails, userLocation]);
+  }, [id, getStoreDetails, userLocation, isLoaded, apiKey, location.state]);
 
   const handleBookmarkClick = (): void => {
     setIsBookmark((prev) => !prev);
@@ -311,21 +593,18 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   };
 
   const handleReviewWrite = (): void => {
-    // 방문인증 확인
     if (!userLocation) {
-      // 위치 권한이 없으면 권한 요청
       if (navigator.geolocation) {
         const options = {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // 5분
+          maximumAge: 300000
         };
 
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
             setLocalUserLocation({ lat: latitude, lng: longitude });
-            // 위치를 받은 후 다시 방문인증 시도
             setTimeout(() => handleReviewWrite(), 100);
           },
           (error) => {
@@ -368,13 +647,9 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
 
   const handleReviewSubmit = (reviewData: any) => {
     console.log("리뷰 제출:", reviewData);
-    // 여기에 실제 리뷰 제출 로직 추가
     setIsReviewModalOpen(false);
-    // 리뷰 제출 후 방문인증 상태 초기화
     setVisitVerificationStatus('pending');
   };
-
-
 
   const renderStars = () => {
     const stars: React.ReactElement[] = [];
@@ -395,10 +670,12 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
       <HeaderContainer>
         <BackIcon onClick={() => {
           if (location.state?.from === 'map') {
-            // Map 페이지로 돌아가면서 마커 위치 정보를 URL 쿼리 파라미터로 전달
+            // 지도에서 들어온 경우 원래 마커 위치로 돌아가기
             navigate(`/map?lat=${location.state.lat}&lng=${location.state.lng}`);
           } else if (location.state?.from === 'bookmark') {
             navigate(-1);
+          } else if (location.state?.from === 'main') {
+            navigate('/main');
           } else {
             navigate('/');
           }
@@ -406,77 +683,52 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
       </HeaderContainer>
       
       <PlaceContainer>
-        <NameContainer>
-          <Name className="Title__H2">{name}</Name>
-          <div 
-            onClick={handleBookmarkClick}
-            style={{
-              cursor: 'pointer',
-              color: isBookmark ? 'var(--primary-blue-500)' : 'var(--neutral-400)'
-            }}
-          >
-            {isBookmark ? 
-              <PiBookmarkSimpleFill style={{width: 24, height: 24}} /> : 
-              <PiBookmarkSimple style={{width: 24, height: 24}} />
-            }
-          </div>
-        </NameContainer>
-
-        <RatingContainer>
-          <div className="Body__Default">{rating}</div>
-          <StarContainer>{renderStars()}</StarContainer>
-        </RatingContainer>
-
-        <InfoContainer className="Body__Default">
-          {distance && <div>{distance}</div>}
-          {distance && <div>|</div>}
-          {industry && <div>{industry}</div>}
-          {industry && <div>|</div>}
+        <PlaceBasicInfo
+          name={name}
+          rating={rating}
+          distance={distance}
+          industry={industry}
+          address={address}
+          isBookmark={isBookmark}
+          onBookmarkClick={handleBookmarkClick}
+          renderStars={renderStars}
+        />
+        
+        {/* 데이터 소스 표시 */}
+        {location.state?.placeId && (
           <div style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: '250px'
-          }}>{address}</div>
-        </InfoContainer>
+            fontSize: '0.8em', 
+            color: 'var(--neutral-500)', 
+            backgroundColor: 'var(--neutral-100)', 
+            borderRadius: '4px',
+            alignSelf: 'flex-start'
+          }}>
+            Google Places 정보
+          </div>
+        )}
 
         <ImageGallery images={images} altText="가게 이미지" />
+        
+        <AdditionalInfo
+          phoneNumber={phoneNumber}
+          website={website}
+          weekdayText={weekdayText}
+        />
       </PlaceContainer>
 
       <LargeDivider />
       
-      {/* 방문자 리뷰 섹션 */}
-      <ReviewSection
-        title="방문자 리뷰"
-        description={
-          <>
-            해당 장소를 방문하셨나요?<br />
-            방문인증을 통해 리뷰를 작성하세요!
-          </>
-        }
-        reviews={userReviews}
-        showWriteButton={true}
-        onWriteClick={handleReviewWrite}
-      />
-
-      <LargeDivider />
-      
-      {/* 구글 방문자 리뷰 섹션 */}
-      <ReviewSection
-        title="구글 방문자 리뷰"
-        description="조금 더 많은 리뷰가 보고 싶으시다면?"
-        reviews={googleReviews}
-      />
-
-      {/* 리뷰 작성 모달 */}
-      <ReviewWriteModal
-        isOpen={isReviewModalOpen}
+      <ReviewSections
+        hasPlaceId={!!location.state?.placeId}
+        userReviews={userReviews}
+        googleReviews={googleReviews}
+        onReviewWrite={handleReviewWrite}
+        isReviewModalOpen={isReviewModalOpen}
+        onReviewSubmit={handleReviewSubmit}
+        onCloseReviewModal={() => setIsReviewModalOpen(false)}
         placeName={name}
-        onClose={() => setIsReviewModalOpen(false)}
-        onSubmit={handleReviewSubmit}
       />
 
-      {/* 커스텀 알림 */}
       <CustomAlert
         isOpen={alertConfig.isOpen}
         title={alertConfig.title}
@@ -484,7 +736,6 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
         type={alertConfig.type}
         onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
       />
-
     </PageContainer>
   );
 }

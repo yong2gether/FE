@@ -6,6 +6,8 @@ import {
   LoginResponse,
   EmailDuplicateRequest,
   EmailDuplicateResponse,
+  UpdateProfileRequest,
+  UpdateProfileResponse,
   PopularStoreDto,
   NearbyStoreDto,
   PlaceDetailsDto,
@@ -22,6 +24,7 @@ import {
   DeleteBookmarkGroupResponse,
   BookmarkedGroupsResponse,
   UserReviewsResponse,
+  BookmarkedGroupResponse,
 } from './types';
 import { createSearchParams } from '../utils/apiUtils';
 
@@ -60,6 +63,11 @@ export const userApi = {
     if (token) {
       apiClient.setToken(token);
     }
+  },
+
+  // 프로필 변경
+  updateProfile: async (data: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
+    return apiClient.put<UpdateProfileResponse>('/api/v1/mypage/profile', data);
   },
 };
 
@@ -139,6 +147,11 @@ export const bookmarkApi = {
   // 북마크 그룹 삭제
   deleteBookmarkGroup: async (data: DeleteBookmarkGroupRequest): Promise<DeleteBookmarkGroupResponse> => {
     return apiClient.delete<DeleteBookmarkGroupResponse>('/api/v1/mypage/bookmarks/groups', data);
+  },
+
+  // 특정 북마크 그룹 조회
+  getBookmarkGroup: async (groupId: number): Promise<BookmarkedGroupResponse> => {
+    return apiClient.get<BookmarkedGroupResponse>(`/api/v1/mypage/bookmarks/${groupId}`);
   },
 };
 
