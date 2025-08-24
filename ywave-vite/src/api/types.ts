@@ -50,7 +50,7 @@ export interface PopularStoreDto {
   lng: number;
   lat: number;
   distM: number;
-  placeId: string | null;
+  placeId: string;
   rating: number;
   userRatingsTotal: number;
   popularityScore: number;
@@ -65,10 +65,6 @@ export interface NearbyStoreDto {
   lat: number;
   distM: number;
   placeId: string;
-  images?: string[]; // 이미지 필드 추가
-  category?: string; // 카테고리 필드 추가
-  rating?: number; // 평점 필드 추가
-  reviewCount?: number; // 리뷰 수 필드 추가
 }
 
 export interface PlaceDetailsDto {
@@ -104,6 +100,20 @@ export interface Review {
 }
 
 // 선호도 설정 관련 타입
+export interface SetPreferredRegionRequest {
+  sido: string;
+  sigungu: string;
+  dong?: string;
+}
+
+export interface RegionResponse {
+  sido: string;
+  sigungu: string;
+  dong?: string;
+  lat: number;
+  lng: number;
+}
+
 export interface UpdatePreferredCategoriesRequest {
   categoryIds: number[];
 }
@@ -129,10 +139,27 @@ export interface CreatedBookmarkGroupDto {
   iconUrl: string;
 }
 
+export interface UpdateBookmarkGroupRequest {
+  groupName?: string;
+  iconUrl?: string;
+}
+
+export interface UpdateBookmarkGroupResponse {
+  message: string;
+  group: UpdatedBookmarkGroupDto;
+}
+
+export interface UpdatedBookmarkGroupDto {
+  groupId: number;
+  groupName: string;
+  iconUrl: string;
+}
+
 export interface BookmarkGroupDto {
   groupId: number;
   groupName: string;
   isDefault: boolean;
+  iconUrl: string;
   stores: BookmarkedStoreDto[];
 }
 
@@ -154,6 +181,15 @@ export interface BookmarkedStoreDto {
   thumbnailUrl?: string;
 }
 
+export interface DeleteBookmarkGroupRequest {
+  groupId: number;
+}
+
+export interface DeleteBookmarkGroupResponse {
+  message: string;
+  deletedGroupId: number;
+}
+
 // 리뷰 관련 타입
 export interface ReviewItem {
   reviewId: number;
@@ -169,7 +205,7 @@ export interface UserReviewsResponse {
   reviews: ReviewItem[];
 }
 
-// AI 관련 타입 (사용하지 않음)
+// AI 관련 타입
 export interface EchoRequest {
   prompt: string;
 }
