@@ -59,29 +59,29 @@ const IndustryContainer = styled.div`
   flex-wrap: wrap;
 `;
 
-const IndustryItem = styled.button<{ isSelect: boolean }>`
+const IndustryItem = styled.button<{ $isSelect: boolean }>`
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
   padding: 12px 16px;
   border: 1px solid var(--neutral-600);
   border-radius: 10px;
   color: var(--neutral-600);
   gap: var(--spacing-xs);
   white-space: nowrap;
-
+  
   &:hover {
     border-color: var(--primary-blue-500);
     color: var(--primary-blue-500);
   }
-
+  
   &:active {
     border-color: var(--primary-blue-600);
     color: var(--primary-blue-600);
   }
 
   ${(props) =>
-    props.isSelect &&
+    props.$isSelect &&
     `
      border-color: var(--primary-blue-600);
      color: var(--primary-blue-600);
@@ -134,8 +134,8 @@ export default function CategoryIndustry(): React.JSX.Element {
           {industries.map((industry) => (
             <IndustryItem
               key={industry.id}
+              $isSelect={selectIndustries.includes(industry.id)}
               onClick={() => handleIndustryClick(industry.id)}
-              isSelect={selectIndustries.includes(industry.id)}
             >
               {industry.icon({size: 16})}
               <div className="Body__MediumSmall">{industry.name}</div>

@@ -5,7 +5,7 @@
   import PublicDropdown from "../../Components/PublicDropdown";
   import LargeButton from "../../Components/Button/LargeButton";
   import DeleteTag from "../../Components/DeleteTag";
-  import ConfirmModal from "../../Components/ConfirmModal";
+  import ConfirmModal from "../../Components/Modal/ConfirmModal";
 
   const PageContainer = styled.div`
     width: 100%;
