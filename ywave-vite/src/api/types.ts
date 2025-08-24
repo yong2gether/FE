@@ -67,6 +67,8 @@ export interface NearbyStoreDto {
   placeId: string;
   images?: string[]; // 이미지 필드 추가
   category?: string; // 카테고리 필드 추가
+  rating?: number; // 평점 필드 추가
+  reviewCount?: number; // 리뷰 수 필드 추가
 }
 
 export interface PlaceDetailsDto {
@@ -83,6 +85,8 @@ export interface PlaceDetailsDto {
   photos?: Photo[];
   reviews?: Review[];
   reviewCount?: number;
+  bookmarked?: boolean;
+  category?: string;
 }
 
 export interface Photo {
@@ -96,9 +100,76 @@ export interface Review {
   rating: number;
   text: string;
   time: number;
+  photos?: Photo[];
 }
 
-// AI 관련 타입
+// 선호도 설정 관련 타입
+export interface UpdatePreferredCategoriesRequest {
+  categoryIds: number[];
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+// 북마크 그룹 관련 타입
+export interface CreateBookmarkGroupRequest {
+  groupName: string;
+  iconUrl: string;
+}
+
+export interface CreateBookmarkGroupResponse {
+  message: string;
+  group: CreatedBookmarkGroupDto;
+}
+
+export interface CreatedBookmarkGroupDto {
+  groupId: number;
+  groupName: string;
+  iconUrl: string;
+}
+
+export interface BookmarkGroupDto {
+  groupId: number;
+  groupName: string;
+  isDefault: boolean;
+  stores: BookmarkedStoreDto[];
+}
+
+export interface BookmarkedGroupsResponse {
+  message: string;
+  groups: BookmarkGroupDto[];
+}
+
+export interface BookmarkedStoreDto {
+  storeId: number;
+  storeName: string;
+  category: string;
+  roadAddress: string;
+  lat: number;
+  lng: number;
+  phone?: string;
+  rating?: number;
+  reviewCount?: number;
+  thumbnailUrl?: string;
+}
+
+// 리뷰 관련 타입
+export interface ReviewItem {
+  reviewId: number;
+  storeId: number;
+  storeName: string;
+  content: string;
+  rating: number;
+  createdAt: string;
+}
+
+export interface UserReviewsResponse {
+  message: string;
+  reviews: ReviewItem[];
+}
+
+// AI 관련 타입 (사용하지 않음)
 export interface EchoRequest {
   prompt: string;
 }

@@ -10,6 +10,12 @@ import {
   NearbyStoreDto,
   PlaceDetailsDto,
   EchoRequest,
+  UpdatePreferredCategoriesRequest,
+  MessageResponse,
+  CreateBookmarkGroupRequest,
+  CreateBookmarkGroupResponse,
+  BookmarkedGroupsResponse,
+  UserReviewsResponse,
 } from './types';
 import { createSearchParams } from '../utils/apiUtils';
 
@@ -48,6 +54,21 @@ export const userApi = {
     if (token) {
       apiClient.setToken(token);
     }
+  },
+
+  // 선호도 설정 업데이트
+  updatePreferredCategories: async (data: UpdatePreferredCategoriesRequest): Promise<MessageResponse> => {
+    return apiClient.post<MessageResponse>('/api/v1/preferences/categories', data);
+  },
+
+  // 선호도 설정 조회
+  getPreferredCategories: async (): Promise<string[]> => {
+    return apiClient.get<string[]>('/api/v1/preferences/categories');
+  },
+
+  // 내 리뷰 조회
+  getMyReviews: async (userId: number): Promise<UserReviewsResponse> => {
+    return apiClient.get<UserReviewsResponse>(`/api/v1/mypage/${userId}/reviews`);
   },
 };
 
@@ -89,17 +110,16 @@ export const storeApi = {
   },
 };
 
-/** 
-// AI 관련 API
-export const aiApi = {
-  // ChatGPT 연결 테스트
-  echo: async (data: EchoRequest): Promise<any> => {
-    return apiClient.post('/api/v1/ai/echo', data);
+// 북마크 그룹 관련 API
+export const bookmarkApi = {
+  // 북마크 그룹 생성
+  createBookmarkGroup: async (data: CreateBookmarkGroupRequest): Promise<CreateBookmarkGroupResponse> => {
+    return apiClient.post<CreateBookmarkGroupResponse>('/api/v1/mypage/bookmarks/groups', data);
   },
 
-  // AI 서버 상태 확인
-  ping: async (): Promise<string> => {
-    return apiClient.get<string>('/api/v1/ai/ping');
+  // 북마크 그룹 목록 조회
+  getBookmarkGroups: async (): Promise<BookmarkedGroupsResponse> => {
+    return apiClient.get<BookmarkedGroupsResponse>('/api/v1/mypage/bookmarks/groups');
   },
 };
 
@@ -107,10 +127,4 @@ export const aiApi = {
 export const initializeApi = () => {
   // 저장된 토큰 복원
   userApi.restoreToken();
-  
-  // API 서버 상태 확인
-  aiApi.ping().catch(error => {
-    console.warn('AI 서버 연결 실패:', error);
-  });
 };
-*/
