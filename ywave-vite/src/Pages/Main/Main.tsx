@@ -83,7 +83,14 @@ const RecommendBoxContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 7px;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
 `;
 
 const Content = styled.div`
@@ -252,13 +259,15 @@ const PopularStoresSection = ({
 
 export default function Main(): React.JSX.Element {
   const navigate = useNavigate();
-  const { getPopularStores } = useStoreApi();
+  const { getPopularStores, getRecommendations, getStoreDetails } = useStoreApi();
   const { getPreferredRegion } = usePreferenceApi();
   const { getProfile } = useUserApi();
   
   const [isRecommend, setIsRecommend] = useState<boolean>(false);
   const [start, setStart] = useState<number>(0);
   const [popularStores, setPopularStores] = useState<PopularStoreDto[]>([]);
+  const [recommendedStores, setRecommendedStores] = useState<any[]>([]);
+  const [isLoadingRecommend, setIsLoadingRecommend] = useState<boolean>(true);
   const [isLoadingPopular, setIsLoadingPopular] = useState<boolean>(true);
   const [nickname, setNickname] = useState<string>("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -340,6 +349,7 @@ export default function Main(): React.JSX.Element {
   useEffect(() => {
     if (userLocation) {
       fetchPopularStores();
+      fetchRecommendations();
     }
   }, [userLocation]);
 
@@ -385,6 +395,36 @@ export default function Main(): React.JSX.Element {
     }
   };
 
+  // 추천 API로 id 받아 상세 조회 후 메인 카드 구성
+  const fetchRecommendations = async () => {
+    try {
+      setIsLoadingRecommend(true);
+      const recs = await getRecommendations(5);
+      // 각 추천 id로 상세 조회
+      const detailed = await Promise.all(
+        recs.map(async (r: any) => {
+          const detail = await getStoreDetails(Number(r.id));
+          return {
+            id: r.id,
+            name: detail.name || r.name,
+            rating: detail.rating || 0,
+            userRatingsTotal: detail.reviewCount || 0,
+            images: detail.photos ? detail.photos.map((p: any) => p.url) : [],
+            sigungu: r.sigungu || '',
+            distM: 0,
+            category: detail.category || '기타'
+          } as any;
+        })
+      );
+      setRecommendedStores(detailed);
+    } catch (e) {
+      console.error('추천 조회 실패:', e);
+      setRecommendedStores([]);
+    } finally {
+      setIsLoadingRecommend(false);
+    }
+  };
+
   const showPrev = () => {
     if (total <= VISIBLE) return;
     setStart((prev) => (prev - VISIBLE + total) % total);
@@ -403,14 +443,14 @@ export default function Main(): React.JSX.Element {
   return (
     <PageContainer>
       <RecommendSection
-        isRecommend={isRecommend}
+        isRecommend={!isLoadingRecommend && recommendedStores.length > 0}
         nick={nickname}
-        total={total}
-        VISIBLE={VISIBLE}
+        total={recommendedStores.length}
+        VISIBLE={recommendedStores.length}
         start={start}
         showPrev={showPrev}
         showNext={showNext}
-        visiblePlaces={visiblePlaces}
+        visiblePlaces={recommendedStores}
         navigate={navigate}
       />
       <PopularStoresSection

@@ -11,8 +11,9 @@ interface RecommendBoxProps {
 
 const PlaceContainer = styled.div<{ $backgroundImage: string }>`
   position: relative;
-  width: 100%;
+  width: 160px; /* 고정 카드 폭 */
   height: 200px;
+  flex: 0 0 160px; /* 가로 스크롤 컨테이너에서 뭉개짐 방지 */
   border-radius: 10px;
   overflow: hidden;
   background-image: url(${({ $backgroundImage }) => $backgroundImage});
@@ -45,9 +46,11 @@ const InfoContainer = styled.div`
 
 const Name = styled.div`
   width: 100%;
-  white-space: nowrap;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 최대 2줄 */
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 `;
 
 const RatingContainer = styled.div`

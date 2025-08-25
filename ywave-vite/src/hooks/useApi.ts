@@ -255,6 +255,10 @@ export const useStoreApi = () => {
     }
   }, []);
 
+  const getRecommendations = useCallback(async (limit: number = 5) => {
+    return await storeApi.getRecommendations(limit);
+  }, []);
+
   return {
     getPopularStores,
     popularStoresState,
@@ -262,6 +266,7 @@ export const useStoreApi = () => {
     nearbyStoresState,
     getStoreDetails,
     storeDetailsState,
+    getRecommendations,
   };
 };
 
