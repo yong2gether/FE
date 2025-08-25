@@ -3,10 +3,12 @@ import styled from "styled-components";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { PiX, PiPlus, PiTrash } from "react-icons/pi";
 import CustomAlert from "../Modal/CustomAlert";
+import { useReviewApi } from "../../hooks/useApi";
 
 interface ReviewWriteModalProps {
   isOpen: boolean;
   placeName: string;
+  storeId: number;
   onClose: () => void;
   onSubmit: (reviewData: ReviewData) => void;
   mode?: 'create' | 'edit';
@@ -430,6 +432,7 @@ const Button = styled.button<{ $isPrimary?: boolean }>`
 export default function ReviewWriteModal({
   isOpen,
   placeName,
+  storeId,
   onClose,
   onSubmit,
   mode = 'create',
@@ -450,6 +453,17 @@ export default function ReviewWriteModal({
     message: '',
     type: 'info'
   });
+
+  const { createMyReview } = useReviewApi();
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -482,7 +496,7 @@ export default function ReviewWriteModal({
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) {
       showAlert("별점 선택 필요", "별점을 선택해주세요.", "warning");
       return;
@@ -499,11 +513,27 @@ export default function ReviewWriteModal({
       return;
     }
 
-    onSubmit({
-      rating,
-      images,
-      content: content.trim(),
-    });
+    try {
+      // 이미지 파일들을 base64 URL로 변환하여 전송 (백엔드가 URL 문자열 배열을 기대함)
+      const imgUrls = await Promise.all(images.map((f) => fileToBase64(f)));
+
+      await createMyReview(storeId, {
+        rating,
+        content: content.trim(),
+        imgUrls,
+      });
+
+      onSubmit({
+        rating,
+        images,
+        content: content.trim(),
+      });
+
+      showAlert("작성 완료", "리뷰가 등록되었습니다.", "success");
+      onClose();
+    } catch (e) {
+      showAlert("오류", "리뷰 등록에 실패했습니다.", "error");
+    }
   };
 
   const handleClose = () => {

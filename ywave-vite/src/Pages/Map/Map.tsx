@@ -446,6 +446,7 @@ export default function Map(): React.JSX.Element {
       
       if (gpsResult && gpsResult.accuracy < 100) {
         setUserPosition(gpsResult.position);
+        lastSearchCenterRef.current = gpsResult.position;
         setCenter(gpsResult.position);
         map?.panTo(gpsResult.position);
         map?.setZoom(17);
@@ -460,6 +461,7 @@ export default function Map(): React.JSX.Element {
         
         if (googleResult) {
           setUserPosition(googleResult.position);
+          lastSearchCenterRef.current = googleResult.position;
           setCenter(googleResult.position);
           map?.panTo(googleResult.position);
           map?.setZoom(17);

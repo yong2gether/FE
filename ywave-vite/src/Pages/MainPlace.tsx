@@ -9,7 +9,7 @@ import ImageGallery from "../Components/ImageComponent/ImageGallery";
 import ReviewSection from "../Components/Review/ReviewSection";
 import ReviewWriteModal from "../Components/Review/ReviewWriteModal";
 import CustomAlert from "../Components/Modal/CustomAlert";
-import { useStoreApi, useBookmarkApi } from "../hooks/useApi";
+import { useStoreApi, useBookmarkApi, usePreferenceApi } from "../hooks/useApi";
 import { calculateDistance, formatDistance } from "../utils/distance";
 import { useGoogleMaps } from "../hooks/useGoogleMaps";
 import { getAuthToken } from "../utils/authUtils";
@@ -249,7 +249,8 @@ const ReviewSections = ({
   isReviewModalOpen, 
   onReviewSubmit, 
   onCloseReviewModal, 
-  placeName 
+  placeName, 
+  storeId
 }: {
   hasPlaceId: boolean;
   userReviews: any[];
@@ -259,6 +260,7 @@ const ReviewSections = ({
   onReviewSubmit: (data: any) => void;
   onCloseReviewModal: () => void;
   placeName: string;
+  storeId: number;
 }) => (
   <>
     {/* 방문자 리뷰 섹션 - storeId 기반일 때만 표시 */}
@@ -297,6 +299,7 @@ const ReviewSections = ({
       <ReviewWriteModal
         isOpen={isReviewModalOpen}
         placeName={placeName}
+        storeId={storeId}
         onClose={onCloseReviewModal}
         onSubmit={onReviewSubmit}
       />
@@ -349,9 +352,46 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   
   const [localUserLocation, setLocalUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const userLocation = propUserLocation || localUserLocation;
+  const { getPreferredRegion } = usePreferenceApi();
+  const [preferredLocation, setPreferredLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState<boolean>(false);
   const { createBookmark, deleteBookmark } = useBookmarkApi();
+
+  // 리뷰 데이터 정규화: 다양한 응답 형태를 UI에서 요구하는 형태로 변환
+  const normalizeReviews = (reviews: any[] = []): any[] => {
+    return reviews.map((review: any, index: number) => {
+      const rating = review.rating ?? review.score ?? 0;
+      const nick = review.authorName || review.nickname || review.userNickname || "익명";
+      const createdRaw = review.createdAt || review.time;
+      let createdAt = "";
+      if (typeof createdRaw === 'number') {
+        const ts = createdRaw > 1e12 ? createdRaw : createdRaw * 1000;
+        createdAt = new Date(ts).toLocaleDateString('ko-KR');
+      } else if (typeof createdRaw === 'string') {
+        const d = new Date(createdRaw);
+        createdAt = isNaN(d.getTime()) ? "" : d.toLocaleDateString('ko-KR');
+      }
+
+      let images: string[] = [];
+      if (Array.isArray(review.photos)) {
+        images = review.photos.map((p: any) => (typeof p === 'string' ? p : p?.url)).filter(Boolean);
+      } else if (Array.isArray(review.imgUrls)) {
+        images = review.imgUrls.filter((u: any) => typeof u === 'string');
+      }
+
+      const reviewText = review.text || review.content || review.reviewText || "";
+
+      return {
+        id: (review.id ?? review.reviewId ?? index).toString(),
+        rating,
+        nick,
+        createdAt,
+        reviewText,
+        images,
+      };
+    });
+  };
 
   // 백엔드 API로 placeId 기반 상세 정보 가져오기
   const fetchPlaceDetailsByPlaceId = async (placeId: string) => {
@@ -463,6 +503,21 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
     }
   }, [propUserLocation]);
 
+  // 선호 지역을 기준 위치로 불러옴 (배포 전 임시 정책)
+  useEffect(() => {
+    const loadPreferred = async () => {
+      try {
+        const pref = await getPreferredRegion();
+        if (pref && pref.lat && pref.lng) {
+          setPreferredLocation({ lat: pref.lat, lng: pref.lng });
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadPreferred();
+  }, [getPreferredRegion]);
+
   useEffect(() => {
     if (id) {
       const fetchPlaceDetails = async () => {
@@ -497,14 +552,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               setWeekdayText(backendPlaceDetails.weekdayText || []);
               
               if (backendPlaceDetails.reviews && backendPlaceDetails.reviews.length > 0) {
-                const convertedReviews = backendPlaceDetails.reviews.map((review: any, index: number) => ({
-                  id: index.toString(),
-                  rating: review.rating || 0,
-                  nick: review.authorName || "익명",
-                  createdAt: review.time ? new Date(review.time * 1000).toLocaleDateString('ko-KR') : "",
-                  reviewText: review.text || "",
-                  images: review.photos ? review.photos.map((photo: any) => photo.url) : []
-                }));
+                const convertedReviews = normalizeReviews(backendPlaceDetails.reviews);
                 setGoogleReviews(convertedReviews);
               } else {
                 setGoogleReviews([]);
@@ -550,22 +598,14 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               setWebsite("");
               setWeekdayText([]);
               
-              // 백엔드에서 받은 reviews 데이터를 googleReviews로 설정
+              // 백엔드에서 받은 내 리뷰 형식 정규화 후 사용자 리뷰에 반영
               if (placeDetails.reviews && placeDetails.reviews.length > 0) {
-                const convertedReviews = placeDetails.reviews.map((review: any, index: number) => ({
-                  id: index.toString(),
-                  rating: review.rating || 0,
-                  nick: review.authorName || "익명",
-                  createdAt: review.time ? new Date(review.time * 1000).toLocaleDateString('ko-KR') : "",
-                  reviewText: review.text || "",
-                  images: review.photos ? review.photos.map((photo: any) => photo.url) : []
-                }));
-                setGoogleReviews(convertedReviews);
+                const convertedReviews = normalizeReviews(placeDetails.reviews);
+                setUserReviews(convertedReviews);
               } else {
-                setGoogleReviews([]);
+                setUserReviews([]);
               }
-              
-              setUserReviews([]);
+              setGoogleReviews([]);
             }
           }
             
@@ -628,7 +668,10 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   };
 
   const handleReviewWrite = (): void => {
-    if (!userLocation) {
+    // 배포 전까지: 선호 지역을 기준으로 방문 인증 진행
+    const baseLocation = preferredLocation || userLocation;
+
+    if (!baseLocation) {
       if (navigator.geolocation) {
         const options = {
           enableHighAccuracy: true,
@@ -664,8 +707,8 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
     }
 
     const distanceInMeters = calculateDistance(
-      userLocation.lat,
-      userLocation.lng,
+      baseLocation.lat,
+      baseLocation.lng,
       lat,
       lng
     );
@@ -762,6 +805,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
         onReviewSubmit={handleReviewSubmit}
         onCloseReviewModal={() => setIsReviewModalOpen(false)}
         placeName={name}
+        storeId={parseInt(id || "0")}
       />
 
       <CustomAlert

@@ -406,9 +406,23 @@ export const useReviewApi = () => {
     }
   }, []);
 
+  const createMyReview = useCallback(async (storeId: number, data: { rating: number; content: string; imgUrls: string[] }) => {
+    setMyReviewsState(prev => updateApiState.start(prev));
+    try {
+      const result = await reviewApi.createReview(storeId, data);
+      // 성공 후 내 리뷰 목록 리프레시가 필요하다면 여기서 재호출 가능
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('리뷰 작성', error);
+      setMyReviewsState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
   return {
     getMyReviews,
     myReviewsState,
+    createMyReview,
   };
 };
 

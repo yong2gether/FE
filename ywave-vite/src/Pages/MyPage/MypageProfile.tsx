@@ -161,8 +161,8 @@ export default function MypageProfile(): React.JSX.Element {
     try {
       const updateData: UpdateProfileRequest = {
         nickname: nick,
-        password: pw
-      };
+        ...(isPwEdit ? { password: pw } : {})
+      } as UpdateProfileRequest;
 
       const response = await userApi.updateProfile(updateData);
       

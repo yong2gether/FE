@@ -198,12 +198,13 @@ export const reviewApi = {
     return apiClient.get<UserReviewsResponse>('/api/v1/mypage/reviews');
   },
 
-  // 리뷰 생성 - 현재 사용하지 않음
-  /*
-  createReview: async (data: ReviewRequest): Promise<ReviewResponse> => {
-    return apiClient.post<ReviewResponse>('/api/v1/mypage/reviews', data);
+  // 리뷰 생성 (storeId 쿼리, 본문: rating, content, imgUrls)
+  createReview: async (
+    storeId: number,
+    data: { rating: number; content: string; imgUrls: string[] }
+  ): Promise<any> => {
+    return apiClient.post<any>(`/api/v1/mypage/reviews?storeId=${storeId}`, data);
   },
-  */
 };
 
 // AI 관련 API
