@@ -13,9 +13,10 @@ const PageContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  min-height: 100vh;
   box-sizing: border-box;
   user-select: none;
+  min-height: 100vh;
+  padding-bottom: 100px;
 `;
 
 const ContentContainer = styled.div`
