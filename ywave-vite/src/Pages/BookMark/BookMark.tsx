@@ -57,7 +57,7 @@ const defaultCenter = { lat: 37.5665, lng: 126.978 };
 export default function BookMark(): React.JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
-  const { getBookmarkGroups, deleteBookmarkGroup, deleteBookmark } = useBookmarkApi();
+  const { getBookmarkGroups, deleteBookmarkGroup, deleteBookmark, getMyBookmarks } = useBookmarkApi();
   const { getStoreDetails } = useStoreApi();
 
   // 폴더 목록 상태
@@ -140,6 +140,59 @@ export default function BookMark(): React.JSX.Element {
       setAllBookmarkPlaces([]);
     }
   }, [getBookmarkGroups, getStoreDetails]);
+
+  // 새로운 API를 사용한 북마크 전체 조회 (성능 향상)
+  const fetchAllBookmarks = useCallback(async () => {
+    try {
+      console.log("전체 북마크 조회 시작...");
+      const allBookmarks = await getMyBookmarks();
+      console.log("전체 북마크 응답:", allBookmarks);
+
+      if (allBookmarks && allBookmarks.length > 0) {
+        // 각 북마크에 대해 상세 정보 조회
+        const allPlaces: any[] = [];
+        
+        for (const bookmark of allBookmarks) {
+          try {
+            const storeDetail = await getStoreDetails(bookmark.storeId);
+            if (storeDetail) {
+              allPlaces.push({
+                ...storeDetail,
+                bookmarkId: bookmark.bookmarkId,
+                groupId: bookmark.bookmarkGroupId,
+                // 그룹 정보는 별도로 조회 필요
+                groupName: "기본 그룹", // 임시값
+                iconUrl: "📁" // 임시값
+              });
+            }
+          } catch (error) {
+            console.error(`Store ${bookmark.storeId} 상세 정보 조회 실패:`, error);
+            // 실패한 경우 기본 정보로 생성
+            allPlaces.push({
+              id: bookmark.storeId,
+              storeId: bookmark.storeId,
+              name: `Store ${bookmark.storeId}`,
+              lat: 37.5665,
+              lng: 126.978,
+              bookmarkId: bookmark.bookmarkId,
+              groupId: bookmark.bookmarkGroupId,
+              groupName: "기본 그룹",
+              iconUrl: "📁"
+            });
+          }
+        }
+        
+        setAllBookmarkPlaces(allPlaces);
+        console.log("새 API로 조회한 북마크 장소 개수:", allPlaces.length);
+      } else {
+        console.log("북마크가 없음");
+        setAllBookmarkPlaces([]);
+      }
+    } catch (error) {
+      console.error("전체 북마크 조회 실패:", error);
+      setAllBookmarkPlaces([]);
+    }
+  }, [getMyBookmarks, getStoreDetails]);
 
   useEffect(() => {
     fetchBookmarkGroups();

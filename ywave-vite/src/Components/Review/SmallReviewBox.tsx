@@ -10,6 +10,9 @@ interface SmallReviewBoxProps {
   createdAt: string;
   reviewText: string;
   images?: string[];
+  isMyReview?: boolean;
+  onEdit?: (reviewId: string) => void;
+  onDelete?: (reviewId: string) => void;
 }
 
 const ReviewContainer = styled.div`
@@ -18,6 +21,27 @@ const ReviewContainer = styled.div`
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--spacing-s);
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  gap: var(--spacing-2xs);
+  margin-left: auto;
+`;
+
+const ActionButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--neutral-500);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  
+  &:hover {
+    background: var(--neutral-100);
+    color: var(--neutral-700);
+  }
 `;
 
 const DetailContainer = styled.div`
@@ -103,31 +127,13 @@ export default function SmallReviewBox({
   nick,
   createdAt,
   reviewText,
-  images = [],
-}: SmallReviewBoxProps): React.JSX.Element {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  images,
+  isMyReview = false,
+  onEdit,
+  onDelete,
+}: SmallReviewBoxProps) {
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const openModal = (index: number) => {
-    setCurrentImageIndex(index);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const goToPrevious = () => {
-    if (currentImageIndex > 0) {
-      setCurrentImageIndex(currentImageIndex - 1);
-    }
-  };
-
-  const goToNext = () => {
-    if (currentImageIndex < images.length - 1) {
-      setCurrentImageIndex(currentImageIndex + 1);
-    }
-  };
 
   const renderStars = () => {
     const stars: React.ReactElement[] = [];
@@ -143,44 +149,87 @@ export default function SmallReviewBox({
     return stars;
   };
 
+  const openImageModal = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  const closeImageModal = () => {
+    setIsImageModalOpen(false);
+  };
+
+  const goToPrevious = () => {
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (images && currentImageIndex < images.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+    }
+  };
+
   return (
-    <>
-      <ReviewContainer>
-        <DetailContainer>
-          <RatingContainer>
-            <div className="Body__Default">{rating}</div>
-            <StarContainer>{renderStars()}</StarContainer>
-          </RatingContainer>
-
-          <InfoContainer className="Body__Default">
-            <div>{nick}님</div>
-            <div>|</div>
-            <div>{createdAt}</div>
-          </InfoContainer>
-
-          <ReviewText className="Body__Default">{reviewText}</ReviewText>
-        </DetailContainer>
-
+    <ReviewContainer>
+      <DetailContainer>
+        <RatingContainer>
+          <div className="Title__H4">{rating}</div>
+          <StarContainer>{renderStars()}</StarContainer>
+        </RatingContainer>
+        
+        <InfoContainer className="Body__Default">
+          <div>{nick}</div>
+          <div>|</div>
+          <div>{createdAt}</div>
+        </InfoContainer>
+        
+        <ReviewText className="Body__Default">{reviewText}</ReviewText>
+        
         {images && images.length > 0 && (
-          <ImageContainer 
-            style={{ backgroundImage: `url(${images[0]})` }}
-            onClick={() => openModal(0)}
-          >
+          <ImageContainer onClick={() => openImageModal(0)}>
+            <img
+              src={images[0]}
+              alt="리뷰 이미지"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '8px'
+              }}
+            />
             {images.length > 1 && (
-              <ImageCount>{images.length}</ImageCount>
+              <ImageCount>+{images.length - 1}</ImageCount>
             )}
           </ImageContainer>
         )}
-      </ReviewContainer>
-
-      <ImageModal
-        isOpen={isModalOpen}
-        images={images}
-        currentIndex={currentImageIndex}
-        onClose={closeModal}
-        onPrevious={goToPrevious}
-        onNext={goToNext}
-      />
-    </>
+      </DetailContainer>
+      
+      {isMyReview && (onEdit || onDelete) && (
+        <ActionButtons>
+          {onEdit && (
+            <ActionButton onClick={() => onEdit(id)}>
+              수정
+            </ActionButton>
+          )}
+          {onDelete && (
+            <ActionButton onClick={() => onDelete(id)}>
+              삭제
+            </ActionButton>
+          )}
+        </ActionButtons>
+      )}
+      
+      {isImageModalOpen && images && (
+        <ImageModal
+          isOpen={isImageModalOpen}
+          images={images}
+          currentIndex={currentImageIndex}
+          onClose={closeImageModal}
+          onPrevious={goToPrevious}
+          onNext={goToNext}
+        />
+      )}
+    </ReviewContainer>
   );
 }

@@ -23,6 +23,7 @@ import MapListBottomSheet from "../../Components/MapList/MapListBottomSheet";
 import MarkerInfoBottomSheet from "../../Components/MarkerInfoBottomSheet";
 import { MdMyLocation } from "react-icons/md";
 import { useStoreApi, usePreferenceApi } from "../../hooks/useApi";
+import { useBookmarkApi } from "../../hooks/useApi";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
 import CustomAlert from "../../Components/Modal/CustomAlert";
 import { industries } from "../../Data/Industries";
@@ -106,6 +107,7 @@ export default function Map(): React.JSX.Element {
 
   const { getNearbyStores, getStoreDetails, nearbyStoresState } = useStoreApi();
   const { getPreferredRegion } = usePreferenceApi();
+  const { checkMyBookmarkedStores } = useBookmarkApi();
 
   // 백엔드 카테고리를 Industries.tsx 카테고리로 매핑
   const mapBackendCategoryToIndustry = useCallback((backendCategory: string): MarkerCategory => {
@@ -340,7 +342,7 @@ export default function Map(): React.JSX.Element {
         lng: position.lng,
         lat: position.lat,
         radius: 500,
-        limit: 100,
+        limit: 50,
         ...(searchQuery && searchQuery.trim() ? { q: searchQuery.trim() } : {})
       });
       
@@ -386,6 +388,18 @@ export default function Map(): React.JSX.Element {
         })
       );
       
+      // 북마크 상태 일괄 체크
+      try {
+        const storeIds = detailedMarkers.map(marker => parseInt(marker.id));
+        if (storeIds.length > 0) {
+          const bookmarkCheck = await checkMyBookmarkedStores(storeIds);
+          console.log('북마크 체크 결과:', bookmarkCheck);
+          // 여기서 북마크 상태를 마커에 반영할 수 있습니다
+        }
+      } catch (error) {
+        console.log('북마크 상태 체크 실패:', error);
+      }
+      
       setStoreMarkers(detailedMarkers);
     } catch (error) {
       console.error("주변 가맹점 조회 실패:", error);
@@ -401,7 +415,7 @@ export default function Map(): React.JSX.Element {
       
       setStoreMarkers([]);
     }
-  }, [getNearbyStores, getStoreDetails, mapBackendCategoryToIndustry]);
+  }, [getNearbyStores, getStoreDetails, mapBackendCategoryToIndustry, checkMyBookmarkedStores]);
 
   // 지역 설정 기반 기본 위치 설정
   useEffect(() => {

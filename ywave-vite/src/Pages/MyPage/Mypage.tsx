@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import styled, { css } from "styled-components";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BiSolidUserCircle } from "react-icons/bi";
@@ -10,6 +10,7 @@ import LargeReviewBox from "../../Components/Review/LargeReviewBox";
 import ReviewStatusDisplay from "../../Components/Review/ReviewStatusDisplay";
 import { convertCategoryCodes, convertCategoryCode } from "../../utils/categoryMapping";
 import { useUserApi, usePreferenceApi, useReviewApi, useStoreApi } from "../../hooks/useApi";
+import ReviewWriteModal from "../../Components/Review/ReviewWriteModal";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -169,11 +170,98 @@ export default function Mypage(): React.JSX.Element {
   const [openMoreId, setOpenMoreId] = useState<string | number | null>(null);
   const [myReviews, setMyReviews] = useState<any[]>([]);
   const [nickname, setNickname] = useState<string>("");
+  // removed unused editingReviewId state
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [editTarget, setEditTarget] = useState<{ reviewId: number; storeId: number; rating: number; content: string } | null>(null);
 
   const { logout, getProfile } = useUserApi();
   const { getPreferredCategories, getPreferredRegion } = usePreferenceApi();
-  const { getMyReviews, myReviewsState } = useReviewApi();
+  const { getMyReviews, myReviewsState, updateMyReview, deleteMyReview } = useReviewApi();
   const { getStoreDetails } = useStoreApi();
+
+  // 리뷰 수정 핸들러
+  const handleEditReview = useCallback((reviewId: string) => {
+    const target = myReviews.find(r => String(r.id) === String(reviewId));
+    if (target && typeof target.storeId === 'number') {
+      setEditTarget({ reviewId: Number(reviewId), storeId: target.storeId, rating: target.rating || 0, content: target.reviewText || "" });
+      setIsEditModalOpen(true);
+    }
+  }, [myReviews]);
+
+  // 리뷰 삭제 핸들러
+  const handleDeleteReview = useCallback(async (reviewId: string) => {
+    if (window.confirm('정말로 이 리뷰를 삭제하시겠습니까?')) {
+      try {
+        await deleteMyReview(parseInt(reviewId));
+        // 삭제 후 리뷰 목록 새로고침 및 정규화 반영
+        const response = await getMyReviews();
+        if (response && response.reviews) {
+          const reviews: any[] = response.reviews;
+          const normalized = await Promise.all(
+            reviews.map(async (r: any, idx: number) => {
+              const id = (r.reviewId ?? r.id ?? idx).toString();
+              const rating = r.rating ?? r.score ?? 0;
+              const createdRaw = r.createdAt ?? r.time;
+              let createdAt = "";
+              if (typeof createdRaw === 'number') {
+                const ts = createdRaw > 1e12 ? createdRaw : createdRaw * 1000;
+                createdAt = new Date(ts).toLocaleDateString('ko-KR');
+              } else if (typeof createdRaw === 'string') {
+                const d = new Date(createdRaw);
+                createdAt = isNaN(d.getTime()) ? "" : d.toLocaleDateString('ko-KR');
+              }
+              let images: string[] = [];
+              if (Array.isArray(r.photos)) {
+                images = r.photos.map((p: any) => (typeof p === 'string' ? p : p?.url)).filter(Boolean);
+              } else if (Array.isArray(r.imgUrls)) {
+                images = r.imgUrls.filter((u: any) => typeof u === 'string');
+              } else if (Array.isArray(r.imageUrls)) {
+                images = r.imageUrls.filter((u: any) => typeof u === 'string');
+              }
+              const reviewText = r.text || r.content || r.reviewText || "";
+
+              // storeId 기반 상세 조회로 가맹점 이름/주소/업종 보강
+              let name = r.storeName || r.name || "";
+              let industry = r.category ? convertCategoryCode(r.category) : "";
+              let address = r.formattedAddress || r.address || "";
+              const sid = Number(r.storeId ?? r.storeID ?? r.id);
+              if (!name || !address || !industry) {
+                if (Number.isFinite(sid)) {
+                  try {
+                    const details = await getStoreDetails(sid);
+                    if (details) {
+                      name = details.name || name;
+                      address = details.formattedAddress || address;
+                      industry = convertCategoryCode(details.category || industry || "") || industry;
+                    }
+                  } catch {}
+                }
+              }
+
+              return {
+                id,
+                name,
+                bookmark: false,
+                rating,
+                createdAt,
+                industry,
+                address,
+                images,
+                reviewText,
+                storeId: sid,
+              };
+            })
+          );
+          setMyReviews(normalized);
+        } else {
+          setMyReviews([]);
+        }
+      } catch (error) {
+        console.error('리뷰 삭제 실패:', error);
+        alert('리뷰 삭제에 실패했습니다.');
+      }
+    }
+  }, [deleteMyReview, getMyReviews, getStoreDetails]);
 
   useEffect(() => {
     // 프로필 조회하여 닉네임 가져오기
@@ -256,6 +344,8 @@ export default function Mypage(): React.JSX.Element {
                   images = r.photos.map((p: any) => (typeof p === 'string' ? p : p?.url)).filter(Boolean);
                 } else if (Array.isArray(r.imgUrls)) {
                   images = r.imgUrls.filter((u: any) => typeof u === 'string');
+                } else if (Array.isArray(r.imageUrls)) {
+                  images = r.imageUrls.filter((u: any) => typeof u === 'string');
                 }
                 const reviewText = r.text || r.content || r.reviewText || "";
 
@@ -287,6 +377,7 @@ export default function Mypage(): React.JSX.Element {
                   address,
                   images,
                   reviewText,
+                  storeId: sid,
                 };
               })
             );
@@ -431,18 +522,89 @@ export default function Mypage(): React.JSX.Element {
               <ReviewStatusDisplay type="empty" />
             ) : (
               myReviews.map((review, i) => (
-                <>
+                <React.Fragment key={review.id}>
                   <LargeReviewBox
                     key={review.id}
                     {...review}
                     isMoreOpen={openMoreId == review.id}
                     onMoreClick={handleMoreClick}
+                    onEdit={handleEditReview}
+                    onDelete={handleDeleteReview}
                   />
                   {i < myReviews.length - 1 && <Divider />}
-                </>
+                </React.Fragment>
               ))
             )}
           </ReviewContainer>
+        )}
+        {/* 리뷰 수정 모달 */}
+        {isEditModalOpen && editTarget && (
+          <ReviewWriteModal
+            isOpen={isEditModalOpen}
+            placeName={myReviews.find(r => r.id === String(editTarget.reviewId))?.name || ""}
+            storeId={editTarget.storeId}
+            onClose={async () => {
+              setIsEditModalOpen(false);
+              setEditTarget(null);
+              // 새로고침
+              const response = await getMyReviews();
+              if (response && response.reviews) {
+                const reviews: any[] = response.reviews;
+                const normalized = await Promise.all(
+                  reviews.map(async (r: any, idx: number) => {
+                    const id = (r.reviewId ?? r.id ?? idx).toString();
+                    const rating = r.rating ?? r.score ?? 0;
+                    const createdRaw = r.createdAt ?? r.time;
+                    let createdAt = "";
+                    if (typeof createdRaw === 'number') {
+                      const ts = createdRaw > 1e12 ? createdRaw : createdRaw * 1000;
+                      createdAt = new Date(ts).toLocaleDateString('ko-KR');
+                    } else if (typeof createdRaw === 'string') {
+                      const d = new Date(createdRaw);
+                      createdAt = isNaN(d.getTime()) ? "" : d.toLocaleDateString('ko-KR');
+                    }
+                    let images: string[] = [];
+                    if (Array.isArray(r.photos)) {
+                      images = r.photos.map((p: any) => (typeof p === 'string' ? p : p?.url)).filter(Boolean);
+                    } else if (Array.isArray(r.imgUrls)) {
+                      images = r.imgUrls.filter((u: any) => typeof u === 'string');
+                    } else if (Array.isArray(r.imageUrls)) {
+                      images = r.imageUrls.filter((u: any) => typeof u === 'string');
+                    }
+                    const reviewText = r.text || r.content || r.reviewText || "";
+                    let name = r.storeName || r.name || "";
+                    let industry = r.category ? convertCategoryCode(r.category) : "";
+                    let address = r.formattedAddress || r.address || "";
+                    const sid = Number(r.storeId ?? r.storeID ?? r.id);
+                    if (!name || !address || !industry) {
+                      if (Number.isFinite(sid)) {
+                        try {
+                          const details = await getStoreDetails(sid);
+                          if (details) {
+                            name = details.name || name;
+                            address = details.formattedAddress || address;
+                            industry = convertCategoryCode(details.category || industry || "") || industry;
+                          }
+                        } catch {}
+                      }
+                    }
+                    return { id, name, bookmark: false, rating, createdAt, industry, address, images, reviewText, storeId: sid };
+                  })
+                );
+                setMyReviews(normalized);
+              } else {
+                setMyReviews([]);
+              }
+            }}
+            onSubmit={async () => {
+              // 수정 성공 시 닫힘 쪽에서 재조회하므로 여기서는 모달만 닫음
+              setIsEditModalOpen(false);
+              setEditTarget(null);
+            }}
+            mode="edit"
+            reviewId={editTarget.reviewId}
+            initialData={{ rating: editTarget.rating, images: [], content: editTarget.content }}
+          />
         )}
       </TabContent>
     </PageContainer>
