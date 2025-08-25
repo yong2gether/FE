@@ -340,7 +340,7 @@ export default function Map(): React.JSX.Element {
         lng: position.lng,
         lat: position.lat,
         radius: 500,
-        limit: 10,
+        limit: 100,
         ...(searchQuery && searchQuery.trim() ? { q: searchQuery.trim() } : {})
       });
       
