@@ -3,6 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 class ApiClient {
   private baseURL: string;
   private token: string | null = null;
+  private userId: number | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -12,8 +13,13 @@ class ApiClient {
     this.token = token;
   }
 
+  setUserId(id: number) {
+    this.userId = id;
+  }
+
   clearToken() {
     this.token = null;
+    this.userId = null;
   }
 
   private async request<T>(
@@ -27,6 +33,11 @@ class ApiClient {
       'User-Agent': 'Y-Wave-App/1.0',
       'Accept': 'application/json',
     };
+
+    // X-USER-ID 헤더 추가 (필요한 API에서 사용)
+    if (this.userId) {
+      headers['X-USER-ID'] = this.userId.toString();
+    }
 
     // options.headers가 있으면 추가
     if (options.headers) {
