@@ -9,6 +9,9 @@ interface ReviewSectionProps {
   reviews: any[];
   showWriteButton?: boolean;
   onWriteClick?: () => void;
+  isMyReviews?: boolean;
+  onEditReview?: (reviewId: string) => void;
+  onDeleteReview?: (reviewId: string) => void;
 }
 
 const Container = styled.div`
@@ -59,6 +62,9 @@ export default function ReviewSection({
   reviews,
   showWriteButton = false,
   onWriteClick,
+  isMyReviews = false,
+  onEditReview,
+  onDeleteReview,
 }: ReviewSectionProps) {
   return (
     <Container>
@@ -81,6 +87,9 @@ export default function ReviewSection({
             <SmallReviewBox
               id={i.toString()}
               {...review}
+              isMyReview={isMyReviews}
+              onEdit={onEditReview}
+              onDelete={onDeleteReview}
             />
             {i < reviews.length - 1 && <SmallDivider />}
           </React.Fragment>

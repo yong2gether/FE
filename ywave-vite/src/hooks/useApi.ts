@@ -215,6 +215,7 @@ export const useStoreApi = () => {
   const [popularStoresState, setPopularStoresState] = useState<ApiState<any[]>>(createInitialApiState());
   const [nearbyStoresState, setNearbyStoresState] = useState<ApiState<any[]>>(createInitialApiState());
   const [storeDetailsState, setStoreDetailsState] = useState<ApiState<any>>(createInitialApiState());
+  const [placeDetailsState, setPlaceDetailsState] = useState<ApiState<any>>(createInitialApiState());
 
   const getPopularStores = useCallback(async (params: any) => {
     setPopularStoresState(prev => updateApiState.start(prev));
@@ -255,6 +256,19 @@ export const useStoreApi = () => {
     }
   }, []);
 
+  const getPlaceDetailsByPlaceId = useCallback(async (placeId: string) => {
+    setPlaceDetailsState(prev => updateApiState.start(prev));
+    try {
+      const result = await storeApi.getPlaceDetailsByPlaceId(placeId);
+      setPlaceDetailsState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('placeId 상세 정보 조회', error);
+      setPlaceDetailsState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
   const getRecommendations = useCallback(async (limit: number = 5) => {
     return await storeApi.getRecommendations(limit);
   }, []);
@@ -266,6 +280,8 @@ export const useStoreApi = () => {
     nearbyStoresState,
     getStoreDetails,
     storeDetailsState,
+    getPlaceDetailsByPlaceId,
+    placeDetailsState,
     getRecommendations,
   };
 };
@@ -279,6 +295,8 @@ export const useBookmarkApi = () => {
   const [getGroupState, setGetGroupState] = useState<ApiState<any>>(createInitialApiState());
   const [createBookmarkState, setCreateBookmarkState] = useState<ApiState<any>>(createInitialApiState());
   const [deleteBookmarkState, setDeleteBookmarkState] = useState<ApiState<any>>(createInitialApiState());
+  const [checkBookmarkedState, setCheckBookmarkedState] = useState<ApiState<any>>(createInitialApiState());
+  const [getMyBookmarksState, setGetMyBookmarksState] = useState<ApiState<any>>(createInitialApiState());
 
   const createBookmarkGroup = useCallback(async (data: any) => {
     setCreateGroupState(prev => updateApiState.start(prev));
@@ -345,6 +363,19 @@ export const useBookmarkApi = () => {
     }
   }, []);
 
+  const getMyBookmarks = useCallback(async () => {
+    setGetMyBookmarksState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.getMyBookmarks();
+      setGetMyBookmarksState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('내 북마크 전체 조회', error);
+      setGetMyBookmarksState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
   const createBookmark = useCallback(async (storeId: number, data: any) => {
     setCreateBookmarkState(prev => updateApiState.start(prev));
     try {
@@ -371,6 +402,19 @@ export const useBookmarkApi = () => {
     }
   }, []);
 
+  const checkMyBookmarkedStores = useCallback(async (storeIds: number[]) => {
+    setCheckBookmarkedState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.checkMyBookmarkedStores(storeIds);
+      setCheckBookmarkedState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('북마크 여부 일괄 체크', error);
+      setCheckBookmarkedState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
   return {
     createBookmarkGroup,
     createGroupState,
@@ -382,16 +426,21 @@ export const useBookmarkApi = () => {
     deleteGroupState,
     getBookmarkGroup,
     getGroupState,
+    getMyBookmarks,
+    getMyBookmarksState,
     createBookmark,
     createBookmarkState,
     deleteBookmark,
     deleteBookmarkState,
+    checkMyBookmarkedStores,
+    checkBookmarkedState,
   };
 };
 
 // 리뷰 API Hook
 export const useReviewApi = () => {
   const [myReviewsState, setMyReviewsState] = useState<ApiState<any>>(createInitialApiState());
+  const [reviewMutationState, setReviewMutationState] = useState<ApiState<any>>(createInitialApiState());
 
   const getMyReviews = useCallback(async () => {
     setMyReviewsState(prev => updateApiState.start(prev));
@@ -407,14 +456,40 @@ export const useReviewApi = () => {
   }, []);
 
   const createMyReview = useCallback(async (storeId: number, data: { rating: number; content: string; imgUrls: string[] }) => {
-    setMyReviewsState(prev => updateApiState.start(prev));
+    setReviewMutationState(prev => updateApiState.start(prev));
     try {
       const result = await reviewApi.createReview(storeId, data);
-      // 성공 후 내 리뷰 목록 리프레시가 필요하다면 여기서 재호출 가능
+      setReviewMutationState(updateApiState.success(result));
       return result;
     } catch (error) {
       const errorMessage = createApiErrorMessage('리뷰 작성', error);
-      setMyReviewsState(updateApiState.error(errorMessage));
+      setReviewMutationState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const updateMyReview = useCallback(async (reviewId: number, data: { rating: number; content: string; imgUrls: string[] }) => {
+    setReviewMutationState(prev => updateApiState.start(prev));
+    try {
+      const result = await reviewApi.updateReview(reviewId, data);
+      setReviewMutationState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('리뷰 수정', error);
+      setReviewMutationState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const deleteMyReview = useCallback(async (reviewId: number) => {
+    setReviewMutationState(prev => updateApiState.start(prev));
+    try {
+      const result = await reviewApi.deleteReview(reviewId);
+      setReviewMutationState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('리뷰 삭제', error);
+      setReviewMutationState(updateApiState.error(errorMessage));
       throw error;
     }
   }, []);
@@ -423,6 +498,9 @@ export const useReviewApi = () => {
     getMyReviews,
     myReviewsState,
     createMyReview,
+    updateMyReview,
+    deleteMyReview,
+    reviewMutationState,
   };
 };
 

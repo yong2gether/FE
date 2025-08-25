@@ -20,6 +20,8 @@ interface LargeReviewBoxProps {
   address: string;
   images?: string[];
   reviewText: string;
+  onEdit?: (reviewId: string) => void;
+  onDelete?: (reviewId: string) => void;
 }
 
 const ReviewContainer = styled.div`
@@ -119,6 +121,17 @@ const InfoContainer = styled.div`
   justify-content: flex-start;
   gap: var(--spacing-2xs);
   color: var(--neutral-500);
+  flex-wrap: wrap;
+  row-gap: 4px;
+  min-width: 0;
+`;
+
+const Ellipsis = styled.span`
+  display: inline-block;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ImageContainer = styled.div`
@@ -158,6 +171,8 @@ export default function LargeReviewBox({
   address,
   images,
   reviewText,
+  onEdit,
+  onDelete,
 }: LargeReviewBoxProps): React.JSX.Element {
   const navigate = useNavigate();
   const [isBookmark, setIsBookmark] = useState<boolean>(bookmark);
@@ -173,16 +188,25 @@ export default function LargeReviewBox({
   };
 
   const handleReviewEdit = () => {
-    navigate("/mypage/review", {
-      state: {
-        name,
-        rating,
-        reviewText,
-      },
-    });
+    if (onEdit) {
+      onEdit(id);
+    } else {
+      // 기존 로직 (수정 페이지로 이동)
+      navigate("/mypage/review", {
+        state: {
+          name,
+          rating,
+          reviewText,
+        },
+      });
+    }
   };
 
-  const handleReviewDelete = () => {};
+  const handleReviewDelete = () => {
+    if (onDelete) {
+      onDelete(id);
+    }
+  };
 
   const renderStars = () => {
     const stars: React.ReactElement[] = [];
@@ -224,11 +248,11 @@ export default function LargeReviewBox({
       </RatingContainer>
 
       <InfoContainer className="Body__Default">
-        <div>{createdAt}</div>
+        <Ellipsis style={{ maxWidth: 100 }}>{createdAt}</Ellipsis>
         <div>|</div>
-        <div>{industry}</div>
+        <Ellipsis style={{ maxWidth: 120 }}>{industry}</Ellipsis>
         <div>|</div>
-        <div>{address}</div>
+        <Ellipsis style={{ maxWidth: 220 }}>{address}</Ellipsis>
       </InfoContainer>
 
       {images && images.length > 0 && (

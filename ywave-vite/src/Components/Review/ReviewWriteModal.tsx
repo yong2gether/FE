@@ -13,12 +13,14 @@ interface ReviewWriteModalProps {
   onSubmit: (reviewData: ReviewData) => void;
   mode?: 'create' | 'edit';
   initialData?: ReviewData;
+  reviewId?: number;
 }
 
 interface ReviewData {
   rating: number;
   images: File[];
   content: string;
+  imgUrls?: string[];
 }
 
 const ModalOverlay = styled.div`
@@ -437,6 +439,7 @@ export default function ReviewWriteModal({
   onSubmit,
   mode = 'create',
   initialData,
+  reviewId,
 }: ReviewWriteModalProps): React.JSX.Element | null {
   const [rating, setRating] = useState<number>(initialData?.rating || 0);
   const [images, setImages] = useState<File[]>(initialData?.images || []);
@@ -454,7 +457,7 @@ export default function ReviewWriteModal({
     type: 'info'
   });
 
-  const { createMyReview } = useReviewApi();
+  const { createMyReview, updateMyReview } = useReviewApi();
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -517,22 +520,31 @@ export default function ReviewWriteModal({
       // 이미지 파일들을 base64 URL로 변환하여 전송 (백엔드가 URL 문자열 배열을 기대함)
       const imgUrls = await Promise.all(images.map((f) => fileToBase64(f)));
 
-      await createMyReview(storeId, {
-        rating,
-        content: content.trim(),
-        imgUrls,
-      });
+      if (mode === 'edit' && reviewId) {
+        await updateMyReview(reviewId, {
+          rating,
+          content: content.trim(),
+          imgUrls,
+        });
+      } else {
+        await createMyReview(storeId, {
+          rating,
+          content: content.trim(),
+          imgUrls,
+        });
+      }
 
       onSubmit({
         rating,
         images,
         content: content.trim(),
+        imgUrls,
       });
 
-      showAlert("작성 완료", "리뷰가 등록되었습니다.", "success");
+      showAlert(mode === 'edit' ? "수정 완료" : "작성 완료", mode === 'edit' ? "리뷰가 수정되었습니다." : "리뷰가 등록되었습니다.", "success");
       onClose();
     } catch (e) {
-      showAlert("오류", "리뷰 등록에 실패했습니다.", "error");
+      showAlert("오류", mode === 'edit' ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다.", "error");
     }
   };
 

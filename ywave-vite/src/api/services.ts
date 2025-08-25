@@ -30,6 +30,12 @@ import {
   DeleteRes,
 
   UserProfileResponse,
+  CheckBookmarkedResponse,
+  ReviewRequest,
+  CreateReviewResponse,
+  DeleteReviewResponse,
+  UserBookmarkItem,
+  RecommendedStore,
 } from './types';
 import { createSearchParams } from '../utils/apiUtils';
 
@@ -147,9 +153,14 @@ export const storeApi = {
     return apiClient.get<PlaceDetailsDto>(`/api/v1/stores/${storeId}/details`);
   },
 
+  // 가맹점 상세 정보 조회 (placeId)
+  getPlaceDetailsByPlaceId: async (placeId: string): Promise<PlaceDetailsDto> => {
+    return apiClient.get<PlaceDetailsDto>(`/api/v1/places/${placeId}/details`);
+  },
+
   // 추천 가맹점 조회
-  getRecommendations: async (limit: number = 5): Promise<any[]> => {
-    return apiClient.get<any[]>(`/api/v1/recommendations?limit=${limit}`);
+  getRecommendations: async (limit: number = 5): Promise<RecommendedStore[]> => {
+    return apiClient.get<RecommendedStore[]>(`/api/v1/recommendations?limit=${limit}`);
   },
 };
 
@@ -180,6 +191,11 @@ export const bookmarkApi = {
     return apiClient.get<BookmarkedGroupResponse>(`/api/v1/mypage/bookmarks/${groupId}`);
   },
 
+  // 내 북마크 전체 목록 조회
+  getMyBookmarks: async (): Promise<UserBookmarkItem[]> => {
+    return apiClient.get<UserBookmarkItem[]>('/api/v1/mypage/bookmarks');
+  },
+
   // 가맹점 북마크 생성
   create: async (storeId: number, data: CreateReq): Promise<CreateRes> => {
     return apiClient.post<CreateRes>(`/api/v1/stores/${storeId}/bookmarks`, data);
@@ -188,6 +204,12 @@ export const bookmarkApi = {
   // 가맹점 북마크 취소
   delete: async (storeId: number): Promise<DeleteRes> => {
     return apiClient.delete<DeleteRes>(`/api/v1/stores/${storeId}/bookmarks`);
+  },
+
+  // 현재 화면의 매장 북마크 여부 일괄 체크
+  checkMyBookmarkedStores: async (storeIds: number[]): Promise<CheckBookmarkedResponse> => {
+    const query = storeIds.map(id => `storeIds=${encodeURIComponent(id)}`).join('&');
+    return apiClient.get<CheckBookmarkedResponse>(`/api/v1/mypage/bookmarks/check?${query}`);
   },
 };
 
@@ -201,9 +223,22 @@ export const reviewApi = {
   // 리뷰 생성 (storeId 쿼리, 본문: rating, content, imgUrls)
   createReview: async (
     storeId: number,
-    data: { rating: number; content: string; imgUrls: string[] }
-  ): Promise<any> => {
-    return apiClient.post<any>(`/api/v1/mypage/reviews?storeId=${storeId}`, data);
+    data: ReviewRequest
+  ): Promise<CreateReviewResponse> => {
+    return apiClient.post<CreateReviewResponse>(`/api/v1/mypage/reviews?storeId=${storeId}`, data);
+  },
+
+  // 리뷰 수정
+  updateReview: async (
+    reviewId: number,
+    data: ReviewRequest
+  ): Promise<CreateReviewResponse> => {
+    return apiClient.put<CreateReviewResponse>(`/api/v1/mypage/reviews/${reviewId}`, data);
+  },
+
+  // 리뷰 삭제
+  deleteReview: async (reviewId: number): Promise<DeleteReviewResponse> => {
+    return apiClient.delete<DeleteReviewResponse>(`/api/v1/mypage/reviews/${reviewId}`);
   },
 };
 

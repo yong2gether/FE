@@ -98,9 +98,9 @@ const Image = styled.img`
 `
 
 export default function MapList({
-    name, bookmark, rating, address, category, images, distance, storeId, placeId, from = 'map',
+    name, bookmark, rating, address, category, images, distance, storeId, placeId, from = 'map', onBookmarkDeleted,
 }: {
-    name: string; bookmark: boolean; rating: number; address: string; category: string; images: string[]; distance?: string; storeId?: string; placeId?: string; from?: 'map' | 'bookmark';
+    name: string; bookmark: boolean; rating: number; address: string; category: string; images: string[]; distance?: string; storeId?: string; placeId?: string; from?: 'map' | 'bookmark'; onBookmarkDeleted?: (storeId: number) => void;
 }): React.JSX.Element {
     const [IsBookMark, setIsBookMark] = useState<boolean>(bookmark);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -121,6 +121,9 @@ export default function MapList({
                 try {
                     await deleteBookmark(parseInt(storeId));
                     setIsBookMark(false);
+                    if (onBookmarkDeleted) {
+                        onBookmarkDeleted(parseInt(storeId));
+                    }
                 } catch (error) {
                     console.error("북마크 삭제 실패:", error);
                 }
@@ -141,13 +144,14 @@ export default function MapList({
             navigate(`/main/place/${storeId || '0'}`, { 
               state: { 
                 from,
-                placeId: placeId 
+                placeId: placeId,
+                storeId: storeId ? parseInt(storeId) : undefined,
               } 
             });
         } else if (storeId) {
             // storeId만 있는 경우 (백엔드에서 가져온 장소)
             navigate(`/main/place/${storeId}`, { 
-              state: { from } 
+              state: { from, storeId: parseInt(storeId) } 
             });
         }
     }

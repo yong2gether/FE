@@ -64,14 +64,24 @@ interface FolderDetailListProps {
   places: Place[];
   onPlaceClick: (placeId: string) => void;
   showHeader?: boolean;
+  onRefresh?: () => void;
 }
 
 export default function FolderDetailList({ 
   title, 
   emoji, 
   places, 
-  showHeader = true
+  showHeader = true,
+  onRefresh
 }: FolderDetailListProps): React.JSX.Element {
+  const [localPlaces, setLocalPlaces] = React.useState(places);
+  React.useEffect(() => { setLocalPlaces(places); }, [places]);
+  
+  const handleBookmarkDeleted = (sid: number) => {
+    setLocalPlaces(prev => prev.filter(p => (p.id !== String(sid))));
+    if (onRefresh) onRefresh();
+  };
+  
   return (
     <Container>
       {showHeader && title && emoji && (
@@ -80,11 +90,11 @@ export default function FolderDetailList({
             {emoji}
           </span>
           <FolderTitle>{title}</FolderTitle>
-          <PlaceCount>{places.length}개 장소</PlaceCount>
+          <PlaceCount>{localPlaces.length}개 장소</PlaceCount>
         </Header>
       )}
       
-      {places.length === 0 ? (
+      {localPlaces.length === 0 ? (
         <EmptyState>
           <div className="Body__MediumLarge" style={{ marginBottom: '8px' }}>
             아직 저장된 장소가 없습니다
@@ -94,7 +104,7 @@ export default function FolderDetailList({
           </div>
         </EmptyState>
       ) : (
-        places.map((place, index) => (
+        localPlaces.map((place, index) => (
           <React.Fragment key={place.id}>
             <MapList 
               name={place.name}
@@ -107,8 +117,9 @@ export default function FolderDetailList({
               storeId={place.id}
               placeId={place.placeId}
               from={'bookmark'}
+              onBookmarkDeleted={handleBookmarkDeleted}
             />
-            {index < places.length - 1 && (
+            {index < localPlaces.length - 1 && (
               <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />
             )}
           </React.Fragment>

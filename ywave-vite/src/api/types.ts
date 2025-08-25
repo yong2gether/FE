@@ -36,7 +36,7 @@ export interface UserInfo {
 
 export interface UpdateProfileRequest {
   nickname: string;
-  password: string;
+  password?: string;
 }
 
 export interface UpdateProfileResponse {
@@ -242,8 +242,8 @@ export interface CreateReq {
 }
 
 export interface CreateRes {
-  message: string;
-  bookmarked: boolean;
+  bookmarkId: number;
+  storeId: number;
 }
 
 export interface DeleteRes {
@@ -265,11 +265,30 @@ export interface BookmarkGroupDetailResponse {
   group: BookmarkGroupDetailDto;
 }
 
+// 내 북마크 전체 목록 조회 응답 타입
+export interface UserBookmarkItem {
+  bookmarkId: number;
+  storeId: number;
+  bookmarkGroupId: number;
+  createdAt: string;
+}
+
+// 추천 가맹점 타입
+export interface RecommendedStore {
+  id: number;
+  name: string;
+  roadAddr: string;
+  sigungu: string;
+  lng: number;
+  lat: number;
+  reason: string;
+}
+
 // 리뷰 생성 관련 타입
 export interface ReviewRequest {
   rating: number;
   content: string;
-  imageUrls?: string[];
+  imgUrls?: string[];
 }
 
 export interface ReviewResponse {
@@ -277,7 +296,7 @@ export interface ReviewResponse {
   message: string;
   rating: number;
   content: string;
-  imageUrls?: string[];
+  imgUrls?: string[];
 }
 
 // 사용자 프로필 응답 타입
@@ -286,6 +305,24 @@ export interface UserProfileResponse {
   nickname: string;
   email: string;
   photoUrl?: string;
+}
+
+// 북마크 일괄 체크 응답
+export interface CheckBookmarkedResponse {
+  storeIds: number[];
+}
+
+// 리뷰 생성 응답 (스펙 명칭에 맞춤)
+export interface CreateReviewResponse {
+  reviewId: number;
+  message?: string;
+  rating?: number;
+  content?: string;
+  imgUrls?: string[];
+}
+
+export interface DeleteReviewResponse {
+  message: string;
 }
 
 

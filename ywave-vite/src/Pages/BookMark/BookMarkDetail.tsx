@@ -132,8 +132,9 @@ export default function BookMarkDetail(): React.JSX.Element {
     if (!allBookmarkPlaces || allBookmarkPlaces.length === 0) return [];
 
     return allBookmarkPlaces.map((place) => ({
-      id: place.placeId || place.id?.toString() || '',
-      placeId: place.placeId, // Google Places API의 placeId
+      id: (place.storeId ?? place.id)?.toString() || '',
+      storeId: place.storeId ?? place.id,
+      placeId: place.placeId,
       name: place.name,
       address: place.formattedAddress,
       lat: place.lat,
@@ -188,7 +189,8 @@ export default function BookMarkDetail(): React.JSX.Element {
             try {
               console.log(`Store ${storeId} 상세 정보 조회 중...`);
               const storeDetail = await getStoreDetails(storeId);
-              return storeDetail;
+              // storeId 보존
+              return storeDetail ? { ...storeDetail, storeId } : null;
             } catch (error) {
               console.error(`Store ${storeId} 상세 정보 조회 실패:`, error);
               return null;
@@ -201,7 +203,7 @@ export default function BookMarkDetail(): React.JSX.Element {
           // null이 아닌 결과만 필터링
           const validStoreDetails = storeDetails.filter(
             (detail) => detail !== null
-          );
+          ) as any[];
 
           console.log("조회된 store 상세 정보들:", validStoreDetails);
           console.log(
@@ -330,6 +332,7 @@ export default function BookMarkDetail(): React.JSX.Element {
             places={places}
             onPlaceClick={handlePlaceClick}
             showHeader={false}
+            onRefresh={fetchBookmarkGroup}
           />
         </BottomSheetContainer>
       </BottomSheet>
@@ -359,7 +362,7 @@ export default function BookMarkDetail(): React.JSX.Element {
                 category={selectedPlace.category || "기타"}
                 images={selectedPlace.images || []}
                 distance="북마크된 장소"
-                storeId={selectedPlace.id?.toString()}
+                storeId={(selectedPlace.storeId ?? selectedPlace.id)?.toString()}
               />
               
               <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
@@ -385,9 +388,10 @@ export default function BookMarkDetail(): React.JSX.Element {
                 </button>
                 <button
                   onClick={async () => {
-                    if (selectedPlace.id) {
+                    const sid = Number(selectedPlace.storeId ?? selectedPlace.id);
+                    if (sid) {
                       try {
-                        await deleteBookmark(selectedPlace.id);
+                        await deleteBookmark(sid);
                         alert("북마크가 삭제되었습니다.");
                         setIsDetailSheetOpen(false);
                         // 북마크 그룹 새로고침

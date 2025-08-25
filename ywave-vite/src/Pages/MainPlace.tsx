@@ -10,6 +10,7 @@ import ReviewSection from "../Components/Review/ReviewSection";
 import ReviewWriteModal from "../Components/Review/ReviewWriteModal";
 import CustomAlert from "../Components/Modal/CustomAlert";
 import { useStoreApi, useBookmarkApi, usePreferenceApi } from "../hooks/useApi";
+import { useReviewApi } from "../hooks/useApi";
 import { calculateDistance, formatDistance } from "../utils/distance";
 import { useGoogleMaps } from "../hooks/useGoogleMaps";
 import { getAuthToken } from "../utils/authUtils";
@@ -263,8 +264,8 @@ const ReviewSections = ({
   storeId: number;
 }) => (
   <>
-    {/* 방문자 리뷰 섹션 - storeId 기반일 때만 표시 */}
-    {!hasPlaceId && (
+    {/* 사용자 리뷰 섹션 - 데이터가 있을 때 표시, 작성 버튼은 storeId가 있을 때만 */}
+    {userReviews.length > 0 && (
       <>
         <ReviewSection
           title="방문자 리뷰"
@@ -275,14 +276,14 @@ const ReviewSections = ({
             </>
           }
           reviews={userReviews}
-          showWriteButton={true}
+          showWriteButton={storeId > 0}
           onWriteClick={onReviewWrite}
         />
         <LargeDivider />
       </>
     )}
     
-    {/* 구글 방문자 리뷰 섹션 - Google 리뷰가 있을 때 항상 표시 */}
+    {/* 구글 방문자 리뷰 섹션 - Google 리뷰가 있을 때 표시 */}
     {googleReviews.length > 0 && (
       <>
         <ReviewSection
@@ -295,7 +296,7 @@ const ReviewSections = ({
     )}
 
     {/* 리뷰 작성 모달 - storeId 기반일 때만 표시 */}
-    {!hasPlaceId && (
+    {storeId > 0 && (
       <ReviewWriteModal
         isOpen={isReviewModalOpen}
         placeName={placeName}
@@ -315,8 +316,17 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const resolvedStoreId: number = (() => {
+    const stateStoreId = (location.state as any)?.storeId;
+    if (typeof stateStoreId === 'string' || typeof stateStoreId === 'number') {
+      const n = Number(stateStoreId);
+      if (!Number.isNaN(n) && n > 0) return n;
+    }
+    const routeId = id ? Number(id) : 0;
+    return Number.isNaN(routeId) ? 0 : routeId;
+  })();
   
-  const { getStoreDetails } = useStoreApi();
+  const { getStoreDetails, getPlaceDetailsByPlaceId } = useStoreApi();
   const { isLoaded, apiKey } = useGoogleMaps();
 
   const [name, setName] = useState<string>("");
@@ -353,10 +363,11 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   const [localUserLocation, setLocalUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const userLocation = propUserLocation || localUserLocation;
   const { getPreferredRegion } = usePreferenceApi();
+  const { getMyReviews } = useReviewApi();
   const [preferredLocation, setPreferredLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState<boolean>(false);
-  const { createBookmark, deleteBookmark } = useBookmarkApi();
+  const { createBookmark, deleteBookmark, checkMyBookmarkedStores } = useBookmarkApi();
 
   // 리뷰 데이터 정규화: 다양한 응답 형태를 UI에서 요구하는 형태로 변환
   const normalizeReviews = (reviews: any[] = []): any[] => {
@@ -378,6 +389,8 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
         images = review.photos.map((p: any) => (typeof p === 'string' ? p : p?.url)).filter(Boolean);
       } else if (Array.isArray(review.imgUrls)) {
         images = review.imgUrls.filter((u: any) => typeof u === 'string');
+      } else if (Array.isArray(review.imageUrls)) {
+        images = review.imageUrls.filter((u: any) => typeof u === 'string');
       }
 
       const reviewText = review.text || review.content || review.reviewText || "";
@@ -393,34 +406,34 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
     });
   };
 
-  // 백엔드 API로 placeId 기반 상세 정보 가져오기
+  // 내 리뷰 중 해당 가맹점(storeId) 리뷰만 표시
+  const refreshUserReviewsForStore = React.useCallback(async () => {
+    if (!resolvedStoreId || resolvedStoreId <= 0) {
+      setUserReviews([]);
+      return;
+    }
+    try {
+      const response = await getMyReviews();
+      if (response && Array.isArray(response.reviews)) {
+        const mine = response.reviews.filter((r: any) => Number(r.storeId) === Number(resolvedStoreId));
+        setUserReviews(normalizeReviews(mine));
+      } else {
+        setUserReviews([]);
+      }
+    } catch (_) {
+      setUserReviews([]);
+    }
+  }, [getMyReviews, resolvedStoreId]);
+
+  // 백엔드 API로 placeId 기반 상세 정보 가져오기 (서비스 훅 사용)
   const fetchPlaceDetailsByPlaceId = async (placeId: string) => {
     try {
-      const token = getAuthToken();
-      const headers: Record<string, string> = {
-        'Accept': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(`https://ywave.site/api/v1/places/${placeId}/details`, {
-        method: 'GET',
-        headers
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('placeId API 응답 데이터:', data);
-        return data;
-      } else {
-        console.error(`백엔드 placeId API 호출 실패: ${response.status} ${response.statusText}`);
-      }
+      const data = await getPlaceDetailsByPlaceId(placeId);
+      return data;
     } catch (error) {
-      console.error('백엔드 placeId API 호출 실패:', error);
+      console.error('placeId 상세 조회 실패:', error);
+      return null;
     }
-    return null;
   };
 
   // placeId를 사용해서 Google Places API로 상세 정보 가져오기 (백업용)
@@ -527,10 +540,12 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
           console.log('location.state:', location.state);
           console.log('id:', id);
           
-          const placeId = location.state?.placeId;
+          const rawPlaceId = (location.state as any)?.placeId as unknown;
+          const hasValidPlaceId = typeof rawPlaceId === 'string' && rawPlaceId !== 'null' && rawPlaceId.length > 0;
           const fromBookmark = location.state?.from === 'bookmark';
           
-          if (placeId && placeId !== "null") {
+          if (hasValidPlaceId) {
+            const placeId = rawPlaceId as string;
             console.log('placeId로 데이터 조회 시작:', placeId);
             const backendPlaceDetails = await fetchPlaceDetailsByPlaceId(placeId);
             if (backendPlaceDetails) {
@@ -541,7 +556,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               setName(backendPlaceDetails.name || "");
               setRating(backendPlaceDetails.rating || 0);
               setDistance("");
-              setIndustry(convertCategoryCode(backendPlaceDetails.category) || "기타");
+              setIndustry(convertCategoryCode(backendPlaceDetails.category || "기타"));
               setAddress(backendPlaceDetails.formattedAddress || "");
               setImages(backendPlaceDetails.photos ? backendPlaceDetails.photos.map((photo: any) => photo.url) : []);
               setLat(backendPlaceDetails.lat || 0);
@@ -557,8 +572,20 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               } else {
                 setGoogleReviews([]);
               }
-              
-              setUserReviews([]);
+              // 사용자 리뷰는 내 리뷰에서 필터링해 표시
+              await refreshUserReviewsForStore();
+
+              // 북마크 여부: 응답에 없으면 storeId로 일괄 체크
+              if (typeof backendPlaceDetails.bookmarked === 'boolean') {
+                setIsBookmark(backendPlaceDetails.bookmarked);
+              } else if (resolvedStoreId && resolvedStoreId > 0) {
+                try {
+                  const chk = await checkMyBookmarkedStores([resolvedStoreId]);
+                  setIsBookmark(Array.isArray(chk?.storeIds) && chk.storeIds.includes(resolvedStoreId));
+                } catch (e) {
+                  // ignore
+                }
+              }
             } else {
               // 백엔드 API 실패 시 Google Places API 사용 (백업)
               if (isLoaded && apiKey) {
@@ -575,10 +602,20 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
                   setLat(googlePlaceDetails.geometry?.location?.lat || 0);
                   setLng(googlePlaceDetails.geometry?.location?.lng || 0);
                   setGoogleReviews([]);
-                  setUserReviews([]);
+                  await refreshUserReviewsForStore();
                   setPhoneNumber("");
                   setWebsite("");
                   setWeekdayText([]);
+
+                  // 구글 경로에서도 북마크 여부는 storeId로 체크
+                  if (resolvedStoreId && resolvedStoreId > 0) {
+                    try {
+                      const chk = await checkMyBookmarkedStores([resolvedStoreId]);
+                      setIsBookmark(Array.isArray(chk?.storeIds) && chk.storeIds.includes(resolvedStoreId));
+                    } catch (e) {
+                      // ignore
+                    }
+                  }
                 }
               }
             }
@@ -598,14 +635,20 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               setWebsite("");
               setWeekdayText([]);
               
-              // 백엔드에서 받은 내 리뷰 형식 정규화 후 사용자 리뷰에 반영
+              // placeDetails.reviews는 구글 리뷰 스키마 → 구글 리뷰로 반영
               if (placeDetails.reviews && placeDetails.reviews.length > 0) {
                 const convertedReviews = normalizeReviews(placeDetails.reviews);
-                setUserReviews(convertedReviews);
+                setGoogleReviews(convertedReviews);
               } else {
-                setUserReviews([]);
+                setGoogleReviews([]);
               }
-              setGoogleReviews([]);
+              // 사용자 리뷰는 내 리뷰에서 필터링해 표시
+              await refreshUserReviewsForStore();
+              // 서버에서 북마크 여부 제공됨 (로그인 시)
+              if (typeof placeDetails.bookmarked === 'boolean') {
+                setIsBookmark(placeDetails.bookmarked);
+              }
+              
             }
           }
             
@@ -639,22 +682,29 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
       
       fetchPlaceDetails();
     }
-  }, [id, getStoreDetails, userLocation, isLoaded, apiKey, location.state]);
+  }, [id, getStoreDetails, userLocation, isLoaded, apiKey, location.state, refreshUserReviewsForStore]);
 
   const handleBookmarkClick = (): void => {
+    if (!resolvedStoreId || resolvedStoreId <= 0) {
+      console.warn('유효한 storeId가 없어 북마크를 처리할 수 없습니다.');
+      setAlertConfig({ isOpen: true, title: '처리 불가', message: '이 장소의 storeId가 없어 북마크를 처리할 수 없습니다.', type: 'warning' });
+      return;
+    }
+
     if (isBookmark) {
-      // 북마크 해제
-      if (id) {
-        deleteBookmark(parseInt(id))
-          .then(() => {
-            setIsBookmark(false);
-          })
-          .catch((error) => {
-            console.error("북마크 삭제 실패:", error);
-          });
-      }
+      deleteBookmark(resolvedStoreId)
+        .then(() => {
+          setIsBookmark(false);
+          // 북마크 폴더에서 진입한 경우, 목록 반영을 위해 뒤로 이동
+          if ((location.state as any)?.from === 'bookmark') {
+            navigate(-1);
+          }
+        })
+        .catch((error) => {
+          console.error('북마크 삭제 실패:', error);
+          setAlertConfig({ isOpen: true, title: '실패', message: '북마크 삭제에 실패했습니다.', type: 'error' });
+        });
     } else {
-      // 북마크 추가 - 모달 열기
       setIsBookmarkModalOpen(true);
     }
   };
@@ -670,6 +720,12 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   const handleReviewWrite = (): void => {
     // 배포 전까지: 선호 지역을 기준으로 방문 인증 진행
     const baseLocation = preferredLocation || userLocation;
+
+    // storeId 없으면(placeId 기반 진입) 리뷰 작성 불가
+    if (!resolvedStoreId || resolvedStoreId <= 0) {
+      showAlert("리뷰 작성 불가", "이 화면은 placeId 기반 조회입니다. 해당 가맹점의 리뷰 작성은 지원되지 않습니다.", "info");
+      return;
+    }
 
     if (!baseLocation) {
       if (navigator.geolocation) {
@@ -723,10 +779,46 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
     setIsReviewModalOpen(true);
   };
 
-  const handleReviewSubmit = (reviewData: any) => {
-    console.log("리뷰 제출:", reviewData);
-    setIsReviewModalOpen(false);
-    setVisitVerificationStatus('pending');
+  const refreshStoreDetails = React.useCallback(async () => {
+    if (!resolvedStoreId || resolvedStoreId <= 0) return;
+    try {
+      const refreshed = await getStoreDetails(resolvedStoreId);
+      if (refreshed) {
+        setName(refreshed.name || name);
+        setRating(refreshed.rating || 0);
+        setIndustry(convertCategoryCode(refreshed.category || "기타"));
+        setAddress(refreshed.formattedAddress || address);
+        setImages(refreshed.photos ? refreshed.photos.map((p: any) => p.url) : []);
+        setLat(refreshed.lat || lat);
+        setLng(refreshed.lng || lng);
+        // refreshed.reviews는 구글 리뷰이므로 구글 리뷰 갱신
+        if (Array.isArray(refreshed.reviews)) {
+          setGoogleReviews(normalizeReviews(refreshed.reviews));
+        }
+        // 사용자 리뷰는 내 리뷰에서 필터링
+        await refreshUserReviewsForStore();
+      }
+    } catch (_) {
+      // ignore
+    }
+  }, [resolvedStoreId, getStoreDetails, name, address, lat, lng, refreshUserReviewsForStore]);
+
+  const handleReviewSubmit = async (reviewData: any) => {
+    try {
+      // placeId 기반에서는 작성 자체가 열리지 않지만, 이중 가드
+      if (!resolvedStoreId || resolvedStoreId <= 0) {
+        setIsReviewModalOpen(false);
+        setVisitVerificationStatus('pending');
+        return;
+      }
+      // 리뷰 작성 후 상세 재조회로 최신 리뷰/메타 반영
+      await refreshStoreDetails();
+    } catch (e) {
+      // ignore fetch failure, UI는 기존 데이터 유지
+    } finally {
+      setIsReviewModalOpen(false);
+      setVisitVerificationStatus('pending');
+    }
   };
 
   const renderStars = () => {
@@ -803,7 +895,11 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
         onReviewWrite={handleReviewWrite}
         isReviewModalOpen={isReviewModalOpen}
         onReviewSubmit={handleReviewSubmit}
-        onCloseReviewModal={() => setIsReviewModalOpen(false)}
+        onCloseReviewModal={async () => {
+          // 모달 닫힐 때도 최신 데이터 재조회
+          await refreshStoreDetails();
+          setIsReviewModalOpen(false);
+        }}
         placeName={name}
         storeId={parseInt(id || "0")}
       />
@@ -819,7 +915,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
       <BookmarkFolderSelectModal
         isOpen={isBookmarkModalOpen}
         onClose={() => setIsBookmarkModalOpen(false)}
-        storeId={parseInt(id || "0")}
+        storeId={resolvedStoreId}
         storeName={name}
         onBookmarkSuccess={handleBookmarkSuccess}
       />
