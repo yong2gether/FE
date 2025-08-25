@@ -8,8 +8,8 @@ import LargeButton from "../../Components/Button/LargeButton";
 import DeleteTag from "../../Components/DeleteTag";
 import LargeReviewBox from "../../Components/Review/LargeReviewBox";
 import ReviewStatusDisplay from "../../Components/Review/ReviewStatusDisplay";
-import { convertCategoryCodes } from "../../utils/categoryMapping";
-import { useUserApi, usePreferenceApi, useReviewApi } from "../../hooks/useApi";
+import { convertCategoryCodes, convertCategoryCode } from "../../utils/categoryMapping";
+import { useUserApi, usePreferenceApi, useReviewApi, useStoreApi } from "../../hooks/useApi";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -173,6 +173,7 @@ export default function Mypage(): React.JSX.Element {
   const { logout, getProfile } = useUserApi();
   const { getPreferredCategories, getPreferredRegion } = usePreferenceApi();
   const { getMyReviews, myReviewsState } = useReviewApi();
+  const { getStoreDetails } = useStoreApi();
 
   useEffect(() => {
     // 프로필 조회하여 닉네임 가져오기
@@ -236,7 +237,60 @@ export default function Mypage(): React.JSX.Element {
         try {
           const response = await getMyReviews();
           if (response && response.reviews) {
-            setMyReviews(response.reviews);
+            const reviews: any[] = response.reviews;
+            const normalized = await Promise.all(
+              reviews.map(async (r: any, idx: number) => {
+                const id = (r.reviewId ?? r.id ?? idx).toString();
+                const rating = r.rating ?? r.score ?? 0;
+                const createdRaw = r.createdAt ?? r.time;
+                let createdAt = "";
+                if (typeof createdRaw === 'number') {
+                  const ts = createdRaw > 1e12 ? createdRaw : createdRaw * 1000;
+                  createdAt = new Date(ts).toLocaleDateString('ko-KR');
+                } else if (typeof createdRaw === 'string') {
+                  const d = new Date(createdRaw);
+                  createdAt = isNaN(d.getTime()) ? "" : d.toLocaleDateString('ko-KR');
+                }
+                let images: string[] = [];
+                if (Array.isArray(r.photos)) {
+                  images = r.photos.map((p: any) => (typeof p === 'string' ? p : p?.url)).filter(Boolean);
+                } else if (Array.isArray(r.imgUrls)) {
+                  images = r.imgUrls.filter((u: any) => typeof u === 'string');
+                }
+                const reviewText = r.text || r.content || r.reviewText || "";
+
+                // storeId 기반 상세 조회로 가맹점 이름/주소/업종 보강
+                let name = r.storeName || r.name || "";
+                let industry = r.category ? convertCategoryCode(r.category) : "";
+                let address = r.formattedAddress || r.address || "";
+                const sid = Number(r.storeId ?? r.storeID ?? r.id);
+                if (!name || !address || !industry) {
+                  if (Number.isFinite(sid)) {
+                    try {
+                      const details = await getStoreDetails(sid);
+                      if (details) {
+                        name = details.name || name;
+                        address = details.formattedAddress || address;
+                        industry = convertCategoryCode(details.category || industry || "") || industry;
+                      }
+                    } catch {}
+                  }
+                }
+
+                return {
+                  id,
+                  name,
+                  bookmark: false,
+                  rating,
+                  createdAt,
+                  industry,
+                  address,
+                  images,
+                  reviewText,
+                };
+              })
+            );
+            setMyReviews(normalized);
           } else {
             setMyReviews([]);
           }
@@ -379,9 +433,9 @@ export default function Mypage(): React.JSX.Element {
               myReviews.map((review, i) => (
                 <>
                   <LargeReviewBox
-                    key={review.reviewId}
+                    key={review.id}
                     {...review}
-                    isMoreOpen={openMoreId == review.reviewId}
+                    isMoreOpen={openMoreId == review.id}
                     onMoreClick={handleMoreClick}
                   />
                   {i < myReviews.length - 1 && <Divider />}

@@ -359,6 +359,7 @@ export default function Setting(): React.JSX.Element {
       <ReviewWriteModal
         isOpen={isReviewModalOpen}
         placeName="스타벅스 강남점 (데모)"
+        storeId={Number(demoPlace.id)}
         onClose={() => setIsReviewModalOpen(false)}
         onSubmit={handleReviewSubmit}
       />
@@ -367,6 +368,7 @@ export default function Setting(): React.JSX.Element {
       <ReviewWriteModal
         isOpen={isEditModalOpen}
         placeName="스타벅스 강남점 (데모)"
+        storeId={Number(demoPlace.id)}
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleReviewEdit}
         mode="edit"
