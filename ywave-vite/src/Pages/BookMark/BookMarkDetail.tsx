@@ -3,25 +3,33 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import styled from "styled-components";
 import { PiArrowLeft } from "react-icons/pi";
-import { useBookmark } from "../../hooks/useBookmark";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
 import { createEmojiMarker, unifiedToEmoji } from "../../utils/emojiToMarker";
+import BottomSheet from "../../Components/BottomSheet";
 import FolderDetailList from "../../Components/BookMarkFolder/FolderDetailList";
+import { useBookmarkApi, useStoreApi } from "../../hooks/useApi";
 
-const Container = styled.div`
-  position: relative;
+const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100vh;
+  position: relative;
   overflow: hidden;
 `;
 
-const MapContainer = styled.div`
+const MapBackground = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 1;
+`;
+
+const MapContainer = styled.div`
+  width: 100%;
+  height: 100%;
 `;
 
 const BackButton = styled.button`
@@ -41,71 +49,53 @@ const BackButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
-  
+
   &:hover {
     background: rgba(255, 255, 255, 1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     transform: translateY(-1px);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
-  
+
   @media (max-width: 480px) {
     top: 16px;
     left: 16px;
     width: 40px;
     height: 40px;
   }
-  
-  @media (max-width: 320px) {
-    top: 12px;
-    left: 12px;
-    width: 36px;
-    height: 36px;
-  }
 `;
 
 const BottomSheetContainer = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  background: white;
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-  max-height: 70vh;
-  overflow-y: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-m);
+  min-height: 100%;
+  position: relative;
 `;
 
-const HeaderContainer = styled.div`
-  padding: 20px 20px 16px 20px;
-  border-bottom: 1px solid var(--neutral-200);
-  background: white;
-  position: sticky;
-  top: 0;
-  z-index: 3;
+const TitleContainer = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--neutral-1000);
+  flex-shrink: 0;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
 `;
 
 const Emoji = styled.span`
   font-size: 24px;
   line-height: 1;
-`;
-
-const Title = styled.h1`
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--neutral-900);
-  margin: 0;
 `;
 
 const PlaceCount = styled.div`
@@ -114,98 +104,129 @@ const PlaceCount = styled.div`
   margin-left: auto;
 `;
 
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  height: 100%;
-  color: var(--neutral-600);
-`;
-
-const ErrorContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--error-600);
-`;
-
 const defaultCenter = { lat: 37.5665, lng: 126.978 };
-
-const mockPlaces = [
-  {
-    id: "1",
-    name: "맛있는 피자집",
-    address: "서울시 강남구 테헤란로 123",
-    lat: 37.5665,
-    lng: 126.978,
-    category: "음식점",
-    rating: 4.5,
-    distance: "0.5km",
-    industry: "음식점",
-    images: ["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"]
-  },
-  {
-    id: "2",
-    name: "커피 전문점",
-    address: "서울시 강남구 테헤란로 456",
-    lat: 37.5670,
-    lng: 126.979,
-    category: "카페",
-    rating: 4.3,
-    distance: "0.8km",
-    industry: "카페",
-    images: ["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"]
-  }
-];
 
 export default function BookMarkDetail(): React.JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
-  const { unicode, title: folderTitle } = location.state || {};
-  const { places: allBookmarkPlaces } = useBookmark();
-  const [emoji, setEmoji] = useState<string>("📁");
-  const [title, setTitle] = useState<string>("폴더");
+  const { id, unicode, title } = location.state || {};
+  const { getBookmarkGroup } = useBookmarkApi();
+  const { getStoreDetails } = useStoreApi();
+
+  // 장소 목록 상태
+  const [allBookmarkPlaces, setAllBookmarkPlaces] = useState<any[]>([]);
+  const [isLoadingStores, setIsLoadingStores] = useState(false);
+
+  // 바텀 시트 상태
+  const [isSheetOpen, setIsSheetOpen] = useState<boolean>(true);
+  const [sheetRatio, setSheetRatio] = useState<number>(0);
 
   const { isLoaded, loadError } = useGoogleMaps();
 
   const places = useMemo(() => {
-    if (!allBookmarkPlaces) return mockPlaces;
-    
-    return allBookmarkPlaces.map(place => ({
-      id: place.id,
+    if (!allBookmarkPlaces || allBookmarkPlaces.length === 0) return [];
+
+    return allBookmarkPlaces.map((place) => ({
+      id: place.placeId,
       name: place.name,
-      address: place.address,
+      address: place.formattedAddress,
       lat: place.lat,
       lng: place.lng,
       category: place.category,
-      rating: 4.5,
-      distance: '0.5km',
+      rating: place.rating || 0,
+      distance: "0.5km", // API에서 거리 정보가 없으므로 기본값
       industry: place.category,
-      images: ["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop"]
+      images:
+        place.photos?.length > 0
+          ? place.photos.map((photo) => photo.url)
+          : undefined,
     }));
   }, [allBookmarkPlaces]);
 
   const mapCenter = useMemo(() => {
     if (places.length === 0) return defaultCenter;
-    
+
     const avgLat = places.reduce((sum, place) => sum + place.lat, 0) / places.length;
     const avgLng = places.reduce((sum, place) => sum + place.lng, 0) / places.length;
-    
+
     return { lat: avgLat, lng: avgLng };
   }, [places]);
 
+  // 특정 북마크 그룹 조회 및 상세 정보 가져오기
+  const fetchBookmarkGroup = useCallback(async () => {
+    if (!id) {
+      console.error("그룹 ID가 없습니다.");
+      return;
+    }
+
+    try {
+      setIsLoadingStores(true);
+      console.log("특정 북마크 그룹 조회 시작...");
+      const response = await getBookmarkGroup(Number(id));
+      console.log("특정 북마크 그룹 조회 응답:", response);
+
+      if (response && response.group && response.group.stores) {
+        // 모든 store id 수집
+        const allStoreIds: number[] = [];
+        response.group.stores.forEach((storeId) => {
+          if (storeId) {
+            allStoreIds.push(storeId);
+          }
+        });
+
+        console.log("수집된 store id들:", allStoreIds);
+
+        if (allStoreIds.length > 0) {
+          // 각 store id에 대해 상세 정보 조회 (병렬 처리)
+          const storeDetailsPromises = allStoreIds.map(async (storeId) => {
+            try {
+              console.log(`Store ${storeId} 상세 정보 조회 중...`);
+              const storeDetail = await getStoreDetails(storeId);
+              return storeDetail;
+            } catch (error) {
+              console.error(`Store ${storeId} 상세 정보 조회 실패:`, error);
+              return null;
+            }
+          });
+
+          // 모든 Promise 완료 대기
+          const storeDetails = await Promise.all(storeDetailsPromises);
+
+          // null이 아닌 결과만 필터링
+          const validStoreDetails = storeDetails.filter(
+            (detail) => detail !== null
+          );
+
+          console.log("조회된 store 상세 정보들:", validStoreDetails);
+          console.log(
+            "성공적으로 조회된 store 개수:",
+            validStoreDetails.length
+          );
+
+          setAllBookmarkPlaces(validStoreDetails);
+        } else {
+          console.log("저장된 store가 없음");
+          setAllBookmarkPlaces([]);
+        }
+      } else {
+        console.log("응답에 group이 없거나 비어있음:", response);
+        setAllBookmarkPlaces([]);
+      }
+    } catch (error) {
+      console.error("특정 북마크 그룹 조회 실패:", error);
+      setAllBookmarkPlaces([]);
+    } finally {
+      setIsLoadingStores(false);
+    }
+  }, [getBookmarkGroup, getStoreDetails, id]);
+
   useEffect(() => {
-    if (unicode) {
-      setEmoji(unifiedToEmoji(unicode));
-    }
-    if (folderTitle) {
-      setTitle(folderTitle);
-    }
-  }, [unicode, folderTitle]);
+    fetchBookmarkGroup();
+  }, [fetchBookmarkGroup]);
 
   const handlePlaceClick = (placeId: string) => {
-    navigate(`/main/place/${placeId}`, { 
-      state: { from: 'bookmark' } 
+    navigate(`/main/place/${placeId}`, {
+      state: { from: "bookmark" },
     });
   };
 
@@ -213,73 +234,88 @@ export default function BookMarkDetail(): React.JSX.Element {
     navigate("/bookmark");
   };
 
-  const renderMap = () => {
-    if (loadError) {
-      return <ErrorContainer>지도를 불러오는 중 오류가 발생했습니다.</ErrorContainer>;
-    }
-
-    if (!isLoaded) {
-      return <LoadingContainer>지도를 불러오는 중입니다...</LoadingContainer>;
-    }
-
-    return (
-      <GoogleMap
-        mapContainerStyle={{ width: '100%', height: '100%' }}
-        center={mapCenter}
-        zoom={14}
-        options={{
-          clickableIcons: false,
-          disableDefaultUI: true,
-          zoomControl: true,
-          controlSize: 28,
-          fullscreenControl: false,
-          streetViewControl: false,
-          mapTypeControl: false,
-        }}
-      >
-        {places.map((place) => (
-          <Marker
-            key={place.id}
-            position={{ lat: place.lat, lng: place.lng }}
-            icon={createEmojiMarker(emoji, {
-              size: 32,
-              backgroundColor: "#ffffff",
-              borderColor: "#1976d2",
-              borderWidth: 2
-            })}
-            title={place.name}
-            onClick={() => handlePlaceClick(place.id)}
-          />
-        ))}
-      </GoogleMap>
-    );
-  };
+  const handleProgressChange = useCallback((ratio: number) => {
+    setSheetRatio(ratio);
+  }, []);
 
   return (
-    <Container>
-      <MapContainer>
-        {renderMap()}
-      </MapContainer>
-      
+    <PageContainer>
+      <MapBackground>
+        <MapContainer>
+          {isLoaded && !loadError && (
+            <GoogleMap
+              mapContainerStyle={{ width: "100%", height: "100%" }}
+              center={mapCenter}
+              zoom={14}
+              options={{
+                clickableIcons: false,
+                disableDefaultUI: true,
+                zoomControl: true,
+                controlSize: 28,
+                fullscreenControl: false,
+                streetViewControl: false,
+                mapTypeControl: false,
+                styles: [
+                  {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }],
+                  },
+                  { featureType: "transit", stylers: [{ visibility: "off" }] },
+                ],
+              }}
+            >
+              {places.map((place) => (
+                <Marker
+                  key={place.id}
+                  position={{ lat: place.lat, lng: place.lng }}
+                  icon={createEmojiMarker(unicode, {
+                    size: 40,
+                    backgroundColor: "#ffffff",
+                    borderColor: "#1976d2",
+                    borderWidth: 3,
+                  })}
+                  title={place.name}
+                  onClick={() => handlePlaceClick(place.id)}
+                />
+              ))}
+            </GoogleMap>
+          )}
+        </MapContainer>
+      </MapBackground>
+
       <BackButton onClick={handleBackClick} aria-label="뒤로 가기">
         <PiArrowLeft size={20} color="#333" />
       </BackButton>
-      
-      <BottomSheetContainer>
-        <HeaderContainer>
-          <Header>
-            <Emoji role="img" aria-label="folder emoji">{emoji}</Emoji>
-            <Title>{title}</Title>
-            <PlaceCount>{places.length}개 장소</PlaceCount>
-          </Header>
-        </HeaderContainer>
-        
-        <FolderDetailList
-          places={places}
-          onPlaceClick={handlePlaceClick}
-          showHeader={false}
-        />
-      </BottomSheetContainer>
-    </Container>
+
+      <BottomSheet
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        snapPoints={[0.25, 0.7, 0.95]}
+        initialSnapIndex={0}
+        bottomOffsetPx={0}
+        showOverlay={false}
+        dismissible={false}
+        onProgressChange={handleProgressChange}
+      >
+        <BottomSheetContainer>
+          <TitleContainer>
+            <Header>
+              <Emoji role="img" aria-label="folder emoji">{unifiedToEmoji(unicode)}</Emoji>
+              <div className="Title__H2">{title}</div>
+            </Header>
+            <PlaceCount>
+              {isLoadingStores ? "로딩 중..." : `${places.length}개 장소`}
+            </PlaceCount>
+          </TitleContainer>
+
+          <FolderDetailList
+            places={places}
+            onPlaceClick={handlePlaceClick}
+            showHeader={false}
+          />
+        </BottomSheetContainer>
+      </BottomSheet>
+    </PageContainer>
   );
 }

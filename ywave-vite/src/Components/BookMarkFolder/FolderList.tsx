@@ -34,7 +34,7 @@ interface FolderListProps {
   folders: Folder[];
   openMoreId: string | null;
   onMoreClick: (id: string | number | null) => void;
-  onFolderClick: (unicode: string, title: string) => void;
+  onFolderClick: (folderId: string, unicode: string, title: string) => void;
   onFolderDelete: (folderId: string) => void;
 }
 
@@ -74,7 +74,7 @@ export default function FolderList({
               placeCount={folder.stores ? folder.stores.length : 0}
               isMoreOpen={openMoreId === folderId}
               onMoreClick={() => onMoreClick(folderId)}
-              onClick={() => onFolderClick(folderIcon, folderTitle)}
+              onClick={() => onFolderClick(folderId, folderIcon, folderTitle)}
               onDelete={() => onFolderDelete(folderId)}
             />
             {index < folders.length - 1 && (

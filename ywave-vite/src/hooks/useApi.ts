@@ -241,6 +241,7 @@ export const useBookmarkApi = () => {
   const [getGroupsState, setGetGroupsState] = useState<ApiState<any>>(createInitialApiState());
   const [updateGroupState, setUpdateGroupState] = useState<ApiState<any>>(createInitialApiState());
   const [deleteGroupState, setDeleteGroupState] = useState<ApiState<any>>(createInitialApiState());
+  const [getGroupState, setGetGroupState] = useState<ApiState<any>>(createInitialApiState());
 
   const createBookmarkGroup = useCallback(async (data: any) => {
     setCreateGroupState(prev => updateApiState.start(prev));
@@ -294,6 +295,19 @@ export const useBookmarkApi = () => {
     }
   }, []);
 
+  const getBookmarkGroup = useCallback(async (groupId: number) => {
+    setGetGroupState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.getBookmarkGroup(groupId);
+      setGetGroupState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('특정 북마크 그룹 조회', error);
+      setGetGroupState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
   return {
     createBookmarkGroup,
     createGroupState,
@@ -303,6 +317,8 @@ export const useBookmarkApi = () => {
     updateGroupState,
     deleteBookmarkGroup,
     deleteGroupState,
+    getBookmarkGroup,
+    getGroupState,
   };
 };
 
