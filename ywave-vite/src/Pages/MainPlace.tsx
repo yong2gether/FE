@@ -115,6 +115,7 @@ const InfoContainer = styled.div`
   justify-content: flex-start;
   gap: var(--spacing-2xs);
   color: var(--neutral-800);
+  flex-wrap: wrap;
 `;
 
 
@@ -169,7 +170,16 @@ const PlaceBasicInfo = ({
     <InfoContainer className="Body__Default">
       {distance && <div>{distance}</div>}
       {distance && <div>|</div>}
-      {industry && <div>{industry}</div>}
+      {industry && (
+        <div style={{
+          maxWidth: 140,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
+          {industry}
+        </div>
+      )}
       {industry && <div>|</div>}
       <div style={{
         whiteSpace: 'nowrap',

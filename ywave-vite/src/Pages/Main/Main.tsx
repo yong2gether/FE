@@ -3,7 +3,7 @@ import styled from "styled-components";
 import TitleLogo from "../../Images/TitleLogo2.svg";
 import { placeDatas } from "../../Data/PlaceDatas";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavigateFunction } from "react-router-dom";
 import RecommendBox from "../../Components/RecommendBox";
 import SmallPlaceBox from "../../Components/PlaceBox/SmallPlaceBox";
 import { useStoreApi, usePreferenceApi, useUserApi } from "../../hooks/useApi";
@@ -144,7 +144,7 @@ const RecommendSection = ({
   showPrev: () => void;
   showNext: () => void;
   visiblePlaces: any[];
-  navigate: (path: string) => void;
+  navigate: NavigateFunction;
 }) => (
   <RecommendContainer>
     <TitleLogoImage src={TitleLogo} alt="Title Logo" />
@@ -181,7 +181,7 @@ const RecommendSection = ({
             name={place.name}
             rating={place.rating}
             onClick={() => {
-              navigate(`/main/place/${place.id}`);
+              navigate(`/main/place/${place.id}`, { state: { from: 'main' } });
             }}
           />
         ))}
