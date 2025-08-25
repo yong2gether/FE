@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi";
 import { AiFillStar } from "react-icons/ai";
+import { useBookmarkApi } from "../../hooks/useApi";
+import BookmarkFolderSelectModal from "../Modal/BookmarkFolderSelectModal";
 
 interface SmallPlaceBoxProps {
   name: string;
@@ -116,12 +118,39 @@ export default function SmallPlaceBox({
   address,
   images,
   onClick,
-}: SmallPlaceBoxProps): React.JSX.Element {
+  storeId,
+}: SmallPlaceBoxProps & { storeId?: string }): React.JSX.Element {
   const [isBookmark, setIsBookmark] = useState<boolean>(bookmark);
+  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState<boolean>(false);
+  const { deleteBookmark } = useBookmarkApi();
+
+  // bookmark prop이 변경될 때마다 상태 동기화
+  useEffect(() => {
+    setIsBookmark(bookmark);
+  }, [bookmark]);
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsBookmark((prev) => !prev);
+    
+    if (isBookmark) {
+      // 북마크 해제
+      if (storeId) {
+        deleteBookmark(parseInt(storeId))
+          .then(() => {
+            setIsBookmark(false);
+          })
+          .catch((error) => {
+            console.error("북마크 삭제 실패:", error);
+          });
+      }
+    } else {
+      // 북마크 추가 - 모달 열기
+      setIsBookmarkModalOpen(true);
+    }
+  };
+
+  const handleBookmarkSuccess = () => {
+    setIsBookmark(true);
   };
 
   const renderStars = () => {
@@ -139,40 +168,52 @@ export default function SmallPlaceBox({
   };
 
   return (
-    <PlaceContainer onClick={onClick}>
-      <NameContainer>
-        <Name className="Title__H4">{name}</Name>
-        {isBookmark ? (
-          <PiBookmarkSimpleFill onClick={handleBookmarkClick} />
-        ) : (
-          <PiBookmarkSimple onClick={handleBookmarkClick} />
+    <>
+      <PlaceContainer onClick={onClick}>
+        <NameContainer>
+          <Name className="Title__H4">{name}</Name>
+          {isBookmark ? (
+            <PiBookmarkSimpleFill onClick={handleBookmarkClick} />
+          ) : (
+            <PiBookmarkSimple onClick={handleBookmarkClick} />
+          )}
+        </NameContainer>
+
+        <RatingContainer>
+          <div className="Body__Default">{rating}</div>
+          <StarContainer>{renderStars()}</StarContainer>
+        </RatingContainer>
+
+        <InfoContainer className="Body__Default">
+          <div>{distance}</div>
+          <div>|</div>
+          <div>{industry}</div>
+          <div>|</div>
+          <div>{address}</div>
+        </InfoContainer>
+
+        {images && images.length > 0 && (
+          <ImageContainer>
+            {images.map((image, index) => (
+              <ImageItem
+                key={index}
+                src={image}
+                alt={`리뷰 이미지 ${index + 1}`}
+              />
+            ))}
+          </ImageContainer>
         )}
-      </NameContainer>
-
-      <RatingContainer>
-        <div className="Body__Default">{rating}</div>
-        <StarContainer>{renderStars()}</StarContainer>
-      </RatingContainer>
-
-      <InfoContainer className="Body__Default">
-        <div>{distance}</div>
-        <div>|</div>
-        <div>{industry}</div>
-        <div>|</div>
-        <div>{address}</div>
-      </InfoContainer>
-
-      {images && images.length > 0 && (
-        <ImageContainer>
-          {images.map((image, index) => (
-            <ImageItem
-              key={index}
-              src={image}
-              alt={`리뷰 이미지 ${index + 1}`}
-            />
-          ))}
-        </ImageContainer>
+      </PlaceContainer>
+      
+      {storeId && (
+        <BookmarkFolderSelectModal
+          isOpen={isBookmarkModalOpen}
+          onClose={() => setIsBookmarkModalOpen(false)}
+          storeId={parseInt(storeId)}
+          storeName={name}
+          onBookmarkSuccess={handleBookmarkSuccess}
+        />
       )}
-    </PlaceContainer>
+    </>
   );
 }

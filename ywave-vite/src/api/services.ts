@@ -11,7 +11,7 @@ import {
   PopularStoreDto,
   NearbyStoreDto,
   PlaceDetailsDto,
-  EchoRequest,
+
   SetPreferredRegionRequest,
   RegionResponse,
   UpdatePreferredCategoriesRequest,
@@ -28,9 +28,7 @@ import {
   CreateReq,
   CreateRes,
   DeleteRes,
-  BookmarkGroupDetailResponse,
-  ReviewRequest,
-  ReviewResponse,
+
   UserProfileResponse,
 } from './types';
 import { createSearchParams } from '../utils/apiUtils';

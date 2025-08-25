@@ -88,8 +88,7 @@ export default function ConfirmModal({
   isOpen,
   title,
   message,
-  confirmText,
-  cancelText,
+
   onConfirm,
   onCancel
 }: ConfirmModalProps): React.JSX.Element | null {

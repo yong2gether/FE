@@ -110,9 +110,23 @@ export default function MypageProfile(): React.JSX.Element {
   });
 
   useEffect(() => {
-    setId("nickname@gmail.com");
-    setPw("abc123");
-    setNick("닉네임");
+    // 프로필 조회하여 실제 닉네임으로 초기값 설정
+    const fetchProfile = async () => {
+      try {
+        const profile = await userApi.getProfile();
+        setNick(profile.nickname);
+        setId(profile.email);
+        setPw("abc123"); // 비밀번호는 빈 값으로 설정 (기존처럼 안보이게)
+      } catch (error) {
+        console.error("프로필 조회 실패:", error);
+        // 실패 시 기본값 설정
+        setId("nickname@gmail.com");
+        setPw("abc123"); // 비밀번호는 빈 값으로 설정
+        setNick("닉네임");
+      }
+    };
+    
+    fetchProfile();
   }, []);
 
   const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {

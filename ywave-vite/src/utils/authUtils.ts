@@ -50,6 +50,11 @@ export const getAuthToken = (): string | null => {
   return localStorage.getItem('accessToken');
 };
 
+export const getUserId = (): number | null => {
+  const userId = localStorage.getItem('userId');
+  return userId ? parseInt(userId) : null;
+};
+
 export const isAuthenticated = (): boolean => {
   const token = getAuthToken();
   return token !== null && token !== '';

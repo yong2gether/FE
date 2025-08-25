@@ -6,9 +6,10 @@ import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import RecommendBox from "../../Components/RecommendBox";
 import SmallPlaceBox from "../../Components/PlaceBox/SmallPlaceBox";
-import { useStoreApi, usePreferenceApi } from "../../hooks/useApi";
+import { useStoreApi, usePreferenceApi, useUserApi } from "../../hooks/useApi";
 import { PopularStoreDto } from "../../api/types";
 import { getAuthToken } from "../../utils/authUtils";
+import { convertCategoryCode } from "../../utils/categoryMapping";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -122,7 +123,7 @@ const RecommendSection = ({
   nick, 
   total, 
   VISIBLE, 
-  start, 
+ 
   showPrev, 
   showNext, 
   visiblePlaces, 
@@ -213,10 +214,11 @@ const PopularStoresSection = ({
             name={store.name}
             rating={store.rating}
             distance={`${Math.round(store.distM)}m`}
-            industry={store.category}
+            industry={convertCategoryCode(store.category)}
             address={store.sigungu}
             images={(store as any).images || []}
             bookmark={false}
+            storeId={store.id.toString()}
             onClick={() => {
               if (store.placeId) {
                 navigate(`/main/place/${store.placeId}`, { 
@@ -252,17 +254,19 @@ export default function Main(): React.JSX.Element {
   const navigate = useNavigate();
   const { getPopularStores } = useStoreApi();
   const { getPreferredRegion } = usePreferenceApi();
+  const { getProfile } = useUserApi();
   
   const [isRecommend, setIsRecommend] = useState<boolean>(false);
   const [start, setStart] = useState<number>(0);
   const [popularStores, setPopularStores] = useState<PopularStoreDto[]>([]);
   const [isLoadingPopular, setIsLoadingPopular] = useState<boolean>(true);
+  const [nickname, setNickname] = useState<string>("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [userRegion, setUserRegion] = useState<string>("");
   
   const VISIBLE = 2;
   const total = placeDatas.length;
-  const nick = "닉네임";
+
 
   // 백엔드 API로 placeId 기반 상세 정보 가져오기
   const fetchPlaceDetailsByPlaceId = async (placeId: string) => {
@@ -296,6 +300,21 @@ export default function Main(): React.JSX.Element {
   useEffect(() => {
     setIsRecommend(true);
   }, []);
+
+  // 프로필 조회하여 닉네임 가져오기
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await getProfile();
+        setNickname(profile.nickname);
+      } catch (error) {
+        console.error("프로필 조회 실패:", error);
+        setNickname("사용자");
+      }
+    };
+    
+    fetchProfile();
+  }, [getProfile]);
 
   // 지역 설정 기반 기본 위치 설정
   useEffect(() => {
@@ -349,7 +368,7 @@ export default function Main(): React.JSX.Element {
                 ...store,
                 rating: placeDetails.rating || store.rating,
                 userRatingsTotal: placeDetails.reviewCount || store.userRatingsTotal,
-                images: placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : []
+                images: placeDetails.photos ? placeDetails.photos.map((photo: any) => photo.url) : []
               };
             }
             return store;
@@ -385,7 +404,7 @@ export default function Main(): React.JSX.Element {
     <PageContainer>
       <RecommendSection
         isRecommend={isRecommend}
-        nick={nick}
+        nick={nickname}
         total={total}
         VISIBLE={VISIBLE}
         start={start}

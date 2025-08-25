@@ -56,12 +56,7 @@ const Logout = styled.div`
   cursor: pointer;
 `;
 
-const Content = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2xl);
-`;
+
 
 const CategoryContainer = styled.div`
   width: 100%;
@@ -173,12 +168,26 @@ export default function Mypage(): React.JSX.Element {
   const [selectIndustries, setSelectIndustries] = useState<IndustryData[]>([]);
   const [openMoreId, setOpenMoreId] = useState<string | number | null>(null);
   const [myReviews, setMyReviews] = useState<any[]>([]);
+  const [nickname, setNickname] = useState<string>("");
 
-  const { logout } = useUserApi();
+  const { logout, getProfile } = useUserApi();
   const { getPreferredCategories, getPreferredRegion } = usePreferenceApi();
   const { getMyReviews, myReviewsState } = useReviewApi();
 
-  const nick = "닉네임";
+  useEffect(() => {
+    // 프로필 조회하여 닉네임 가져오기
+    const fetchProfile = async () => {
+      try {
+        const profile = await getProfile();
+        setNickname(profile.nickname);
+      } catch (error) {
+        console.error("프로필 조회 실패:", error);
+        setNickname("사용자");
+      }
+    };
+    
+    fetchProfile();
+  }, [getProfile]);
 
   useEffect(() => {
     const fetchPreferredCategories = async () => {
@@ -273,7 +282,7 @@ export default function Mypage(): React.JSX.Element {
           <ImageContainer>
             <BiSolidUserCircle />
           </ImageContainer>
-          {nick}님
+          {nickname}님
         </UserContainer>
         <Logout className="Body__MediumSmall" onClick={handleLogout}>
           로그아웃

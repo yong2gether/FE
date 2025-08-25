@@ -111,20 +111,7 @@ class ApiClient {
     throw lastError;
   }
 
-  // 토큰 만료 처리
-  private handleTokenExpiration() {
-    // 토큰 제거
-    this.clearToken();
-    
-    // 로컬 스토리지에서도 토큰 제거
-    localStorage.removeItem('accessToken');
-    
-    // 로그인 페이지로 리다이렉트 (현재 페이지가 로그인 페이지가 아닌 경우)
-    if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-      console.log("🔄 로그인 페이지로 리다이렉트...");
-      window.location.href = '/login';
-    }
-  }
+
 
   // GET 요청
   async get<T>(endpoint: string): Promise<T> {

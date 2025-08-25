@@ -23,10 +23,10 @@ import Onboarding from "./Pages/Onboarding";
 export default function RouterComponent(): React.JSX.Element {
     return(
         <Routes>
-            {/*셋팅 페이지 라우팅*/}
-            <Route path="/" element={<Setting />} />
-            {/*랜딩 페이지 라우팅*/}
-            <Route path="/landing" element={<Landing />} />
+            {/*기본 진입: 랜딩*/}
+            <Route path="/" element={<Landing />} />
+            {/*설정 페이지*/}
+            <Route path="/setting" element={<Setting />} />
             {/*서비스 소개 페이지 라우팅*/}
             <Route path="/onboarding" element={<Onboarding />} />
             {/*로그인 페이지 라우팅*/}
