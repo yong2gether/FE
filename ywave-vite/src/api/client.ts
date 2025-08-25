@@ -3,6 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 class ApiClient {
   private baseURL: string;
   private token: string | null = null;
+  private userId: number | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -12,8 +13,13 @@ class ApiClient {
     this.token = token;
   }
 
+  setUserId(id: number) {
+    this.userId = id;
+  }
+
   clearToken() {
     this.token = null;
+    this.userId = null;
   }
 
   private async request<T>(
@@ -27,6 +33,11 @@ class ApiClient {
       'User-Agent': 'Y-Wave-App/1.0',
       'Accept': 'application/json',
     };
+
+    // X-USER-ID 헤더 추가 (필요한 API에서 사용)
+    if (this.userId) {
+      headers['X-USER-ID'] = this.userId.toString();
+    }
 
     // options.headers가 있으면 추가
     if (options.headers) {
@@ -100,20 +111,7 @@ class ApiClient {
     throw lastError;
   }
 
-  // 토큰 만료 처리
-  private handleTokenExpiration() {
-    // 토큰 제거
-    this.clearToken();
-    
-    // 로컬 스토리지에서도 토큰 제거
-    localStorage.removeItem('accessToken');
-    
-    // 로그인 페이지로 리다이렉트 (현재 페이지가 로그인 페이지가 아닌 경우)
-    if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-      console.log("🔄 로그인 페이지로 리다이렉트...");
-      window.location.href = '/login';
-    }
-  }
+
 
   // GET 요청
   async get<T>(endpoint: string): Promise<T> {

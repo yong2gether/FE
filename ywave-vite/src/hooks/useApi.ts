@@ -53,6 +53,7 @@ export const useUserApi = () => {
   const [signupState, setSignupState] = useState<ApiState<any>>(createInitialApiState());
   const [loginState, setLoginState] = useState<ApiState<any>>(createInitialApiState());
   const [emailCheckState, setEmailCheckState] = useState<ApiState<any>>(createInitialApiState());
+  const [profileState, setProfileState] = useState<ApiState<any>>(createInitialApiState());
 
   const signup = useCallback(async (data: any) => {
     setSignupState(prev => updateApiState.start(prev));
@@ -93,6 +94,32 @@ export const useUserApi = () => {
     }
   }, []);
 
+  const getProfile = useCallback(async () => {
+    setProfileState(prev => updateApiState.start(prev));
+    try {
+      const result = await userApi.getProfile();
+      setProfileState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('프로필 조회', error);
+      setProfileState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const updateProfile = useCallback(async (data: any) => {
+    setProfileState(prev => updateApiState.start(prev));
+    try {
+      const result = await userApi.updateProfile(data);
+      setProfileState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('프로필 변경', error);
+      setProfileState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
   const logout = useCallback(() => {
     userApi.logout();
     setLoginState(createInitialApiState());
@@ -105,6 +132,9 @@ export const useUserApi = () => {
     loginState,
     checkEmailDuplicate,
     emailCheckState,
+    getProfile,
+    profileState,
+    updateProfile,
     logout,
   };
 };
@@ -242,6 +272,8 @@ export const useBookmarkApi = () => {
   const [updateGroupState, setUpdateGroupState] = useState<ApiState<any>>(createInitialApiState());
   const [deleteGroupState, setDeleteGroupState] = useState<ApiState<any>>(createInitialApiState());
   const [getGroupState, setGetGroupState] = useState<ApiState<any>>(createInitialApiState());
+  const [createBookmarkState, setCreateBookmarkState] = useState<ApiState<any>>(createInitialApiState());
+  const [deleteBookmarkState, setDeleteBookmarkState] = useState<ApiState<any>>(createInitialApiState());
 
   const createBookmarkGroup = useCallback(async (data: any) => {
     setCreateGroupState(prev => updateApiState.start(prev));
@@ -308,6 +340,32 @@ export const useBookmarkApi = () => {
     }
   }, []);
 
+  const createBookmark = useCallback(async (storeId: number, data: any) => {
+    setCreateBookmarkState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.create(storeId, data);
+      setCreateBookmarkState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('북마크 생성', error);
+      setCreateBookmarkState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
+  const deleteBookmark = useCallback(async (storeId: number) => {
+    setDeleteBookmarkState(prev => updateApiState.start(prev));
+    try {
+      const result = await bookmarkApi.delete(storeId);
+      setDeleteBookmarkState(updateApiState.success(result));
+      return result;
+    } catch (error) {
+      const errorMessage = createApiErrorMessage('북마크 삭제', error);
+      setDeleteBookmarkState(updateApiState.error(errorMessage));
+      throw error;
+    }
+  }, []);
+
   return {
     createBookmarkGroup,
     createGroupState,
@@ -319,6 +377,10 @@ export const useBookmarkApi = () => {
     deleteGroupState,
     getBookmarkGroup,
     getGroupState,
+    createBookmark,
+    createBookmarkState,
+    deleteBookmark,
+    deleteBookmarkState,
   };
 };
 

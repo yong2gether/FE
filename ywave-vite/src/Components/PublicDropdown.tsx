@@ -12,6 +12,7 @@ interface PublicDropdownProps {
   placeholder: string;
   value: Option | null;
   onChange: (option: Option) => void;
+  disabled?: boolean;
 }
 
 const DropdownContainer = styled.div`
@@ -100,15 +101,18 @@ export default function PublicDropdown({
   placeholder,
   value,
   onChange,
+  disabled = false,
 }: PublicDropdownProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleDropdown = (): void => {
+    if (disabled) return;
     setIsOpen((prev) => !prev);
   };
 
   const handleOptionClick = (option: Option): void => {
+    if (disabled) return;
     if (onChange) {
       onChange(option);
     }
@@ -136,11 +140,16 @@ export default function PublicDropdown({
         $isOpen={isOpen}
         $isSelect={!!value}
         onClick={handleDropdown}
+        style={{
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.5 : 1,
+          backgroundColor: disabled ? 'var(--neutral-100)' : 'white',
+        }}
       >
         <div>{value ? value.value : placeholder}</div>
         {isOpen ? <UpIcon /> : <DownIcon />}
       </DropdownHeader>
-      {isOpen && (
+      {isOpen && !disabled && (
         <DropdownList>
           {options.map((option) => (
             <DropdownItem

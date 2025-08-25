@@ -114,11 +114,11 @@ export default function CategoryIndustry(): React.JSX.Element {
     setAlertConfig({ isOpen: true, title, message, type });
   };
 
-  const handleIndustryClick = (clickId: number): void => {
-    if (selectIndustries.includes(clickId)) {
-      setSelectIndustries(selectIndustries.filter((id) => id !== clickId));
+  const handleIndustryClick = (industryId: number): void => {
+    if (selectIndustries.includes(industryId)) {
+      setSelectIndustries(selectIndustries.filter((id) => id !== industryId));
     } else {
-      setSelectIndustries((prev) => [...prev, clickId]);
+      setSelectIndustries((prev) => [...prev, industryId]);
     }
   };
 
@@ -126,11 +126,13 @@ export default function CategoryIndustry(): React.JSX.Element {
     if (selectIndustries.length > 0) {
       setIsSubmitting(true);
       try {
+        console.log('전송할 데이터:', { categoryIds: selectIndustries });
+        console.log('현재 토큰:', localStorage.getItem('accessToken'));
         await setPreferredCategories({
           categoryIds: selectIndustries
         });
 
-        localStorage.setItem('selectedIndustries', JSON.stringify(selectIndustries));
+
         localStorage.setItem('hasCompletedCategories', 'true');
         
         showAlert("설정 완료", "업종 선호도가 설정되었습니다.", "success");

@@ -9,10 +9,12 @@ import ImageGallery from "../Components/ImageComponent/ImageGallery";
 import ReviewSection from "../Components/Review/ReviewSection";
 import ReviewWriteModal from "../Components/Review/ReviewWriteModal";
 import CustomAlert from "../Components/Modal/CustomAlert";
-import { useStoreApi } from "../hooks/useApi";
+import { useStoreApi, useBookmarkApi } from "../hooks/useApi";
 import { calculateDistance, formatDistance } from "../utils/distance";
 import { useGoogleMaps } from "../hooks/useGoogleMaps";
 import { getAuthToken } from "../utils/authUtils";
+import { convertCategoryCode } from "../utils/categoryMapping";
+import BookmarkFolderSelectModal from "../Components/Modal/BookmarkFolderSelectModal";
 
 
 const PageContainer = styled.div`
@@ -322,6 +324,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   const [googleReviews, setGoogleReviews] = useState<any[]>([]);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [visitVerificationStatus, setVisitVerificationStatus] = useState<'pending' | 'verified' | 'failed'>('pending');
+
   const [alertConfig, setAlertConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -336,6 +339,9 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   
   const [localUserLocation, setLocalUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const userLocation = propUserLocation || localUserLocation;
+
+  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState<boolean>(false);
+  const { createBookmark, deleteBookmark } = useBookmarkApi();
 
   // 백엔드 API로 placeId 기반 상세 정보 가져오기
   const fetchPlaceDetailsByPlaceId = async (placeId: string) => {
@@ -457,6 +463,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
           console.log('id:', id);
           
           const placeId = location.state?.placeId;
+          const fromBookmark = location.state?.from === 'bookmark';
           
           if (placeId && placeId !== "null") {
             console.log('placeId로 데이터 조회 시작:', placeId);
@@ -469,9 +476,9 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               setName(backendPlaceDetails.name || "");
               setRating(backendPlaceDetails.rating || 0);
               setDistance("");
-              setIndustry(backendPlaceDetails.category || "기타");
+              setIndustry(convertCategoryCode(backendPlaceDetails.category) || "기타");
               setAddress(backendPlaceDetails.formattedAddress || "");
-              setImages(backendPlaceDetails.photos ? backendPlaceDetails.photos.map(photo => photo.url) : []);
+              setImages(backendPlaceDetails.photos ? backendPlaceDetails.photos.map((photo: any) => photo.url) : []);
               setLat(backendPlaceDetails.lat || 0);
               setLng(backendPlaceDetails.lng || 0);
               
@@ -480,13 +487,13 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               setWeekdayText(backendPlaceDetails.weekdayText || []);
               
               if (backendPlaceDetails.reviews && backendPlaceDetails.reviews.length > 0) {
-                const convertedReviews = backendPlaceDetails.reviews.map((review, index) => ({
+                const convertedReviews = backendPlaceDetails.reviews.map((review: any, index: number) => ({
                   id: index.toString(),
                   rating: review.rating || 0,
                   nick: review.authorName || "익명",
                   createdAt: review.time ? new Date(review.time * 1000).toLocaleDateString('ko-KR') : "",
                   reviewText: review.text || "",
-                  images: review.photos ? review.photos.map(photo => photo.url) : []
+                  images: review.photos ? review.photos.map((photo: any) => photo.url) : []
                 }));
                 setGoogleReviews(convertedReviews);
               } else {
@@ -504,7 +511,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
                   setDistance("");
                   setIndustry("기타");
                   setAddress(googlePlaceDetails.formatted_address || "");
-                  setImages(googlePlaceDetails.photos ? googlePlaceDetails.photos.map(photo => 
+                  setImages(googlePlaceDetails.photos ? googlePlaceDetails.photos.map((photo: any) => 
                     `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=${apiKey}`
                   ) : []);
                   setLat(googlePlaceDetails.geometry?.location?.lat || 0);
@@ -524,9 +531,9 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
             setName(placeDetails.name || "");
             setRating(placeDetails.rating || 0);
               setDistance("");
-              setIndustry(placeDetails.category || "기타");
+              setIndustry(convertCategoryCode(placeDetails.category || "기타"));
             setAddress(placeDetails.formattedAddress || "");
-            setImages(placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : []);
+            setImages(placeDetails.photos ? placeDetails.photos.map((photo: any) => photo.url) : []);
             setLat(placeDetails.lat || 0);
             setLng(placeDetails.lng || 0);
               setPhoneNumber("");
@@ -535,13 +542,13 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
               
               // 백엔드에서 받은 reviews 데이터를 googleReviews로 설정
               if (placeDetails.reviews && placeDetails.reviews.length > 0) {
-                const convertedReviews = placeDetails.reviews.map((review, index) => ({
+                const convertedReviews = placeDetails.reviews.map((review: any, index: number) => ({
                   id: index.toString(),
                   rating: review.rating || 0,
                   nick: review.authorName || "익명",
                   createdAt: review.time ? new Date(review.time * 1000).toLocaleDateString('ko-KR') : "",
                   reviewText: review.text || "",
-                  images: review.photos ? review.photos.map(photo => photo.url) : []
+                  images: review.photos ? review.photos.map((photo: any) => photo.url) : []
                 }));
                 setGoogleReviews(convertedReviews);
               } else {
@@ -585,7 +592,25 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
   }, [id, getStoreDetails, userLocation, isLoaded, apiKey, location.state]);
 
   const handleBookmarkClick = (): void => {
-    setIsBookmark((prev) => !prev);
+    if (isBookmark) {
+      // 북마크 해제
+      if (id) {
+        deleteBookmark(parseInt(id))
+          .then(() => {
+            setIsBookmark(false);
+          })
+          .catch((error) => {
+            console.error("북마크 삭제 실패:", error);
+          });
+      }
+    } else {
+      // 북마크 추가 - 모달 열기
+      setIsBookmarkModalOpen(true);
+    }
+  };
+
+  const handleBookmarkSuccess = () => {
+    setIsBookmark(true);
   };
 
   const showAlert = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
@@ -610,7 +635,7 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
           (error) => {
             console.log('📍 위치 권한이 거부되었습니다:', error.message);
             showAlert("위치 권한 필요", "리뷰 작성을 위해서는 위치 권한이 필요합니다.\n브라우저 설정에서 위치 권한을 허용해주세요.", "warning");
-            setVisitVerificationStatus('failed');
+
           },
           options
         );
@@ -735,6 +760,14 @@ export default function MainPlace({ userLocation: propUserLocation }: MainPlaceP
         message={alertConfig.message}
         type={alertConfig.type}
         onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+      
+      <BookmarkFolderSelectModal
+        isOpen={isBookmarkModalOpen}
+        onClose={() => setIsBookmarkModalOpen(false)}
+        storeId={parseInt(id || "0")}
+        storeName={name}
+        onBookmarkSuccess={handleBookmarkSuccess}
       />
     </PageContainer>
   );

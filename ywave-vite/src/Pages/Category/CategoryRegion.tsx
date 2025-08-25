@@ -8,6 +8,7 @@ import DeleteTag from "../../Components/DeleteTag";
 import ConfirmModal from "../../Components/Modal/ConfirmModal";
 import { usePreferenceApi } from "../../hooks/useApi";
 import { SetPreferredRegionRequest } from "../../api/types";
+import { useUserApi } from "../../hooks/useApi";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -111,14 +112,16 @@ interface DropdownProps {
   placeholder: string;
   value: Option | null;
   onChange: (option: Option | null) => void;
+  disabled?: boolean;
 }
 
-const RegionDropdown: React.FC<DropdownProps> = ({ options, placeholder, value, onChange }) => (
+const RegionDropdown: React.FC<DropdownProps> = ({ options, placeholder, value, onChange, disabled = false }) => (
   <PublicDropdown
     options={options}
     placeholder={placeholder}
     value={value}
     onChange={onChange}
+    disabled={disabled}
   />
 );
 
@@ -140,18 +143,21 @@ const RegionSelector: React.FC<{
       placeholder="시/도"
       value={disabled ? null : selectCity}
       onChange={onCityChange}
+      disabled={disabled}
     />
     <RegionDropdown
       options={guOptions}
       placeholder="시/구/군"
       value={disabled ? null : selectGu}
       onChange={onGuChange}
+      disabled={disabled || !selectCity}
     />
     <RegionDropdown
       options={dongOptions}
       placeholder="동/읍/면"
       value={disabled ? null : selectDong}
       onChange={onDongChange}
+      disabled={disabled || !selectCity || !selectGu}
     />
   </DropdownContainer>
 );
@@ -211,13 +217,40 @@ export default function CategoryRegion(): React.JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const { setPreferredRegion, setRegionState } = usePreferenceApi();
+  const { getProfile } = useUserApi();
+  const [nickname, setNickname] = useState<string>("");
 
-  const nickname = "상현";
+  useEffect(() => {
+    // 프로필 조회하여 닉네임 가져오기
+    const fetchProfile = async () => {
+      try {
+        const profile = await getProfile();
+        setNickname(profile.nickname);
+      } catch (error) {
+        console.error("프로필 조회 실패:", error);
+        setNickname("사용자");
+      }
+    };
+    
+    fetchProfile();
+  }, [getProfile]);
+
   const isRegionSelected = selectRegions.length >= 1;
 
   // 동적으로 시/구/군 및 동/읍/면 옵션 생성
   const guOptions: Option[] = getGuOptions(selectCity);
   const dongOptions: Option[] = getDongOptions(selectCity, selectGu);
+
+  // 시/도가 변경되면 하위 선택값들 초기화
+  useEffect(() => {
+    setSelectGu(null);
+    setSelectDong(null);
+  }, [selectCity]);
+
+  // 시/구/군이 변경되면 동/읍/면 선택값 초기화
+  useEffect(() => {
+    setSelectDong(null);
+  }, [selectGu]);
 
   useEffect(() => {
     if (selectCity && selectGu && selectDong) {
@@ -322,11 +355,11 @@ export default function CategoryRegion(): React.JSX.Element {
         </ContentContainer>
         
         <ButtonContainer>
-                  <LargeButton
-          buttonText="다음"
-          onClick={handleSaveRegion}
-          disabled={!isRegionSelected || isSubmitting}
-        />
+          <LargeButton
+            buttonText="다음"
+            onClick={handleSaveRegion}
+            disabled={!isRegionSelected || isSubmitting}
+          />
         </ButtonContainer>
       </PageContainer>
       

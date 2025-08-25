@@ -31,6 +31,7 @@ export interface LoginResponse {
 
 export interface UserInfo {
   email: string;
+  id: number;
 }
 
 export interface UpdateProfileRequest {
@@ -76,6 +77,7 @@ export interface NearbyStoreDto {
   lat: number;
   distM: number;
   placeId: string;
+  category: string;
 }
 
 export interface PlaceDetailsDto {
@@ -126,7 +128,7 @@ export interface RegionResponse {
 }
 
 export interface UpdatePreferredCategoriesRequest {
-  categoryIds: number[];
+  categoryIds: string[];
 }
 
 export interface MessageResponse {
@@ -232,6 +234,58 @@ export interface UserReviewsResponse {
 // AI 관련 타입
 export interface EchoRequest {
   prompt: string;
+}
+
+// 가맹점 북마크 관련 타입
+export interface CreateReq {
+  groupId?: number;
+}
+
+export interface CreateRes {
+  message: string;
+  bookmarked: boolean;
+}
+
+export interface DeleteRes {
+  storeId: number;
+  deleted: boolean;
+}
+
+// 북마크 그룹 상세 조회 관련 타입
+export interface BookmarkGroupDetailDto {
+  groupId: number;
+  groupName: string;
+  iconUrl: string;
+  isDefault: boolean;
+  stores: BookmarkedStoreDto[];
+}
+
+export interface BookmarkGroupDetailResponse {
+  message: string;
+  group: BookmarkGroupDetailDto;
+}
+
+// 리뷰 생성 관련 타입
+export interface ReviewRequest {
+  rating: number;
+  content: string;
+  imageUrls?: string[];
+}
+
+export interface ReviewResponse {
+  reviewId: number;
+  message: string;
+  rating: number;
+  content: string;
+  imageUrls?: string[];
+}
+
+// 사용자 프로필 응답 타입
+export interface UserProfileResponse {
+  id: number;
+  nickname: string;
+  email: string;
+  photoUrl?: string;
 }
 
 

@@ -109,25 +109,26 @@ export default function Map(): React.JSX.Element {
 
   // 백엔드 카테고리를 Industries.tsx 카테고리로 매핑
   const mapBackendCategoryToIndustry = useCallback((backendCategory: string): MarkerCategory => {
-    const industry = industries.find(ind => ind.name === backendCategory);
+    const industry = industries.find(ind => ind.code === backendCategory);
     if (industry) {
-      switch (industry.name) {
-        case "음식점": return "음식점";
-        case "카페": return "카페";
-        case "슈퍼/마트": return "마트슈퍼";
-        case "의료기관": return "의료기관";
-        case "교육/문구": return "교육문구";
-        case "숙박": return "숙박";
-        case "생활편의": return "생활편의";
-        case "의류 잡화": return "의류잡화";
-        case "체육시설": return "체육시설";
-        case "주유소": return "주유소";
-        case "오락": return "오락";
-        case "편의점": return "편의점";
-        case "헤어샵": return "헤어샵";
-        case "뷰티": return "뷰티";
-        case "꽃집": return "꽃집";
-        case "영화/공연": return "영화/공연";
+      switch (industry.code) {
+        case "FOOD": return "음식점";
+        case "CAFE": return "카페";
+        case "SUPERMARKET": return "마트슈퍼";
+        case "MEDICAL": return "의료기관";
+        case "EDU_STATIONERY": return "교육문구";
+        case "LODGING": return "숙박";
+        case "LIFE_CONVENIENCE": return "생활편의";
+        case "APPAREL": return "의류잡화";
+        case "SPORTS": return "체육시설";
+        case "GAS_STATION": return "주유소";
+        case "ENTERTAINMENT": return "오락";
+        case "CONVENIENCE_STORE": return "편의점";
+        case "HAIR": return "헤어샵";
+        case "BEAUTY": return "뷰티";
+        case "FLOWER": return "꽃집";
+        case "MOVIE_PERFORMANCE": return "영화/공연";
+        case "ETC": return "기타";
         default: return "기타";
       }
     }
@@ -351,7 +352,7 @@ export default function Map(): React.JSX.Element {
             return {
               id: store.id.toString(),
               position: { lat: placeDetails.lat, lng: placeDetails.lng },
-              category: mapBackendCategoryToIndustry(placeDetails.category || ""),
+              category: mapBackendCategoryToIndustry(placeDetails.category || store.category || ""),
               name: placeDetails.name && placeDetails.name.trim() ? placeDetails.name : store.name,
               address: placeDetails.formattedAddress || store.sigungu,
               images: placeDetails.photos ? placeDetails.photos.map(photo => photo.url) : [
@@ -368,7 +369,7 @@ export default function Map(): React.JSX.Element {
             return {
               id: store.id.toString(),
               position: { lat: store.lat, lng: store.lng },
-              category: "기타",
+              category: mapBackendCategoryToIndustry(store.category || ""),
               name: store.name,
               address: store.sigungu,
               images: [

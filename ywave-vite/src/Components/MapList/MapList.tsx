@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,6 +6,9 @@ import {
     PiBookmarkSimpleFill,
 } from "react-icons/pi";
 import { AiFillStar } from "react-icons/ai";
+import { convertCategoryCode } from "../../utils/categoryMapping";
+import { useBookmarkApi } from "../../hooks/useApi";
+import BookmarkFolderSelectModal from "../Modal/BookmarkFolderSelectModal";
 
 
 const MapListContainer = styled.div`
@@ -95,22 +98,56 @@ const Image = styled.img`
 `
 
 export default function MapList({
-    name, bookmark, rating, address, category, images, distance, storeId,
+    name, bookmark, rating, address, category, images, distance, storeId, placeId, from = 'map',
 }: {
-    name: string; bookmark: boolean; rating: number; address: string; category: string; images: string[]; distance?: string; storeId?: string;
+    name: string; bookmark: boolean; rating: number; address: string; category: string; images: string[]; distance?: string; storeId?: string; placeId?: string; from?: 'map' | 'bookmark';
 }): React.JSX.Element {
     const [IsBookMark, setIsBookMark] = useState<boolean>(bookmark);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const navigate = useNavigate();
+    const { deleteBookmark } = useBookmarkApi();
     
-    const handleBookmarkClick = (e: React.MouseEvent) => {
+    // bookmark prop이 변경될 때마다 상태 동기화
+    useEffect(() => {
+        setIsBookMark(bookmark);
+    }, [bookmark]);
+    
+    const handleBookmarkClick = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsBookMark(!IsBookMark); 
-    }
+        
+        if (IsBookMark) {
+            // 북마크 삭제
+            if (storeId) {
+                try {
+                    await deleteBookmark(parseInt(storeId));
+                    setIsBookMark(false);
+                } catch (error) {
+                    console.error("북마크 삭제 실패:", error);
+                }
+            }
+        } else {
+            // 북마크 생성 - 모달 열기
+            setIsModalOpen(true);
+        }
+    };
+
+    const handleBookmarkSuccess = () => {
+        setIsBookMark(true);
+    };
 
     const handleStoreClick = () => {
-        if (storeId) {
+        if (placeId) {
+            // placeId가 있는 경우 (Google Places API에서 가져온 장소)
+            navigate(`/main/place/${storeId || '0'}`, { 
+              state: { 
+                from,
+                placeId: placeId 
+              } 
+            });
+        } else if (storeId) {
+            // storeId만 있는 경우 (백엔드에서 가져온 장소)
             navigate(`/main/place/${storeId}`, { 
-              state: { from: 'map' } 
+              state: { from } 
             });
         }
     }
@@ -126,31 +163,43 @@ export default function MapList({
     };
 
     return (
-    <MapListContainer onClick={handleStoreClick}>
-        <TitleContainer className="Title__H4">
-            {name}
-            {IsBookMark ? <PiBookmarkSimpleFill style={{width:24, height:24}} onClick={handleBookmarkClick} /> : <PiBookmarkSimple style={{width:24, height:24}} onClick={handleBookmarkClick} />}
-        </TitleContainer>
-        <RatingContainer>
-            <div className="Body__Default">{rating}</div>
-            <StarContainer>
-                {renderStars()}
-            </StarContainer>
-      </RatingContainer>
-      <InfoContainer>
-        {distance && <div className="Body__Default">{distance}</div>}
-        {distance && <div className="Body__Default">|</div>}
-        <div className="Body__Default">{category}</div>
-        <div className="Body__Default">|</div>
-        <AddressText className="Body__Default">{address}</AddressText>
-      </InfoContainer>
-      {images && images.length > 0 && (
-        <ImageContainer>
-            {images.map((image, index) => (
-                <Image key={index} src={image} />
-            ))}
-        </ImageContainer>
-      )}
-    </MapListContainer>
+        <>
+            <MapListContainer onClick={handleStoreClick}>
+                <TitleContainer className="Title__H4">
+                    {name}
+                    {IsBookMark ? <PiBookmarkSimpleFill style={{width:24, height:24}} onClick={handleBookmarkClick} /> : <PiBookmarkSimple style={{width:24, height:24}} onClick={handleBookmarkClick} />}
+                </TitleContainer>
+                <RatingContainer>
+                    <div className="Body__Default">{rating}</div>
+                    <StarContainer>
+                        {renderStars()}
+                    </StarContainer>
+              </RatingContainer>
+              <InfoContainer>
+                {distance && <div className="Body__Default">{distance}</div>}
+                {distance && <div className="Body__Default">|</div>}
+                <div className="Body__Default">{convertCategoryCode(category)}</div>
+                <div className="Body__Default">|</div>
+                <AddressText className="Body__Default">{address}</AddressText>
+              </InfoContainer>
+              {images && images.length > 0 && (
+                <ImageContainer>
+                    {images.map((image, index) => (
+                        <Image key={index} src={image} />
+                    ))}
+                </ImageContainer>
+              )}
+            </MapListContainer>
+            
+            {storeId && (
+                <BookmarkFolderSelectModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    storeId={parseInt(storeId)}
+                    storeName={name}
+                    onBookmarkSuccess={handleBookmarkSuccess}
+                />
+            )}
+        </>
     )
 }

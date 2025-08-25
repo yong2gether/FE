@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import { PiBookmarkSimpleFill } from "react-icons/pi";
 import { AiFillStar } from "react-icons/ai";

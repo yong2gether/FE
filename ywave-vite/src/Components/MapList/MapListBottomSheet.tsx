@@ -8,6 +8,7 @@ import { industries } from "../../Data/Industries";
 import PublicDropdown from "../PublicDropdown";
 import DeleteTag from "../DeleteTag";
 import { calculateDistance, formatDistance } from "../../utils/distance";
+import { convertCategoryCode } from "../../utils/categoryMapping";
 
 interface MapListBottomSheetProps {
   onLocationRequest: () => void;
@@ -189,7 +190,7 @@ const RegionChips = styled.div`
 interface Option { index: number; value: string; }
 
 export default function MapListBottomSheet({ 
-  onLocationRequest, 
+ 
   onSearchThisArea, 
   onSearch, 
   showReSearch, 
@@ -198,7 +199,7 @@ export default function MapListBottomSheet({
   userLocation,
   searchQuery = ""
 }: MapListBottomSheetProps): React.JSX.Element {
-  const [selectIndustries, setSelectIndustries] = useState<number[]>([]);
+  const [selectIndustries, setSelectIndustries] = useState<string[]>([]);
   const [sheetRatio, setSheetRatio] = useState<number>(0);
   const [regionModalOpen, setRegionModalOpen] = useState<boolean>(false);
   const [selectedRegion, setSelectedRegion] = useState<string>("지역 설정");
@@ -208,19 +209,18 @@ export default function MapListBottomSheet({
   const [selectDong, setSelectDong] = useState<Option | null>(null);
   const [selectRegions, setSelectRegions] = useState<string[]>([]);
 
-  const handleIndustryClick = (clickId: number): void => {
-    if (selectIndustries.includes(clickId)) {
-      setSelectIndustries(selectIndustries.filter((id) => id !== clickId));
+  const handleIndustryClick = (industryCode: string): void => {
+    if (selectIndustries.includes(industryCode)) {
+      setSelectIndustries(selectIndustries.filter((code) => code !== industryCode));
     } else {
-      setSelectIndustries((prev) => [...prev, clickId]);
+      setSelectIndustries((prev) => [...prev, industryCode]);
     }
   };
 
   const filteredStores = storeMarkers.filter(store => {
     // 업종 필터링
     if (selectIndustries.length > 0) {
-      const storeCategory = industries.find(ind => ind.name === store.category)?.id;
-      if (!storeCategory || !selectIndustries.includes(storeCategory)) {
+      if (!selectIndustries.includes(store.category)) {
         return false;
       }
     }
@@ -230,7 +230,7 @@ export default function MapListBottomSheet({
       const query = searchQuery.toLowerCase().trim();
       const storeName = store.name.toLowerCase();
       const storeAddress = store.address.toLowerCase();
-      const storeCategory = store.category.toLowerCase();
+      const storeCategory = convertCategoryCode(store.category).toLowerCase();
       
       if (!storeName.includes(query) && 
           !storeAddress.includes(query) && 
@@ -319,7 +319,7 @@ export default function MapListBottomSheet({
             <div className="Body__Small">{selectedRegion}</div>
           </RegionSetting>
           {industries.map((industry) => (
-            <IndustryItem key={industry.id} $isSelect={selectIndustries.includes(industry.id)} onClick={() => handleIndustryClick(industry.id)}>
+            <IndustryItem key={industry.id} $isSelect={selectIndustries.includes(industry.code)} onClick={() => handleIndustryClick(industry.code)}>
               {industry.icon({size: 14})}
               <div className="Body__Small">{industry.name}</div>
             </IndustryItem>
@@ -360,7 +360,7 @@ export default function MapListBottomSheet({
                   bookmark={false}
                   rating={store.rating || 0}
                   address={store.address}
-                  category={store.category || "기타"}
+                  category={convertCategoryCode(store.category)}
                   images={store.images || []}
                   distance={getDistance({ lat: store.position.lat, lng: store.position.lng })}
                   storeId={store.id.toString()}

@@ -114,8 +114,7 @@ export default function BookMarkEdit(): React.JSX.Element {
   useEffect(() => {
     setFolderEmoji(unifiedToEmoji(unicode));
     setFolderInput(title);
-    console.log(folderEmoji);
-  }, [unicode, title]);
+  }, [unicode, title]); // folderEmoji 제거
 
   const handleEmojiEdit = (): void => {
     setIsEmojiPickerOpen(true);

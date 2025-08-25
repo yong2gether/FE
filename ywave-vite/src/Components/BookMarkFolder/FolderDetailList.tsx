@@ -46,6 +46,7 @@ const EmptyState = styled.div`
 
 interface Place {
   id: string;
+  placeId?: string; // Google Places API의 placeId (선택적)
   name: string;
   address: string;
   lat: number;
@@ -97,13 +98,15 @@ export default function FolderDetailList({
           <React.Fragment key={place.id}>
             <MapList 
               name={place.name}
-              bookmark={false}
+              bookmark={true}
               rating={place.rating}
               address={place.address}
               category={place.category}
               images={place.images || []}
               distance={place.distance}
               storeId={place.id}
+              placeId={place.placeId}
+              from={'bookmark'}
             />
             {index < places.length - 1 && (
               <div style={{height: 1, background: "var(--neutral-200)", width: "100%"}} />

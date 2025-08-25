@@ -11,7 +11,7 @@ import {
   PopularStoreDto,
   NearbyStoreDto,
   PlaceDetailsDto,
-  EchoRequest,
+
   SetPreferredRegionRequest,
   RegionResponse,
   UpdatePreferredCategoriesRequest,
@@ -25,6 +25,11 @@ import {
   BookmarkedGroupsResponse,
   UserReviewsResponse,
   BookmarkedGroupResponse,
+  CreateReq,
+  CreateRes,
+  DeleteRes,
+
+  UserProfileResponse,
 } from './types';
 import { createSearchParams } from '../utils/apiUtils';
 
@@ -38,10 +43,12 @@ export const userApi = {
   // 로그인
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>('/api/v1/login', data);
-    // 로그인 성공 시 토큰 저장
+    // 로그인 성공 시 토큰과 userId 저장
     if (response.accessToken) {
       apiClient.setToken(response.accessToken);
+      apiClient.setUserId(response.user.id);
       localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('userId', response.user.id.toString());
     }
     return response;
   },
@@ -55,14 +62,28 @@ export const userApi = {
   logout: () => {
     apiClient.clearToken();
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('userId');
   },
 
   // 토큰 복원 (앱 시작 시)
   restoreToken: () => {
     const token = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
     if (token) {
       apiClient.setToken(token);
     }
+    if (userId) {
+      apiClient.setUserId(parseInt(userId));
+    }
+  },
+
+  // 프로필 조회
+  getProfile: async (): Promise<UserProfileResponse> => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      throw new Error('사용자 ID가 없습니다.');
+    }
+    return apiClient.get<UserProfileResponse>(`/api/v1/mypage/${userId}/profile`);
   },
 
   // 프로필 변경
@@ -153,6 +174,16 @@ export const bookmarkApi = {
   getBookmarkGroup: async (groupId: number): Promise<BookmarkedGroupResponse> => {
     return apiClient.get<BookmarkedGroupResponse>(`/api/v1/mypage/bookmarks/${groupId}`);
   },
+
+  // 가맹점 북마크 생성
+  create: async (storeId: number, data: CreateReq): Promise<CreateRes> => {
+    return apiClient.post<CreateRes>(`/api/v1/stores/${storeId}/bookmarks`, data);
+  },
+
+  // 가맹점 북마크 취소
+  delete: async (storeId: number): Promise<DeleteRes> => {
+    return apiClient.delete<DeleteRes>(`/api/v1/stores/${storeId}/bookmarks`);
+  },
 };
 
 // 리뷰 관련 API
@@ -161,6 +192,13 @@ export const reviewApi = {
   getMyReviews: async (): Promise<UserReviewsResponse> => {
     return apiClient.get<UserReviewsResponse>('/api/v1/mypage/reviews');
   },
+
+  // 리뷰 생성 - 현재 사용하지 않음
+  /*
+  createReview: async (data: ReviewRequest): Promise<ReviewResponse> => {
+    return apiClient.post<ReviewResponse>('/api/v1/mypage/reviews', data);
+  },
+  */
 };
 
 // AI 관련 API

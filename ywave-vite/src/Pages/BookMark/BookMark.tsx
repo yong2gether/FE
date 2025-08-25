@@ -5,9 +5,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import FolderList from "../../Components/BookMarkFolder/FolderList";
 import PencilButton from "../../Components/Button/PencilButton";
 import { useBookmarkApi } from "../../hooks/useApi";
-import { GoogleMap, Marker } from "@react-google-maps/api";
-import { createEmojiMarker } from "../../utils/emojiToMarker";
+import { useStoreApi } from "../../hooks/useApi";
+import { GoogleMap} from "@react-google-maps/api";
 import { useGoogleMaps } from "../../hooks/useGoogleMaps";
+import MapList from "../../Components/MapList/MapList";
 
 const PageContainer = styled.div`
   display: flex;
@@ -56,7 +57,8 @@ const defaultCenter = { lat: 37.5665, lng: 126.978 };
 export default function BookMark(): React.JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
-  const { getBookmarkGroups, deleteBookmarkGroup } = useBookmarkApi();
+  const { getBookmarkGroups, deleteBookmarkGroup, deleteBookmark } = useBookmarkApi();
+  const { getStoreDetails } = useStoreApi();
 
   // 폴더 목록 상태
   const [folders, setFolders] = useState<any[]>([]);
@@ -68,8 +70,12 @@ export default function BookMark(): React.JSX.Element {
   const [openMoreId, setOpenMoreId] = useState<string | null>(null);
   const [sheetRatio, setSheetRatio] = useState<number>(0);
 
+  // 마커 상세정보 바텀시트 상태
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState<boolean>(false);
+  const [selectedPlace, setSelectedPlace] = useState<any>(null);
+
   // Google Maps API 훅 사용
-  const { isLoaded, loadError, apiKey } = useGoogleMaps();
+  const { isLoaded, loadError } = useGoogleMaps();
 
   // 폴더 목록 조회
   const fetchBookmarkGroups = useCallback(async () => {
@@ -83,15 +89,46 @@ export default function BookMark(): React.JSX.Element {
         console.log("첫 번째 폴더 구조:", response.groups[0]);
         setFolders(response.groups);
 
-        // 모든 북마크 장소 수집
+        // 모든 북마크 장소 수집 (stores는 storeId 배열)
         const allPlaces: any[] = [];
-        response.groups.forEach((group: any) => {
-          if (group.stores) {
-            allPlaces.push(...group.stores);
+        
+        for (const group of response.groups) {
+          if (group.stores && Array.isArray(group.stores)) {
+            // 각 storeId에 대해 상세 정보 조회
+            for (const storeId of group.stores) {
+              try {
+                const numericStoreId = Number(storeId);
+                console.log(`Store ${numericStoreId} 상세 정보 조회 중...`);
+                const storeDetail = await getStoreDetails(numericStoreId);
+                if (storeDetail) {
+                  allPlaces.push({
+                    ...storeDetail,
+                    groupId: group.groupId,
+                    groupName: group.groupName,
+                    iconUrl: group.iconUrl
+                  });
+                }
+              } catch (error) {
+                console.error(`Store ${storeId} 상세 정보 조회 실패:`, error);
+                // 실패한 경우 기본 정보로 생성
+                allPlaces.push({
+                  id: storeId,
+                  storeId: storeId,
+                  name: `Store ${storeId}`,
+                  lat: 37.5665,
+                  lng: 126.978,
+                  groupId: group.groupId,
+                  groupName: group.groupName,
+                  iconUrl: group.iconUrl
+                });
+              }
+            }
           }
-        });
+        }
+        
         setAllBookmarkPlaces(allPlaces);
         console.log("전체 북마크 장소 개수:", allPlaces.length);
+        console.log("생성된 장소 데이터:", allPlaces);
       } else {
         console.log("응답에 groups가 없음:", response);
         setFolders([]);
@@ -102,7 +139,7 @@ export default function BookMark(): React.JSX.Element {
       setFolders([]);
       setAllBookmarkPlaces([]);
     }
-  }, [getBookmarkGroups]);
+  }, [getBookmarkGroups, getStoreDetails]);
 
   useEffect(() => {
     fetchBookmarkGroups();
@@ -149,34 +186,6 @@ export default function BookMark(): React.JSX.Element {
     [deleteBookmarkGroup, isDeleting]
   );
 
-  // 북마크 장소들을 지도에 표시할 데이터
-  const bookmarkPlaces = useMemo(() => {
-    if (!allBookmarkPlaces) return [];
-
-    return allBookmarkPlaces.map((place) => ({
-      id: place.id,
-      name: place.name,
-      lat: place.lat,
-      lng: place.lng,
-      unicode: "1f4c1", // 기본 폴더 이모지
-    }));
-  }, [allBookmarkPlaces]);
-
-  // 지도 중심점 계산
-  const mapCenter = useMemo(() => {
-    if (bookmarkPlaces.length === 0) return defaultCenter;
-
-    // 모든 장소의 평균 위치 계산
-    const avgLat =
-      bookmarkPlaces.reduce((sum, place) => sum + place.lat, 0) /
-      bookmarkPlaces.length;
-    const avgLng =
-      bookmarkPlaces.reduce((sum, place) => sum + place.lng, 0) /
-      bookmarkPlaces.length;
-
-    return { lat: avgLat, lng: avgLng };
-  }, [bookmarkPlaces]);
-
   const handleMoreClick = useCallback((id: string | number | null): void => {
     if (id === null) return;
     setOpenMoreId((prev) => (prev === id.toString() ? null : id.toString()));
@@ -202,6 +211,68 @@ export default function BookMark(): React.JSX.Element {
   const handleProgressChange = useCallback((ratio: number) => {
     setSheetRatio(ratio);
   }, []);
+
+  // 북마크 장소들을 지도에 표시할 데이터
+  const bookmarkPlaces = useMemo(() => {
+    if (!allBookmarkPlaces) return [];
+
+    console.log("allBookmarkPlaces 원본 데이터:", allBookmarkPlaces);
+    
+    const mappedPlaces = allBookmarkPlaces.map((place) => {
+      const sidNum = Number(place.storeId ?? place.id);
+      return ({
+      id: Number.isFinite(sidNum) ? String(sidNum) : (place.id?.toString?.() ?? ''),
+      storeId: Number.isFinite(sidNum) ? sidNum : undefined,
+      placeId: place.placeId,
+      name: place.name || place.storeName || `Store ${place.storeId ?? place.id}`,
+      address: place.roadAddress || place.formattedAddress || place.address || "",
+      lat: place.lat || 37.5665,
+      lng: place.lng || 126.978,
+      unicode: place.iconUrl || "1f4c1",
+      rating: place.rating ?? 0,
+      images: (place.photos?.map((ph: any) => ph.url)) || (place.thumbnailUrl ? [place.thumbnailUrl] : []),
+      groupId: place.groupId,
+      groupName: place.groupName
+    })});
+    
+    console.log("매핑된 bookmarkPlaces:", mappedPlaces);
+    return mappedPlaces;
+  }, [allBookmarkPlaces]);
+
+  // 지도 중심점 계산
+  const mapCenter = useMemo(() => {
+    if (bookmarkPlaces.length === 0) return defaultCenter;
+
+    // 모든 장소의 평균 위치 계산
+    const avgLat =
+      bookmarkPlaces.reduce((sum, place) => sum + place.lat, 0) /
+      bookmarkPlaces.length;
+    const avgLng =
+      bookmarkPlaces.reduce((sum, place) => sum + place.lng, 0) /
+      bookmarkPlaces.length;
+
+    return { lat: avgLat, lng: avgLng };
+  }, [bookmarkPlaces]);
+
+  // 마커 클릭 시 바로 상세 페이지로 이동 (북마크 컨텍스트)
+  const handleMarkerClick = useCallback((place: any) => {
+    console.log("마커 클릭됨:", place);
+    const sid = (place.storeId ?? place.id);
+    const sidStr = sid ? String(sid) : undefined;
+
+    if (place.placeId) {
+      navigate(`/main/place/${sidStr ?? '0'}`, {
+        state: { from: 'bookmark', placeId: place.placeId }
+      });
+      return;
+    }
+
+    if (sidStr) {
+      navigate(`/main/place/${sidStr}`, {
+        state: { from: 'bookmark' }
+      });
+    }
+  }, [navigate]);
 
   // BookMarkAdd에서 돌아왔을 때 새로고침
   useEffect(() => {
@@ -239,19 +310,6 @@ export default function BookMark(): React.JSX.Element {
                 ],
               }}
             >
-              {bookmarkPlaces.map((place) => (
-                <Marker
-                  key={place.id}
-                  position={{ lat: place.lat, lng: place.lng }}
-                  icon={createEmojiMarker(place.unicode, {
-                    size: 40,
-                    backgroundColor: "#ffffff",
-                    borderColor: "#1976d2",
-                    borderWidth: 3,
-                  })}
-                  title={place.name}
-                />
-              ))}
             </GoogleMap>
           )}
         </MapContainer>
@@ -283,6 +341,91 @@ export default function BookMark(): React.JSX.Element {
             onFolderClick={handleFolderClick}
             onFolderDelete={handleFolderDelete}
           />
+        </BottomSheetContainer>
+      </BottomSheet>
+
+      {/* 마커 상세정보 바텀시트 */}
+      <BottomSheet
+        isOpen={isDetailSheetOpen}
+        onClose={() => setIsDetailSheetOpen(false)}
+        snapPoints={[0.4, 0.7]}
+        initialSnapIndex={0}
+        bottomOffsetPx={0}
+        showOverlay={true}
+        dismissible={true}
+      >
+        <BottomSheetContainer>
+          {selectedPlace && (
+            <>
+              <TitleContainer>
+                <div className="Title__H2">{selectedPlace.name}</div>
+              </TitleContainer>
+              
+              <MapList
+                name={selectedPlace.name}
+                bookmark={true}
+                rating={selectedPlace.rating || 0}
+                address={selectedPlace.formattedAddress || selectedPlace.address || "주소 정보 없음"}
+                category={selectedPlace.category || "기타"}
+                images={selectedPlace.photos?.map((photo: any) => photo.url) || []}
+                distance="북마크된 장소"
+                storeId={(selectedPlace.storeId ?? selectedPlace.id)?.toString()}
+                placeId={selectedPlace.placeId}
+                from={'bookmark'}
+              />
+              
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <button
+                  onClick={() => {
+                    const sid = (selectedPlace.storeId ?? selectedPlace.id)?.toString();
+                    if (sid) {
+                      navigate(`/main/place/${sid}`, {
+                        state: { from: 'bookmark' }
+                      });
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    backgroundColor: 'var(--primary-blue-500)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  상세보기
+                </button>
+                <button
+                  onClick={async () => {
+                    const sid = (selectedPlace.storeId ?? selectedPlace.id);
+                    if (sid) {
+                      try {
+                        await deleteBookmark(Number(sid));
+                        alert("북마크가 삭제되었습니다.");
+                        setIsDetailSheetOpen(false);
+                        fetchBookmarkGroups();
+                      } catch (error) {
+                        console.error("북마크 삭제 실패:", error);
+                        alert("북마크 삭제에 실패했습니다.");
+                      }
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    backgroundColor: 'var(--neutral-200)',
+                    color: 'var(--neutral-700)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  북마크 삭제
+                </button>
+              </div>
+            </>
+          )}
         </BottomSheetContainer>
       </BottomSheet>
     </PageContainer>
