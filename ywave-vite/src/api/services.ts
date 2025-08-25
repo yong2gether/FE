@@ -146,6 +146,11 @@ export const storeApi = {
   getStoreDetails: async (storeId: number): Promise<PlaceDetailsDto> => {
     return apiClient.get<PlaceDetailsDto>(`/api/v1/stores/${storeId}/details`);
   },
+
+  // 추천 가맹점 조회
+  getRecommendations: async (limit: number = 5): Promise<any[]> => {
+    return apiClient.get<any[]>(`/api/v1/recommendations?limit=${limit}`);
+  },
 };
 
 // 북마크 그룹 관련 API
