@@ -115,7 +115,7 @@ const ButtonContainer = styled.div`
   width: 100%;
   padding: 0px 16px;
   position: absolute;
-  bottom: 62px;
+  bottom: 160px;
   z-index: 100;
   opacity: 0;
   transition: opacity 0.5s ease-in;
